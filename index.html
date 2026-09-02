@@ -364,6 +364,7 @@
   var noteOpenId = null;
   var noteEditId = null;
   var projectNoteEditId = null;
+  var projectNoteOpenId = null;
 
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
   function nowIso(){ return new Date().toISOString(); }
@@ -952,17 +953,23 @@
     if(!notes.length) return '';
     var hasMultiCat = p.categories.length > 1;
     var notesHtml = notes.map(function(n){
+      var isOpen = projectNoteOpenId === n.id || projectNoteEditId === n.id;
+      var chevron = isOpen
+        ? '<svg viewBox="0 0 20 20" fill="none" style="width:13px;height:13px;flex-shrink:0;"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        : '<svg viewBox="0 0 20 20" fill="none" style="width:13px;height:13px;flex-shrink:0;"><path d="M8 5l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
       var bodySection = '';
-      if(projectNoteEditId === n.id){
-        bodySection = '<div class="proj-note-body-edit">'+
-          '<textarea class="note-add-area" data-pn-edit-ta="'+n.id+'" rows="4" style="margin-top:8px;">'+escapeHtml(n.body)+'</textarea>'+
-          '<div class="note-edit-actions">'+
-            '<button class="note-edit-ok" data-pn-edit-ok="'+n.id+'">OK</button>'+
-            '<button class="note-edit-cancel" data-pn-edit-cancel>Annuler</button>'+
-          '</div>'+
-        '</div>';
-      } else if(n.body){
-        bodySection = '<div class="proj-note-body">'+parseAiText(n.body)+'</div>';
+      if(isOpen){
+        if(projectNoteEditId === n.id){
+          bodySection = '<div class="proj-note-body-edit">'+
+            '<textarea class="note-add-area" data-pn-edit-ta="'+n.id+'" rows="5" style="margin-top:8px;">'+escapeHtml(n.body)+'</textarea>'+
+            '<div class="note-edit-actions">'+
+              '<button class="note-edit-ok" data-pn-edit-ok="'+n.id+'">OK</button>'+
+              '<button class="note-edit-cancel" data-pn-edit-cancel data-pn-edit-cancel-id="'+n.id+'">Annuler</button>'+
+            '</div>'+
+          '</div>';
+        } else {
+          bodySection = '<div class="proj-note-body">'+(n.body ? parseAiText(n.body) : '<span style="color:var(--ink-faint);font-size:13px;">Aucun contenu.</span>')+'</div>';
+        }
       }
       var moveHtml = '';
       if(hasMultiCat){
@@ -974,6 +981,7 @@
       }
       return '<div class="proj-note-row">'+
         '<div class="proj-note-top">'+
+          '<button class="proj-note-toggle-btn" data-pn-toggle="'+n.id+'" title="Déplier/replier" style="border:none;background:none;padding:0;margin:0;color:var(--ink-faint);cursor:pointer;display:flex;align-items:center;flex-shrink:0;">'+chevron+'</button>'+
           '<span class="proj-note-icon">'+noteIcon()+'</span>'+
           '<input class="cat-note-title" type="text" value="'+escapeHtml(n.title)+'" '+
             'data-pn-title="'+n.id+'" placeholder="Titre…">'+
@@ -1269,6 +1277,7 @@
     if(!n) return;
     n.body = body.trim();
     projectNoteEditId = null;
+    projectNoteOpenId = noteId;
     p.updatedAt = nowIso();
     persist(); render();
   }
@@ -1316,7 +1325,9 @@
       if(l){ firstLine = l; break; }
     }
     var title = firstLine.slice(0,65) + (firstLine.length>65 ? '…' : '');
-    p.projectNotes.push({id:uid(), title:title, body:text.trim(), catId:catId, createdAt:nowIso()});
+    var newNote = {id:uid(), title:title, body:text.trim(), catId:catId, createdAt:nowIso()};
+    p.projectNotes.push(newNote);
+    projectNoteOpenId = newNote.id;
     p.updatedAt = nowIso();
     persist(); render();
     showToast("Note enregistrée");
@@ -1657,9 +1668,27 @@
     document.querySelectorAll("[data-pn-delete]").forEach(function(el){
       el.addEventListener("click", function(){ performDeleteProjectNote(currentProjectId, el.dataset.pnDelete); });
     });
-    // Notes projet libres — ouvrir édition body
+    // Notes projet libres — toggle expand/collapse
+    document.querySelectorAll("[data-pn-toggle]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var id = el.dataset.pnToggle;
+        if(projectNoteEditId === id) return;
+        projectNoteOpenId = (projectNoteOpenId === id) ? null : id;
+        render();
+      });
+    });
+    // Notes projet libres — ouvrir édition body (+ expand)
     document.querySelectorAll("[data-pn-edit-open]").forEach(function(el){
-      el.addEventListener("click", function(){ projectNoteEditId = el.dataset.pnEditOpen; render(); });
+      el.addEventListener("click", function(){
+        var id = el.dataset.pnEditOpen;
+        projectNoteEditId = id;
+        projectNoteOpenId = id;
+        render();
+        setTimeout(function(){
+          var ta = document.querySelector('[data-pn-edit-ta="'+id+'"]');
+          if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+        }, 30);
+      });
     });
     // Notes projet libres — valider édition body
     document.querySelectorAll("[data-pn-edit-ok]").forEach(function(el){
@@ -1668,9 +1697,14 @@
         if(ta) performEditProjectNoteBody(currentProjectId, el.dataset.pnEditOk, ta.value);
       });
     });
-    // Notes projet libres — annuler édition
+    // Notes projet libres — annuler édition (garde la note ouverte)
     document.querySelectorAll("[data-pn-edit-cancel]").forEach(function(el){
-      el.addEventListener("click", function(){ projectNoteEditId = null; render(); });
+      el.addEventListener("click", function(){
+        var id = el.dataset.pnEditCancelId || projectNoteEditId;
+        projectNoteEditId = null;
+        projectNoteOpenId = id;
+        render();
+      });
     });
     // Notes projet libres — déplacer (select)
     document.querySelectorAll("[data-pn-move]").forEach(function(el){
