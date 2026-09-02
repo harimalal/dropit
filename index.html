@@ -255,8 +255,29 @@
   }
   .voir-suite-link:hover{color:var(--accent);}
 
-  /* RECLASSER */
-  .reclassify-btn{width:100%;margin-top:8px;}
+  /* DÉCIDE POUR MOI */
+  .decide-btn{width:100%;margin-top:8px;}
+  .decide-panel{border:1px solid var(--line);border-radius:10px;background:var(--canvas);padding:14px 16px;margin-top:8px;}
+  .decide-loading{font-size:13px;color:var(--ink-faint);display:flex;align-items:center;gap:8px;}
+  .decide-q-block{margin-bottom:16px;}
+  .decide-q-label{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:8px;line-height:1.4;}
+  .decide-opts{display:flex;flex-wrap:wrap;gap:7px;}
+  .decide-opt{border:1.5px solid var(--line);border-radius:20px;padding:7px 14px;font-size:13px;background:var(--canvas-card);color:var(--ink);transition:border-color .12s,background .12s;}
+  .decide-opt:hover{border-color:var(--accent);}
+  .decide-opt.selected{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
+  .decide-progress{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);margin-bottom:12px;}
+  .decide-confirm-btn{width:100%;margin-top:4px;}
+  .decide-confirm-btn:disabled{opacity:.4;cursor:default;}
+  .decide-rec-task{margin-bottom:14px;}
+  .decide-rec-task-title{font-family:var(--font-mono);font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:var(--accent);margin-bottom:7px;}
+  .decide-rec-opt{display:flex;flex-wrap:wrap;gap:4px;align-items:baseline;margin-bottom:6px;font-size:13.5px;line-height:1.4;}
+  .decide-rec-opt-name{font-weight:600;color:var(--ink);}
+  .decide-rec-opt-key{color:var(--ink-soft);}
+  .decide-rec-opt-limit{color:var(--ink-faint);font-size:12.5px;}
+  .decide-conclusion{font-size:13.5px;color:var(--ink);border-top:1px solid var(--line);padding-top:12px;margin-top:12px;line-height:1.5;}
+  .decide-badge{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);margin-top:10px;}
+  .decide-close{border:none;background:none;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);padding:0;margin-top:12px;display:block;}
+  .decide-close:hover{color:var(--accent);}
 </style>
 </head>
 <body>
@@ -284,6 +305,7 @@
   var currentCategoryId = null; // set when viewing a single category's checklist
   var generating = false;
   var composeText = "";
+  var decisionState = {};
 
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
   function nowIso(){ return new Date().toISOString(); }
@@ -690,7 +712,7 @@
         '</div>'+
         (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(renderItemRow).join("") : '')+
         '<button class="btn suggest-more-btn" id="suggest-category-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Suggérer la suite</button>'+
-        (remaining.length > 1 ? '<button class="btn reclassify-btn" id="reclassify-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Reclasser par priorité</button>' : '');
+        (remaining.length ? '<button class="btn decide-btn" id="decide-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Décide pour moi</button>'+renderDecidePanel(cat) : '');
     } else if(!accompli && multiCategory){
       // multiple categories: show them as cards, navigate into each
       bodyHtml = ''+
@@ -749,7 +771,7 @@
       '</div>'+
       (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(renderItemRow).join("") : '')+
       '<button class="btn suggest-more-btn" id="suggest-category-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Suggérer</button>'+
-      (remaining.length > 1 ? '<button class="btn reclassify-btn" id="reclassify-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Reclasser par priorité</button>' : '');
+      (remaining.length ? '<button class="btn decide-btn" id="decide-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Décide pour moi</button>'+renderDecidePanel(cat) : '');
 
     return ''+
     topBarHtml+
@@ -776,6 +798,55 @@
       }).join('');
     }
     return '<div class="research-panel">'+inner+'</div>';
+  }
+
+  function renderDecidePanel(cat){
+    var ds = decisionState[cat.id];
+    if(!ds) return '';
+    if(ds.phase === 'loading_q'){
+      return '<div class="decide-panel"><div class="decide-loading"><div class="loading-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;"></div>L\'IA analyse tes tâches…</div></div>';
+    }
+    if(ds.phase === 'questionnaire'){
+      var answeredCount = Object.keys(ds.answers).length;
+      var totalQ = ds.questions.length;
+      var allAnswered = answeredCount === totalQ;
+      var questionsHtml = ds.questions.map(function(qobj, qi){
+        var optsHtml = qobj.options.map(function(opt){
+          var sel = ds.answers[qi] === opt;
+          return '<button class="decide-opt'+(sel?' selected':'')+'" data-decide-q="'+qi+'" data-decide-cat="'+escapeHtml(cat.id)+'" data-decide-opt="'+escapeHtml(opt)+'">'+escapeHtml(opt)+'</button>';
+        }).join('');
+        return '<div class="decide-q-block"><div class="decide-q-label">'+(qi+1)+'. '+escapeHtml(qobj.q)+'</div><div class="decide-opts">'+optsHtml+'</div></div>';
+      }).join('');
+      return '<div class="decide-panel">'+
+        '<div class="decide-progress">'+answeredCount+' / '+totalQ+' réponse'+(totalQ>1?'s':'')+' · sélectionne une option par question</div>'+
+        questionsHtml+
+        '<button class="btn btn-primary decide-confirm-btn" id="decide-confirm-btn" data-category="'+escapeHtml(cat.id)+'"'+(allAnswered?'':' disabled')+'>Voir la recommandation →</button>'+
+        '<button class="decide-close" data-decide-close="'+escapeHtml(cat.id)+'">Fermer</button>'+
+      '</div>';
+    }
+    if(ds.phase === 'loading_rec'){
+      return '<div class="decide-panel"><div class="decide-loading"><div class="loading-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;"></div>L\'IA prépare ta recommandation…</div></div>';
+    }
+    if(ds.phase === 'recommendation'){
+      var rec = ds.recommendation || {};
+      var itemsHtml = (rec.items||[]).map(function(item){
+        var optsHtml = (item.options||[]).map(function(opt){
+          return '<div class="decide-rec-opt">'+
+            '<span class="decide-rec-opt-name">'+escapeHtml(opt.name||'')+'</span>'+
+            '<span class="decide-rec-opt-key"> — '+escapeHtml(opt.key||'')+'</span>'+
+            (opt.limit&&opt.limit!=='null'?'<span class="decide-rec-opt-limit">('+escapeHtml(opt.limit)+')</span>':'')+
+          '</div>';
+        }).join('');
+        return '<div class="decide-rec-task"><div class="decide-rec-task-title">'+escapeHtml(item.task||'')+'</div>'+optsHtml+'</div>';
+      }).join('');
+      return '<div class="decide-panel">'+
+        itemsHtml+
+        (rec.conclusion?'<div class="decide-conclusion">'+escapeHtml(rec.conclusion)+'</div>':'')+
+        '<div class="decide-badge">'+rec.criteria_count+' critères analysés · '+rec.options_count+' options comparées</div>'+
+        '<button class="decide-close" data-decide-close="'+escapeHtml(cat.id)+'">Fermer</button>'+
+      '</div>';
+    }
+    return '';
   }
 
   function renderItemRow(it){
@@ -920,19 +991,48 @@
     });
   }
 
-  function generateReclassify(project, items){
-    var undone = items.filter(function(it){return !it.done;}).map(function(it){return {id:it.id,title:it.title};});
+  function generateDecisionQuestionnaire(p, cat){
+    var remaining = cat.items.filter(function(it){return !it.done;}).map(function(it){return it.title;});
     var promptText = ""+
-      "Projet : "+project.title+" — "+(project.summary||"")+"\n"+
-      "Tâches restantes (JSON) : "+JSON.stringify(undone)+"\n\n"+
-      "Réordonne ces tâches de la plus urgente/prioritaire à la moins urgente :\n"+
-      "1. Ce qui bloque les autres tâches (dépendances)\n"+
-      "2. Ce qui a le plus d'impact sur l'avancement\n"+
-      "3. Ce qui est le plus simple à faire maintenant\n"+
-      "Réponds UNIQUEMENT avec un tableau JSON des IDs dans le nouvel ordre, sans texte autour : [\"id1\",\"id2\"]";
+      "Projet : "+p.title+" — "+(p.summary||"")+"\n"+
+      "Catégorie : "+cat.title+"\n"+
+      "Tâches à accomplir : "+JSON.stringify(remaining)+"\n\n"+
+      "Tu aides l'utilisateur à prendre les meilleures décisions sur ces tâches. "+
+      "Génère 3 à 5 questions fermées et contextuelles pour affiner ta recommandation. "+
+      "Les questions portent sur le contexte personnel, les contraintes, les préférences — pas sur ce qu'il y a à faire (c'est déjà listé). "+
+      "Chaque question doit avoir 2 à 4 options courtes et claires.\n"+
+      "Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown :\n"+
+      '{"questions":[{"q":"...","options":["option A","option B"]}]}';
     return fetch("/api/ai",{
       method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:300,messages:[{role:"user",content:[{type:"text",text:promptText}]}]})
+      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:700,messages:[{role:"user",content:[{type:"text",text:promptText}]}]})
+    }).then(function(res){return res.json();}).then(function(data){
+      var textOut=(data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n");
+      var clean=textOut.replace(/```json|```/g,"").trim();
+      return JSON.parse(clean);
+    });
+  }
+
+  function generateDecisionRecommendation(p, cat, answers, questions){
+    var remaining = cat.items.filter(function(it){return !it.done;}).map(function(it){return it.title;});
+    var answersText = questions.map(function(qobj, qi){
+      return "Q : "+qobj.q+" → "+(answers[qi]||"—");
+    }).join("\n");
+    var promptText = ""+
+      "Projet : "+p.title+" — "+(p.summary||"")+"\n"+
+      "Catégorie : "+cat.title+"\n"+
+      "Tâches : "+JSON.stringify(remaining)+"\n"+
+      "Contexte utilisateur :\n"+answersText+"\n\n"+
+      "Fais une synthèse de recherche concise et personnalisée. Pour chaque tâche, donne les 2 à 3 meilleures options concrètes (service, produit, démarche — pas de conseil générique). "+
+      "Prends en compte le contexte utilisateur pour filtrer et prioriser. Sois direct et synthétique.\n"+
+      "criteria_count = nombre total de critères pris en compte (questions + tâches).\n"+
+      "options_count = nombre total d'options comparées dans la synthèse.\n"+
+      "Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown :\n"+
+      '{"items":[{"task":"titre de la tâche","options":[{"name":"option courte","key":"avantage clé en 5 mots max","limit":"limite en 4 mots ou null"}]}],'+
+      '"conclusion":"une phrase de conclusion globale","criteria_count":8,"options_count":6}';
+    return fetch("/api/ai",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:[{type:"text",text:promptText}]}]})
     }).then(function(res){return res.json();}).then(function(data){
       var textOut=(data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n");
       var clean=textOut.replace(/```json|```/g,"").trim();
@@ -963,28 +1063,48 @@
     });
   }
 
-  function performReclassify(projectId, categoryId){
+  function performDecideStart(projectId, categoryId){
     var p = findProject(projectId);
     if(!p) return;
     var cat = categoryId ? findCategory(p, categoryId) : (p.categories[0]||null);
     if(!cat) return;
-    generating = true; render();
-    generateReclassify(p, cat.items).then(function(orderedIds){
-      generating = false;
-      if(!Array.isArray(orderedIds)){render();return;}
-      var done = cat.items.filter(function(it){return it.done;});
-      var remaining = cat.items.filter(function(it){return !it.done;});
-      var idMap = {};
-      remaining.forEach(function(it){idMap[it.id]=it;});
-      var reordered = orderedIds.map(function(id){return idMap[id];}).filter(Boolean);
-      remaining.forEach(function(it){if(orderedIds.indexOf(it.id)===-1) reordered.push(it);});
-      cat.items = reordered.concat(done);
-      cat.updatedAt = nowIso(); p.updatedAt = nowIso();
-      persist(); render();
-      showToast("Tâches reclassées par priorité");
+    var ds = decisionState[cat.id];
+    if(ds && (ds.phase === 'questionnaire' || ds.phase === 'recommendation')){
+      delete decisionState[cat.id]; render(); return;
+    }
+    decisionState[cat.id] = {phase:'loading_q', questions:[], answers:{}, recommendation:null};
+    render();
+    generateDecisionQuestionnaire(p, cat).then(function(result){
+      var questions = Array.isArray(result.questions) ? result.questions.slice(0,5) : [];
+      if(!questions.length){
+        delete decisionState[cat.id]; render();
+        showToast("Impossible de générer le questionnaire"); return;
+      }
+      decisionState[cat.id] = {phase:'questionnaire', questions:questions, answers:{}, recommendation:null};
+      render();
     }).catch(function(){
-      generating = false; render();
-      showToast("Reclassement indisponible pour l'instant");
+      delete decisionState[cat.id]; render();
+      showToast("Questionnaire indisponible pour l'instant");
+    });
+  }
+
+  function performDecideRecommendation(projectId, categoryId){
+    var p = findProject(projectId);
+    if(!p) return;
+    var cat = categoryId ? findCategory(p, categoryId) : (p.categories[0]||null);
+    if(!cat) return;
+    var ds = decisionState[cat.id];
+    if(!ds || ds.phase !== 'questionnaire') return;
+    var answers = ds.answers;
+    var questions = ds.questions;
+    ds.phase = 'loading_rec';
+    render();
+    generateDecisionRecommendation(p, cat, answers, questions).then(function(result){
+      decisionState[cat.id] = {phase:'recommendation', questions:questions, answers:answers, recommendation:result};
+      render();
+    }).catch(function(){
+      ds.phase = 'questionnaire'; render();
+      showToast("Recommandation indisponible pour l'instant");
     });
   }
 
@@ -1173,9 +1293,33 @@
     var voirSuiteBtn = document.getElementById("voir-suite-btn");
     if(voirSuiteBtn) voirSuiteBtn.addEventListener("click", function(){ showAllItems = true; render(); });
 
-    var reclassifyBtn = document.getElementById("reclassify-btn");
-    if(reclassifyBtn) reclassifyBtn.addEventListener("click", function(){
-      performReclassify(currentProjectId, reclassifyBtn.dataset.category);
+    var decideBtn = document.getElementById("decide-btn");
+    if(decideBtn) decideBtn.addEventListener("click", function(){
+      performDecideStart(currentProjectId, decideBtn.dataset.category);
+    });
+
+    document.querySelectorAll("[data-decide-q]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var qi = parseInt(el.dataset.decideQ, 10);
+        var opt = el.dataset.decideOpt;
+        var catId = el.dataset.decideCat;
+        var ds = decisionState[catId];
+        if(!ds || ds.phase !== 'questionnaire') return;
+        ds.answers[qi] = opt;
+        render();
+      });
+    });
+
+    var decideConfirmBtn = document.getElementById("decide-confirm-btn");
+    if(decideConfirmBtn) decideConfirmBtn.addEventListener("click", function(){
+      performDecideRecommendation(currentProjectId, decideConfirmBtn.dataset.category);
+    });
+
+    document.querySelectorAll("[data-decide-close]").forEach(function(el){
+      el.addEventListener("click", function(){
+        delete decisionState[el.dataset.decideClose];
+        render();
+      });
     });
 
     document.querySelectorAll("[data-research-btn]").forEach(function(el){
