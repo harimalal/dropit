@@ -255,29 +255,42 @@
   }
   .voir-suite-link:hover{color:var(--accent);}
 
-  /* DÉCIDE POUR MOI */
-  .decide-btn{width:100%;margin-top:8px;}
-  .decide-panel{border:1px solid var(--line);border-radius:10px;background:var(--canvas);padding:14px 16px;margin-top:8px;}
-  .decide-loading{font-size:13px;color:var(--ink-faint);display:flex;align-items:center;gap:8px;}
-  .decide-q-block{margin-bottom:16px;}
-  .decide-q-label{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:8px;line-height:1.4;}
-  .decide-opts{display:flex;flex-wrap:wrap;gap:7px;}
-  .decide-opt{border:1.5px solid var(--line);border-radius:20px;padding:7px 14px;font-size:13px;background:var(--canvas-card);color:var(--ink);transition:border-color .12s,background .12s;}
-  .decide-opt:hover{border-color:var(--accent);}
-  .decide-opt.selected{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
-  .decide-progress{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);margin-bottom:12px;}
-  .decide-confirm-btn{width:100%;margin-top:4px;}
-  .decide-confirm-btn:disabled{opacity:.4;cursor:default;}
-  .decide-rec-task{margin-bottom:14px;}
-  .decide-rec-task-title{font-family:var(--font-mono);font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:var(--accent);margin-bottom:7px;}
-  .decide-rec-opt{display:flex;flex-wrap:wrap;gap:4px;align-items:baseline;margin-bottom:6px;font-size:13.5px;line-height:1.4;}
-  .decide-rec-opt-name{font-weight:600;color:var(--ink);}
-  .decide-rec-opt-key{color:var(--ink-soft);}
-  .decide-rec-opt-limit{color:var(--ink-faint);font-size:12.5px;}
-  .decide-conclusion{font-size:13.5px;color:var(--ink);border-top:1px solid var(--line);padding-top:12px;margin-top:12px;line-height:1.5;}
-  .decide-badge{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);margin-top:10px;}
-  .decide-close{border:none;background:none;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);padding:0;margin-top:12px;display:block;}
-  .decide-close:hover{color:var(--accent);}
+  /* NOTES PAR TÂCHE */
+  .task-note{font-size:12.5px;color:var(--ink-soft);line-height:1.4;padding:3px 0 0 32px;}
+  .note-toggle{border:none;background:none;font-size:11.5px;color:var(--ink-faint);padding:2px 0 2px 32px;display:block;}
+  .note-toggle:hover{color:var(--accent);}
+  .note-edit-row{display:flex;gap:6px;margin-top:4px;padding-left:32px;}
+  .note-edit-input{flex:1;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;background:var(--canvas-card);color:var(--ink);}
+  .note-save-btn{border:1px solid var(--line);background:var(--canvas-card);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--ink);flex-shrink:0;}
+  .note-save-btn:hover{border-color:var(--accent);}
+
+  /* CHAT */
+  .chat-panel{border:1px solid var(--line);border-radius:12px;margin-top:12px;overflow:hidden;}
+  .chat-messages{max-height:240px;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+  .chat-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:6px 0;}
+  .chat-msg-user{align-self:flex-end;max-width:88%;}
+  .chat-msg-ai{align-self:flex-start;max-width:88%;}
+  .chat-bubble-user{padding:9px 13px;border-radius:14px 14px 4px 14px;font-size:13.5px;line-height:1.5;background:var(--accent);color:#fff;}
+  .chat-bubble-ai{padding:9px 13px;border-radius:14px 14px 14px 4px;font-size:13.5px;line-height:1.5;background:var(--canvas-card);border:1px solid var(--line);color:var(--ink);}
+  .chat-ai-footer{display:flex;align-items:center;gap:4px;margin-top:3px;}
+  .chat-copy-btn{border:none;background:none;padding:2px 5px;color:var(--ink-faint);border-radius:5px;font-size:11px;font-family:var(--font-mono);}
+  .chat-copy-btn:hover{background:var(--accent-soft);color:var(--accent);}
+  .chat-loading{padding:8px 14px;font-size:13px;color:var(--ink-faint);display:flex;align-items:center;gap:8px;}
+  .chat-input-row{border-top:1px solid var(--line);display:flex;background:var(--canvas-card);}
+  .chat-text-input{flex:1;border:none;background:transparent;padding:11px 14px;font-size:13.5px;color:var(--ink);outline:none;}
+  .chat-send-btn{border:none;background:transparent;padding:10px 14px;color:var(--accent);font-weight:700;font-size:13px;flex-shrink:0;}
+  .chat-send-btn:hover{color:#A34936;}
+  .chat-send-btn:disabled{opacity:.35;}
+
+  /* FICHE PROJET */
+  .fiche-btn{margin-top:8px;}
+  .fiche-panel{border:1px solid var(--line);border-radius:12px;background:var(--canvas);padding:16px;margin-top:8px;}
+  .fiche-heading{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
+  .fiche-cat-name{font-size:12px;font-weight:700;color:var(--ink-faint);margin:10px 0 6px;}
+  .fiche-item{margin-bottom:8px;}
+  .fiche-item-task{font-size:13.5px;font-weight:600;color:var(--ink);}
+  .fiche-item-note{font-size:13px;color:var(--ink-soft);margin-top:2px;line-height:1.4;}
+  .fiche-empty{font-size:13px;color:var(--ink-faint);}
 </style>
 </head>
 <body>
@@ -305,7 +318,9 @@
   var currentCategoryId = null; // set when viewing a single category's checklist
   var generating = false;
   var composeText = "";
-  var decisionState = {};
+  var chatState = {};
+  var ficheOpen = false;
+  var noteEditingId = null;
 
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
   function nowIso(){ return new Date().toISOString(); }
@@ -332,12 +347,12 @@
     };
   }
   function makeItem(title){
-    return {id: uid(), title:String(title||"").trim(), done:false, createdAt: nowIso()};
+    return {id: uid(), title:String(title||"").trim(), done:false, createdAt: nowIso(), note:""};
   }
   function normalizeItem(raw){
     return {
       id:raw.id||uid(), title:raw.title||"", done:!!raw.done, createdAt:raw.createdAt||nowIso(),
-      research: raw.research || null
+      research: raw.research || null, note: raw.note || ""
     };
   }
   function normalizeCategory(raw){
@@ -559,6 +574,7 @@
   function checkIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 10.5l3.5 3.5L16 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function sendIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M3 10l14-7-5 14-2.5-5.5L3 10z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/></svg>'; }
   function sparkleIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M10 3l1.3 4.2L15.5 8.5l-4.2 1.3L10 14l-1.3-4.2L4.5 8.5l4.2-1.3L10 3z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>'; }
+  function copyIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><rect x="5" y="3" width="8" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 5.5H2.5A1.5 1.5 0 001 7v6a1.5 1.5 0 001.5 1.5h5A1.5 1.5 0 009 13v-.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'; }
 
   /* ---------- rendering ---------- */
 
@@ -712,7 +728,9 @@
         '</div>'+
         (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(renderItemRow).join("") : '')+
         '<button class="btn suggest-more-btn" id="suggest-category-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Suggérer la suite</button>'+
-        (remaining.length ? '<button class="btn decide-btn" id="decide-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Décide pour moi</button>'+renderDecidePanel(cat) : '');
+        '<button class="btn fiche-btn" id="fiche-btn">'+sparkleIcon()+' &nbsp;Fiche projet</button>'+
+        renderFicheProjet(p)+
+        renderChatPanel(cat);
     } else if(!accompli && multiCategory){
       // multiple categories: show them as cards, navigate into each
       bodyHtml = ''+
@@ -771,7 +789,9 @@
       '</div>'+
       (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(renderItemRow).join("") : '')+
       '<button class="btn suggest-more-btn" id="suggest-category-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Suggérer</button>'+
-      (remaining.length ? '<button class="btn decide-btn" id="decide-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Décide pour moi</button>'+renderDecidePanel(cat) : '');
+      '<button class="btn fiche-btn" id="fiche-btn">'+sparkleIcon()+' &nbsp;Fiche projet</button>'+
+      renderFicheProjet(p)+
+      renderChatPanel(cat);
 
     return ''+
     topBarHtml+
@@ -800,59 +820,66 @@
     return '<div class="research-panel">'+inner+'</div>';
   }
 
-  function renderDecidePanel(cat){
-    var ds = decisionState[cat.id];
-    if(!ds) return '';
-    if(ds.phase === 'loading_q'){
-      return '<div class="decide-panel"><div class="decide-loading"><div class="loading-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;"></div>L\'IA analyse tes tâches…</div></div>';
-    }
-    if(ds.phase === 'questionnaire'){
-      var answeredCount = Object.keys(ds.answers).length;
-      var totalQ = ds.questions.length;
-      var allAnswered = answeredCount === totalQ;
-      var questionsHtml = ds.questions.map(function(qobj, qi){
-        var optsHtml = qobj.options.map(function(opt){
-          var sel = ds.answers[qi] === opt;
-          return '<button class="decide-opt'+(sel?' selected':'')+'" data-decide-q="'+qi+'" data-decide-cat="'+escapeHtml(cat.id)+'" data-decide-opt="'+escapeHtml(opt)+'">'+escapeHtml(opt)+'</button>';
-        }).join('');
-        return '<div class="decide-q-block"><div class="decide-q-label">'+(qi+1)+'. '+escapeHtml(qobj.q)+'</div><div class="decide-opts">'+optsHtml+'</div></div>';
+  function renderChatPanel(cat){
+    var cs = chatState[cat.id] || {messages:[], loading:false};
+    var msgsHtml = '';
+    if(!cs.messages.length && !cs.loading){
+      msgsHtml = '<div class="chat-empty">Pose une question sur ce projet…</div>';
+    } else {
+      msgsHtml = cs.messages.map(function(m, idx){
+        if(m.role === 'user'){
+          return '<div class="chat-msg-user"><div class="chat-bubble-user">'+escapeHtml(m.text)+'</div></div>';
+        }
+        return '<div class="chat-msg-ai">'+
+          '<div class="chat-bubble-ai">'+escapeHtml(m.text)+'</div>'+
+          '<div class="chat-ai-footer"><button class="chat-copy-btn" data-copy-idx="'+idx+'" data-copy-cat="'+escapeHtml(cat.id)+'" title="Copier">'+copyIcon()+' copier</button></div>'+
+        '</div>';
       }).join('');
-      return '<div class="decide-panel">'+
-        '<div class="decide-progress">'+answeredCount+' / '+totalQ+' réponse'+(totalQ>1?'s':'')+' · sélectionne une option par question</div>'+
-        questionsHtml+
-        '<button class="btn btn-primary decide-confirm-btn" id="decide-confirm-btn" data-category="'+escapeHtml(cat.id)+'"'+(allAnswered?'':' disabled')+'>Voir la recommandation →</button>'+
-        '<button class="decide-close" data-decide-close="'+escapeHtml(cat.id)+'">Fermer</button>'+
-      '</div>';
     }
-    if(ds.phase === 'loading_rec'){
-      return '<div class="decide-panel"><div class="decide-loading"><div class="loading-spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;"></div>L\'IA prépare ta recommandation…</div></div>';
-    }
-    if(ds.phase === 'recommendation'){
-      var rec = ds.recommendation || {};
-      var itemsHtml = (rec.items||[]).map(function(item){
-        var optsHtml = (item.options||[]).map(function(opt){
-          return '<div class="decide-rec-opt">'+
-            '<span class="decide-rec-opt-name">'+escapeHtml(opt.name||'')+'</span>'+
-            '<span class="decide-rec-opt-key"> — '+escapeHtml(opt.key||'')+'</span>'+
-            (opt.limit&&opt.limit!=='null'?'<span class="decide-rec-opt-limit">('+escapeHtml(opt.limit)+')</span>':'')+
+    var loadHtml = cs.loading ? '<div class="chat-loading"><div class="loading-spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;"></div>En train de répondre…</div>' : '';
+    return '<div class="chat-panel">'+
+      '<div class="chat-messages" id="chat-msgs-'+escapeHtml(cat.id)+'">'+msgsHtml+'</div>'+
+      loadHtml+
+      '<div class="chat-input-row">'+
+        '<input class="chat-text-input" id="chat-input" data-chat-cat="'+escapeHtml(cat.id)+'" placeholder="Pose une question…"'+(cs.loading?' disabled':'')+'>'+
+        '<button class="chat-send-btn" id="chat-send-btn" data-chat-cat="'+escapeHtml(cat.id)+'"'+(cs.loading?' disabled':'')+'>Envoyer</button>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function renderFicheProjet(p){
+    if(!ficheOpen) return '';
+    var hasNotes = false;
+    var catsHtml = p.categories.map(function(cat){
+      var noted = cat.items.filter(function(it){return it.note && it.note.trim();});
+      if(!noted.length) return '';
+      hasNotes = true;
+      return (p.categories.length > 1 ? '<div class="fiche-cat-name">'+escapeHtml(cat.title)+'</div>' : '')+
+        noted.map(function(it){
+          return '<div class="fiche-item">'+
+            '<div class="fiche-item-task">'+escapeHtml(it.title)+'</div>'+
+            '<div class="fiche-item-note">'+escapeHtml(it.note)+'</div>'+
           '</div>';
         }).join('');
-        return '<div class="decide-rec-task"><div class="decide-rec-task-title">'+escapeHtml(item.task||'')+'</div>'+optsHtml+'</div>';
-      }).join('');
-      return '<div class="decide-panel">'+
-        itemsHtml+
-        (rec.conclusion?'<div class="decide-conclusion">'+escapeHtml(rec.conclusion)+'</div>':'')+
-        '<div class="decide-badge">'+rec.criteria_count+' critères analysés · '+rec.options_count+' options comparées</div>'+
-        '<button class="decide-close" data-decide-close="'+escapeHtml(cat.id)+'">Fermer</button>'+
-      '</div>';
-    }
-    return '';
+    }).join('');
+    if(!hasNotes) catsHtml = '<div class="fiche-empty">Aucune note pour l\'instant — renseigne tes décisions sur chaque tâche.</div>';
+    return '<div class="fiche-panel"><div class="fiche-heading">Fiche projet</div>'+catsHtml+'</div>';
   }
 
   function renderItemRow(it){
     var panelOpen = it.research && it.research.open;
     var rowStyle = panelOpen ? 'border-radius:10px 10px 0 0;border-bottom-color:transparent;' : '';
     var btnActive = (it.research && (it.research.loading || it.research.open)) ? ' active' : '';
+    var noteHtml;
+    if(noteEditingId === it.id){
+      noteHtml = '<div class="note-edit-row">'+
+        '<input class="note-edit-input" id="note-input-'+it.id+'" data-note-item="'+it.id+'" value="'+escapeHtml(it.note||'')+'" placeholder="Ta décision, ta réponse…">'+
+        '<button class="note-save-btn" data-note-save="'+it.id+'">OK</button>'+
+      '</div>';
+    } else {
+      noteHtml = (it.note&&it.note.trim() ? '<div class="task-note">'+escapeHtml(it.note)+'</div>' : '')+
+        '<button class="note-toggle" data-note-toggle="'+it.id+'">'+(it.note&&it.note.trim()?'Modifier la note':'+ note')+'</button>';
+    }
     return ''+
     '<div class="step-row '+(it.done?"done":"")+'" style="'+rowStyle+'">'+
       '<button class="step-check '+(it.done?"checked":"")+'" data-toggle-item="'+it.id+'">'+(it.done?checkIcon():'')+'</button>'+
@@ -860,6 +887,7 @@
       '<button class="research-icon-btn'+btnActive+'" data-research-btn="'+it.id+'" title="Rechercher avec l\'IA">'+researchIcon()+'</button>'+
       '<button class="step-remove" data-remove-item="'+it.id+'">×</button>'+
     '</div>'+
+    noteHtml+
     renderResearchPanel(it);
   }
 
@@ -991,52 +1019,25 @@
     });
   }
 
-  function generateDecisionQuestionnaire(p, cat){
-    var remaining = cat.items.filter(function(it){return !it.done;}).map(function(it){return it.title;});
-    var promptText = ""+
-      "Projet : "+p.title+" — "+(p.summary||"")+"\n"+
-      "Catégorie : "+cat.title+"\n"+
-      "Tâches à accomplir : "+JSON.stringify(remaining)+"\n\n"+
-      "Tu aides l'utilisateur à prendre les meilleures décisions sur ces tâches. "+
-      "Génère 3 à 5 questions fermées et contextuelles pour affiner ta recommandation. "+
-      "Les questions portent sur le contexte personnel, les contraintes, les préférences — pas sur ce qu'il y a à faire (c'est déjà listé). "+
-      "Chaque question doit avoir 2 à 4 options courtes et claires.\n"+
-      "Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown :\n"+
-      '{"questions":[{"q":"...","options":["option A","option B"]}]}';
-    return fetch("/api/ai",{
-      method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:700,messages:[{role:"user",content:[{type:"text",text:promptText}]}]})
-    }).then(function(res){return res.json();}).then(function(data){
-      var textOut=(data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n");
-      var clean=textOut.replace(/```json|```/g,"").trim();
-      return JSON.parse(clean);
+  function generateChatResponse(p, cat, messages){
+    var tasks = cat.items.map(function(it){
+      return it.title + (it.note&&it.note.trim() ? ' [note: '+it.note+']' : '') + (it.done?' (fait)':'');
     });
-  }
-
-  function generateDecisionRecommendation(p, cat, answers, questions){
-    var remaining = cat.items.filter(function(it){return !it.done;}).map(function(it){return it.title;});
-    var answersText = questions.map(function(qobj, qi){
-      return "Q : "+qobj.q+" → "+(answers[qi]||"—");
-    }).join("\n");
-    var promptText = ""+
-      "Projet : "+p.title+" — "+(p.summary||"")+"\n"+
-      "Catégorie : "+cat.title+"\n"+
-      "Tâches : "+JSON.stringify(remaining)+"\n"+
-      "Contexte utilisateur :\n"+answersText+"\n\n"+
-      "Fais une synthèse de recherche concise et personnalisée. Pour chaque tâche, donne les 2 à 3 meilleures options concrètes (service, produit, démarche — pas de conseil générique). "+
-      "Prends en compte le contexte utilisateur pour filtrer et prioriser. Sois direct et synthétique.\n"+
-      "criteria_count = nombre total de critères pris en compte (questions + tâches).\n"+
-      "options_count = nombre total d'options comparées dans la synthèse.\n"+
-      "Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown :\n"+
-      '{"items":[{"task":"titre de la tâche","options":[{"name":"option courte","key":"avantage clé en 5 mots max","limit":"limite en 4 mots ou null"}]}],'+
-      '"conclusion":"une phrase de conclusion globale","criteria_count":8,"options_count":6}';
+    var systemText = "Tu es un assistant direct et concis qui aide l'utilisateur sur son projet. "+
+      "Projet : \""+p.title+"\" — "+(p.summary||"")+". "+
+      "Catégorie : \""+cat.title+"\". "+
+      "Tâches : "+JSON.stringify(tasks)+". "+
+      "Réponds en 2 à 4 phrases max. Sois opérationnel, sans introduction ni formule de politesse.";
+    var hist = messages.slice(-12);
+    while(hist.length && hist[0].role !== 'user') hist = hist.slice(1);
+    var apiMessages = hist.map(function(m){
+      return {role:m.role==='user'?'user':'assistant', content:[{type:"text",text:m.text}]};
+    });
     return fetch("/api/ai",{
-      method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:[{type:"text",text:promptText}]}]})
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-6", max_tokens:350, system:systemText, messages:apiMessages})
     }).then(function(res){return res.json();}).then(function(data){
-      var textOut=(data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n");
-      var clean=textOut.replace(/```json|```/g,"").trim();
-      return JSON.parse(clean);
+      return (data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n").trim();
     });
   }
 
@@ -1063,49 +1064,41 @@
     });
   }
 
-  function performDecideStart(projectId, categoryId){
+  function performChatSend(projectId, categoryId, text){
     var p = findProject(projectId);
     if(!p) return;
     var cat = categoryId ? findCategory(p, categoryId) : (p.categories[0]||null);
-    if(!cat) return;
-    var ds = decisionState[cat.id];
-    if(ds && (ds.phase === 'questionnaire' || ds.phase === 'recommendation')){
-      delete decisionState[cat.id]; render(); return;
-    }
-    decisionState[cat.id] = {phase:'loading_q', questions:[], answers:{}, recommendation:null};
+    if(!cat || !text.trim()) return;
+    if(!chatState[cat.id]) chatState[cat.id] = {messages:[], loading:false};
+    var cs = chatState[cat.id];
+    if(cs.loading) return;
+    cs.messages.push({role:'user', text:text.trim()});
+    cs.loading = true;
     render();
-    generateDecisionQuestionnaire(p, cat).then(function(result){
-      var questions = Array.isArray(result.questions) ? result.questions.slice(0,5) : [];
-      if(!questions.length){
-        delete decisionState[cat.id]; render();
-        showToast("Impossible de générer le questionnaire"); return;
-      }
-      decisionState[cat.id] = {phase:'questionnaire', questions:questions, answers:{}, recommendation:null};
+    var el = document.getElementById('chat-msgs-'+cat.id);
+    if(el) el.scrollTop = el.scrollHeight;
+    generateChatResponse(p, cat, cs.messages).then(function(reply){
+      cs.messages.push({role:'ai', text:reply});
+      cs.loading = false;
       render();
+      var el2 = document.getElementById('chat-msgs-'+cat.id);
+      if(el2) el2.scrollTop = el2.scrollHeight;
     }).catch(function(){
-      delete decisionState[cat.id]; render();
-      showToast("Questionnaire indisponible pour l'instant");
+      cs.loading = false;
+      cs.messages.push({role:'ai', text:"Désolé, je ne peux pas répondre pour l'instant."});
+      render();
     });
   }
 
-  function performDecideRecommendation(projectId, categoryId){
+  function performSaveNote(projectId, itemId, noteText){
     var p = findProject(projectId);
     if(!p) return;
-    var cat = categoryId ? findCategory(p, categoryId) : (p.categories[0]||null);
-    if(!cat) return;
-    var ds = decisionState[cat.id];
-    if(!ds || ds.phase !== 'questionnaire') return;
-    var answers = ds.answers;
-    var questions = ds.questions;
-    ds.phase = 'loading_rec';
-    render();
-    generateDecisionRecommendation(p, cat, answers, questions).then(function(result){
-      decisionState[cat.id] = {phase:'recommendation', questions:questions, answers:answers, recommendation:result};
-      render();
-    }).catch(function(){
-      ds.phase = 'questionnaire'; render();
-      showToast("Recommandation indisponible pour l'instant");
-    });
+    var found = findItemAnywhere(p, itemId);
+    if(!found) return;
+    found.item.note = noteText.trim();
+    noteEditingId = null;
+    p.updatedAt = nowIso();
+    persist(); render();
   }
 
   function performCreateFromIntention(){
@@ -1293,34 +1286,50 @@
     var voirSuiteBtn = document.getElementById("voir-suite-btn");
     if(voirSuiteBtn) voirSuiteBtn.addEventListener("click", function(){ showAllItems = true; render(); });
 
-    var decideBtn = document.getElementById("decide-btn");
-    if(decideBtn) decideBtn.addEventListener("click", function(){
-      performDecideStart(currentProjectId, decideBtn.dataset.category);
+    // Chat
+    var chatSendBtn = document.getElementById("chat-send-btn");
+    var chatInput = document.getElementById("chat-input");
+    if(chatSendBtn) chatSendBtn.addEventListener("click", function(){
+      if(!chatInput || !chatInput.value.trim()) return;
+      var text = chatInput.value; chatInput.value = '';
+      performChatSend(currentProjectId, chatSendBtn.dataset.chatCat, text);
     });
-
-    document.querySelectorAll("[data-decide-q]").forEach(function(el){
+    if(chatInput) chatInput.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); if(chatSendBtn) chatSendBtn.click(); }
+    });
+    document.querySelectorAll("[data-copy-idx]").forEach(function(el){
       el.addEventListener("click", function(){
-        var qi = parseInt(el.dataset.decideQ, 10);
-        var opt = el.dataset.decideOpt;
-        var catId = el.dataset.decideCat;
-        var ds = decisionState[catId];
-        if(!ds || ds.phase !== 'questionnaire') return;
-        ds.answers[qi] = opt;
-        render();
+        var cs = chatState[el.dataset.copyCat];
+        var msg = cs && cs.messages[parseInt(el.dataset.copyIdx, 10)];
+        if(!msg) return;
+        navigator.clipboard.writeText(msg.text).then(function(){ showToast("Copié"); }).catch(function(){ showToast("Copie impossible"); });
       });
     });
-
-    var decideConfirmBtn = document.getElementById("decide-confirm-btn");
-    if(decideConfirmBtn) decideConfirmBtn.addEventListener("click", function(){
-      performDecideRecommendation(currentProjectId, decideConfirmBtn.dataset.category);
-    });
-
-    document.querySelectorAll("[data-decide-close]").forEach(function(el){
+    // Notes
+    document.querySelectorAll("[data-note-toggle]").forEach(function(el){
       el.addEventListener("click", function(){
-        delete decisionState[el.dataset.decideClose];
-        render();
+        noteEditingId = el.dataset.noteToggle; render();
+        var inp = document.getElementById("note-input-"+noteEditingId);
+        if(inp){ inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
       });
     });
+    document.querySelectorAll("[data-note-save]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var inp = document.getElementById("note-input-"+el.dataset.noteSave);
+        performSaveNote(currentProjectId, el.dataset.noteSave, inp ? inp.value : '');
+      });
+    });
+    document.querySelectorAll("[data-note-item]").forEach(function(el){
+      el.addEventListener("keydown", function(e){
+        if(e.key === "Enter"){ e.preventDefault(); performSaveNote(currentProjectId, el.dataset.noteItem, el.value); }
+        if(e.key === "Escape"){ noteEditingId = null; render(); }
+      });
+    });
+    // Fiche projet
+    var ficheBtn = document.getElementById("fiche-btn");
+    if(ficheBtn) ficheBtn.addEventListener("click", function(){ ficheOpen = !ficheOpen; render(); });
+    // Auto-scroll chat
+    document.querySelectorAll("[id^='chat-msgs-']").forEach(function(el){ el.scrollTop = el.scrollHeight; });
 
     document.querySelectorAll("[data-research-btn]").forEach(function(el){
       el.addEventListener("click", function(){
