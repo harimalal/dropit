@@ -262,21 +262,26 @@
   }
   .note-add-area:focus{outline:none;border-color:var(--accent);}
   .note-add-hint{font-size:10.5px;color:var(--ink-faint);margin-top:4px;}
-  /* NOTES CATÉGORIE (libres, non liées à une tâche) */
-  .cat-notes-section{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
-  .cat-notes-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;display:block;}
-  .cat-note-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);}
-  .cat-note-icon{color:var(--ink-faint);flex-shrink:0;display:flex;}
-  .cat-note-icon .icon{width:14px;height:14px;}
+  /* NOTES LIBRES PROJET */
+  .project-notes-section{margin-top:14px;}
+  .proj-notes-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;display:block;padding-top:12px;border-top:1px solid var(--line);}
+  .proj-note-row{background:var(--canvas-card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;}
+  .proj-note-top{display:flex;align-items:center;gap:6px;}
+  .proj-note-icon{color:var(--ink-faint);flex-shrink:0;display:flex;align-items:center;}
+  .proj-note-icon .icon{width:14px;height:14px;}
   .cat-note-title{
     flex:1;border:none;background:transparent;font-size:13.5px;color:var(--ink);
-    padding:0;outline:none;font-family:inherit;
+    padding:0;outline:none;font-family:inherit;min-width:0;
   }
   .cat-note-title::placeholder{color:var(--ink-faint);}
   .cat-note-delete{border:none;background:none;color:var(--ink-faint);font-size:16px;padding:0 2px;line-height:1;flex-shrink:0;}
   .cat-note-delete:hover{color:var(--accent);}
-  .add-cat-note-btn{display:block;margin-top:8px;color:var(--ink-faint);background:none;border:none;font-size:13px;padding:3px 0;text-align:left;}
-  .add-cat-note-btn:hover{color:var(--accent);}
+  .proj-note-body{font-size:13px;color:var(--ink);line-height:1.6;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);}
+  .proj-note-body-edit{margin-top:8px;}
+  .proj-note-move{
+    border:1px solid var(--line);background:var(--canvas-card);border-radius:6px;
+    font-size:11px;color:var(--ink-faint);padding:2px 5px;max-width:110px;flex-shrink:0;
+  }
 
   /* VOIR LA SUITE */
   .voir-suite-link{
@@ -358,6 +363,7 @@
   var chatHomeOpen = false;
   var noteOpenId = null;
   var noteEditId = null;
+  var projectNoteEditId = null;
 
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
   function nowIso(){ return new Date().toISOString(); }
@@ -370,6 +376,7 @@
   function makeProject(overrides){
     var base = {
       id: uid(), title:"", emoji:"✨", summary:"", categories:[],
+      projectNotes: [],
       createdAt: nowIso(), updatedAt: nowIso()
     };
     overrides = overrides || {};
@@ -417,14 +424,27 @@
     if(Array.isArray(raw.categories)){
       categories = raw.categories.map(normalizeCategory);
     } else if(Array.isArray(raw.steps)){
-      // migration from the flat v0 shape: wrap old steps into a single category
       categories = [{
         id: uid(), title: "À faire",
         items: raw.steps.map(normalizeItem),
+        catNotes: [],
         createdAt: raw.createdAt || nowIso(), updatedAt: raw.updatedAt || nowIso()
       }];
     } else {
       categories = [];
+    }
+    var projectNotes = Array.isArray(raw.projectNotes) ? raw.projectNotes.map(function(n){
+      return {id:n.id||uid(), title:n.title||"", body:n.body||"", catId:n.catId||null, createdAt:n.createdAt||nowIso()};
+    }) : [];
+    if(!raw.projectNotes){
+      categories.forEach(function(cat){
+        if(cat.catNotes && cat.catNotes.length){
+          cat.catNotes.forEach(function(n){
+            projectNotes.push({id:n.id||uid(), title:n.title||"", body:"", catId:cat.id, createdAt:n.createdAt||nowIso()});
+          });
+        }
+        cat.catNotes = [];
+      });
     }
     return {
       id: raw.id || uid(),
@@ -433,6 +453,7 @@
       summary: raw.summary || "",
       dna: raw.dna || "",
       categories: categories,
+      projectNotes: projectNotes,
       createdAt: raw.createdAt || nowIso(),
       updatedAt: raw.updatedAt || nowIso()
     };
@@ -627,6 +648,7 @@
   function copyIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><rect x="5" y="3" width="8" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 5.5H2.5A1.5 1.5 0 001 7v6a1.5 1.5 0 001.5 1.5h5A1.5 1.5 0 009 13v-.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'; }
   function pencilIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><path d="M2 11.5l6-6 2.5 2.5-6 6-2.5.5.5-3z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M9.5 5l1-1a1.2 1.2 0 011.7 0l.3.3a1.2 1.2 0 010 1.7l-1 1L9.5 5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>'; }
   function bookmarkIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><path d="M3.5 2.5h9v11l-4.5-2.5L3.5 13.5V2.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>'; }
+  function moveIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><path d="M2 4h7v8H2V4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M9 6l3 2-3 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
 
   /* ---------- rendering ---------- */
 
@@ -818,14 +840,15 @@
         '</div>'+
         (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(renderItemRow).join("") : '')+
         '<button class="btn suggest-more-btn" id="suggest-category-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Suggérer la suite</button>'+
-        renderCategoryNotes(p, cat);
+        renderProjectNotes(p, null);
     } else if(!accompli && multiCategory){
       // multiple categories: show them as cards, navigate into each
       bodyHtml = ''+
         '<div class="section-label">Catégories</div>'+
         '<div class="category-grid">'+ p.categories.map(renderCategoryCard).join("") +'</div>'+
         '<button class="add-category-link" id="add-category-link-btn">+ Nouvelle catégorie</button>'+
-        '<button class="btn suggest-more-btn" id="suggest-project-btn">'+sparkleIcon()+' &nbsp;Suggérer la suite</button>';
+        '<button class="btn suggest-more-btn" id="suggest-project-btn">'+sparkleIcon()+' &nbsp;Suggérer la suite</button>'+
+        renderProjectNotes(p, null);
     } else if(accompli && p.categories.length){
       // accompli: still show the categories/items read-only below the banner, for reference
       bodyHtml = multiCategory
@@ -879,7 +902,7 @@
       '</div>'+
       (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(renderItemRow).join("") : '')+
       '<button class="btn suggest-more-btn" id="suggest-category-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Suggérer</button>'+
-      renderCategoryNotes(p, cat);
+      renderProjectNotes(p, cat.id);
 
     return ''+
     topBarHtml+
@@ -923,18 +946,46 @@
     '</div>';
   }
 
-  function renderCategoryNotes(p, cat){
-    var notes = cat.catNotes || [];
+  function renderProjectNotes(p, catId){
+    var filterCatId = catId || null;
+    var notes = (p.projectNotes||[]).filter(function(n){ return (n.catId||null) === filterCatId; });
+    if(!notes.length) return '';
+    var hasMultiCat = p.categories.length > 1;
     var notesHtml = notes.map(function(n){
-      return '<div class="cat-note-row">'+
-        '<span class="cat-note-icon">'+noteIcon()+'</span>'+
-        '<input class="cat-note-title" type="text" value="'+escapeHtml(n.title)+'" '+
-          'data-cat-note-id="'+n.id+'" data-cat-note-cat="'+cat.id+'" placeholder="Titre de la note…">'+
-        '<button class="cat-note-delete" data-delete-cat-note="'+n.id+'" data-delete-cat-note-cat="'+cat.id+'">×</button>'+
+      var bodySection = '';
+      if(projectNoteEditId === n.id){
+        bodySection = '<div class="proj-note-body-edit">'+
+          '<textarea class="note-add-area" data-pn-edit-ta="'+n.id+'" rows="4" style="margin-top:8px;">'+escapeHtml(n.body)+'</textarea>'+
+          '<div class="note-edit-actions">'+
+            '<button class="note-edit-ok" data-pn-edit-ok="'+n.id+'">OK</button>'+
+            '<button class="note-edit-cancel" data-pn-edit-cancel>Annuler</button>'+
+          '</div>'+
+        '</div>';
+      } else if(n.body){
+        bodySection = '<div class="proj-note-body">'+parseAiText(n.body)+'</div>';
+      }
+      var moveHtml = '';
+      if(hasMultiCat){
+        var opts = '<option value=""'+(!(n.catId)?' selected':'')+'>Projet (global)</option>'+
+          p.categories.map(function(cat){
+            return '<option value="'+escapeHtml(cat.id)+'"'+(n.catId===cat.id?' selected':'')+'>'+escapeHtml(cat.title)+'</option>';
+          }).join('');
+        moveHtml = '<select class="proj-note-move" data-pn-move="'+n.id+'" title="Déplacer">'+opts+'</select>';
+      }
+      return '<div class="proj-note-row">'+
+        '<div class="proj-note-top">'+
+          '<span class="proj-note-icon">'+noteIcon()+'</span>'+
+          '<input class="cat-note-title" type="text" value="'+escapeHtml(n.title)+'" '+
+            'data-pn-title="'+n.id+'" placeholder="Titre…">'+
+          '<button class="note-pencil-btn" data-pn-edit-open="'+n.id+'" title="Modifier le contenu">'+pencilIcon()+'</button>'+
+          moveHtml+
+          '<button class="cat-note-delete" data-pn-delete="'+n.id+'" title="Supprimer">×</button>'+
+        '</div>'+
+        bodySection+
       '</div>';
     }).join('');
-    return '<div class="cat-notes-section">'+
-      (notes.length ? '<span class="cat-notes-label">Notes libres</span>' : '')+
+    return '<div class="project-notes-section">'+
+      '<span class="proj-notes-label">Notes</span>'+
       notesHtml+
     '</div>';
   }
@@ -1197,25 +1248,45 @@
     persist(); render();
   }
 
-  function performUpdateCategoryNote(projectId, catId, noteId, title){
+  function findProjectNote(p, noteId){
+    return (p.projectNotes||[]).filter(function(n){return n.id===noteId;})[0]||null;
+  }
+
+  function performUpdateProjectNoteTitle(projectId, noteId, title){
     var p = findProject(projectId);
     if(!p) return;
-    var cat = findCategory(p, catId);
-    if(!cat || !cat.catNotes) return;
-    var n = cat.catNotes.find ? cat.catNotes.find(function(n){ return n.id===noteId; }) : null;
-    if(!n){ for(var i=0;i<cat.catNotes.length;i++){ if(cat.catNotes[i].id===noteId){ n=cat.catNotes[i]; break; } } }
+    var n = findProjectNote(p, noteId);
     if(!n) return;
     n.title = title;
     p.updatedAt = nowIso();
     persist();
   }
 
-  function performDeleteCategoryNote(projectId, catId, noteId){
+  function performEditProjectNoteBody(projectId, noteId, body){
     var p = findProject(projectId);
     if(!p) return;
-    var cat = findCategory(p, catId);
-    if(!cat || !cat.catNotes) return;
-    cat.catNotes = cat.catNotes.filter(function(n){ return n.id !== noteId; });
+    var n = findProjectNote(p, noteId);
+    if(!n) return;
+    n.body = body.trim();
+    projectNoteEditId = null;
+    p.updatedAt = nowIso();
+    persist(); render();
+  }
+
+  function performDeleteProjectNote(projectId, noteId){
+    var p = findProject(projectId);
+    if(!p) return;
+    p.projectNotes = (p.projectNotes||[]).filter(function(n){ return n.id !== noteId; });
+    p.updatedAt = nowIso();
+    persist(); render();
+  }
+
+  function performMoveProjectNote(projectId, noteId, catId){
+    var p = findProject(projectId);
+    if(!p) return;
+    var n = findProjectNote(p, noteId);
+    if(!n) return;
+    n.catId = catId || null;
     p.updatedAt = nowIso();
     persist(); render();
   }
@@ -1236,9 +1307,8 @@
   function performSaveChatAsNote(projectId, text){
     var p = findProject(projectId);
     if(!p || !text.trim()) return;
-    var cat = currentCategoryId ? findCategory(p, currentCategoryId) : (p.categories[0]||null);
-    if(!cat) return;
-    if(!cat.catNotes) cat.catNotes = [];
+    if(!p.projectNotes) p.projectNotes = [];
+    var catId = currentCategoryId || null;
     var firstLine = '';
     var lines = text.split('\n');
     for(var i=0; i<lines.length; i++){
@@ -1246,7 +1316,7 @@
       if(l){ firstLine = l; break; }
     }
     var title = firstLine.slice(0,65) + (firstLine.length>65 ? '…' : '');
-    cat.catNotes.push({id:uid(), title:title, createdAt:nowIso()});
+    p.projectNotes.push({id:uid(), title:title, body:text.trim(), catId:catId, createdAt:nowIso()});
     p.updatedAt = nowIso();
     persist(); render();
     showToast("Note enregistrée");
@@ -1579,17 +1649,32 @@
         performDeleteNote(currentProjectId, el.dataset.deleteNoteTask, el.dataset.deleteNote);
       });
     });
-    // Notes catégorie — mise à jour titre au blur
-    document.querySelectorAll("[data-cat-note-id]").forEach(function(el){
-      el.addEventListener("blur", function(){
-        performUpdateCategoryNote(currentProjectId, el.dataset.catNoteCat, el.dataset.catNoteId, el.value);
+    // Notes projet libres — titre (blur)
+    document.querySelectorAll("[data-pn-title]").forEach(function(el){
+      el.addEventListener("blur", function(){ performUpdateProjectNoteTitle(currentProjectId, el.dataset.pnTitle, el.value); });
+    });
+    // Notes projet libres — supprimer
+    document.querySelectorAll("[data-pn-delete]").forEach(function(el){
+      el.addEventListener("click", function(){ performDeleteProjectNote(currentProjectId, el.dataset.pnDelete); });
+    });
+    // Notes projet libres — ouvrir édition body
+    document.querySelectorAll("[data-pn-edit-open]").forEach(function(el){
+      el.addEventListener("click", function(){ projectNoteEditId = el.dataset.pnEditOpen; render(); });
+    });
+    // Notes projet libres — valider édition body
+    document.querySelectorAll("[data-pn-edit-ok]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var ta = document.querySelector('[data-pn-edit-ta="'+el.dataset.pnEditOk+'"]');
+        if(ta) performEditProjectNoteBody(currentProjectId, el.dataset.pnEditOk, ta.value);
       });
     });
-    // Notes catégorie — suppression
-    document.querySelectorAll("[data-delete-cat-note]").forEach(function(el){
-      el.addEventListener("click", function(){
-        performDeleteCategoryNote(currentProjectId, el.dataset.deleteCatNoteCat, el.dataset.deleteCatNote);
-      });
+    // Notes projet libres — annuler édition
+    document.querySelectorAll("[data-pn-edit-cancel]").forEach(function(el){
+      el.addEventListener("click", function(){ projectNoteEditId = null; render(); });
+    });
+    // Notes projet libres — déplacer (select)
+    document.querySelectorAll("[data-pn-move]").forEach(function(el){
+      el.addEventListener("change", function(){ performMoveProjectNote(currentProjectId, el.dataset.pnMove, el.value||null); });
     });
     // Note edit — ouvrir
     document.querySelectorAll("[data-note-edit-open]").forEach(function(el){
