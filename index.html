@@ -676,7 +676,6 @@
       : '';
     return ''+
     '<div class="home-container" id="home-container">'+containerHtml+'</div>'+
-    '<button class="reset-link" id="reset-sample-btn">Données d\'exemple</button>'+
     renderComposeBar()+
     renderHomeChatModal()+
     (state.projects.length > 0 ? '<button class="chat-icon-btn" id="chat-home-icon-btn" title="Demander à l\'IA" style="bottom:76px;">'+chatIcon()+'</button>' : '')+
@@ -1511,14 +1510,6 @@
     }
     var composeSendBtn = document.getElementById("compose-send-btn");
     if(composeSendBtn && !generating) composeSendBtn.addEventListener("click", function(){ performCreateFromIntention(); });
-
-    var resetBtn = document.getElementById("reset-sample-btn");
-    if(resetBtn) resetBtn.addEventListener("click", function(){
-      if(confirm("Remplacer tes projets actuels par des exemples ?")){
-        state = defaultData();
-        persist(); render();
-      }
-    });
 
     var backBtn = document.getElementById("detail-back-btn");
     if(backBtn) backBtn.addEventListener("click", function(){ currentProjectId = null; showAllItems = false; render(); });
