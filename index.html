@@ -264,33 +264,46 @@
   .note-save-btn{border:1px solid var(--line);background:var(--canvas-card);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--ink);flex-shrink:0;}
   .note-save-btn:hover{border-color:var(--accent);}
 
-  /* CHAT */
-  .chat-panel{border:1px solid var(--line);border-radius:12px;margin-top:12px;overflow:hidden;}
-  .chat-messages{max-height:240px;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
-  .chat-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:6px 0;}
-  .chat-msg-user{align-self:flex-end;max-width:88%;}
-  .chat-msg-ai{align-self:flex-start;max-width:88%;}
-  .chat-bubble-user{padding:9px 13px;border-radius:14px 14px 4px 14px;font-size:13.5px;line-height:1.5;background:var(--accent);color:#fff;}
-  .chat-bubble-ai{padding:9px 13px;border-radius:14px 14px 14px 4px;font-size:13.5px;line-height:1.5;background:var(--canvas-card);border:1px solid var(--line);color:var(--ink);}
-  .chat-ai-footer{display:flex;align-items:center;gap:4px;margin-top:3px;}
-  .chat-copy-btn{border:none;background:none;padding:2px 5px;color:var(--ink-faint);border-radius:5px;font-size:11px;font-family:var(--font-mono);}
+  /* CHAT MODAL */
+  .chat-icon-btn{
+    position:fixed;right:16px;bottom:16px;width:48px;height:48px;border-radius:50%;
+    background:var(--ink);color:#fff;border:none;z-index:45;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 20px rgba(43,36,32,0.22);
+  }
+  .chat-icon-btn:hover{background:var(--accent);}
+  .chat-icon-btn .icon{width:20px;height:20px;}
+  .chat-modal{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
+  .chat-modal-box{width:100%;max-width:620px;height:72vh;background:var(--canvas-card);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 32px rgba(43,36,32,0.18);}
+  .chat-modal-header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
+  .chat-modal-title{font-size:13.5px;font-weight:700;color:var(--ink);}
+  .chat-modal-sub{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);margin-top:1px;}
+  .chat-close-btn{border:none;background:none;font-size:22px;color:var(--ink-faint);line-height:1;padding:0 2px;}
+  .chat-close-btn:hover{color:var(--ink);}
+  .chat-messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+  .chat-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:20px 0;}
+  .chat-msg-user{align-self:flex-end;max-width:86%;}
+  .chat-msg-ai{align-self:flex-start;max-width:92%;}
+  .chat-bubble-user{padding:10px 14px;border-radius:16px 16px 4px 16px;font-size:13.5px;line-height:1.5;background:var(--accent);color:#fff;}
+  .chat-bubble-ai{padding:11px 14px;border-radius:16px 16px 16px 4px;font-size:13.5px;line-height:1.6;background:var(--canvas);border:1px solid var(--line);color:var(--ink);}
+  .chat-ai-footer{display:flex;align-items:center;gap:4px;margin-top:4px;}
+  .chat-copy-btn{border:none;background:none;padding:2px 6px;color:var(--ink-faint);border-radius:5px;font-size:11px;font-family:var(--font-mono);}
   .chat-copy-btn:hover{background:var(--accent-soft);color:var(--accent);}
-  .chat-loading{padding:8px 14px;font-size:13px;color:var(--ink-faint);display:flex;align-items:center;gap:8px;}
+  .chat-loading{padding:8px 16px;font-size:13px;color:var(--ink-faint);display:flex;align-items:center;gap:8px;}
   .chat-input-row{border-top:1px solid var(--line);display:flex;background:var(--canvas-card);}
-  .chat-text-input{flex:1;border:none;background:transparent;padding:11px 14px;font-size:13.5px;color:var(--ink);outline:none;}
-  .chat-send-btn{border:none;background:transparent;padding:10px 14px;color:var(--accent);font-weight:700;font-size:13px;flex-shrink:0;}
+  .chat-text-input{flex:1;border:none;background:transparent;padding:13px 16px;font-size:14px;color:var(--ink);outline:none;}
+  .chat-send-btn{border:none;background:transparent;padding:12px 16px;color:var(--accent);font-weight:700;font-size:13px;flex-shrink:0;}
   .chat-send-btn:hover{color:#A34936;}
   .chat-send-btn:disabled{opacity:.35;}
-
-  /* FICHE PROJET */
-  .fiche-btn{margin-top:8px;}
-  .fiche-panel{border:1px solid var(--line);border-radius:12px;background:var(--canvas);padding:16px;margin-top:8px;}
-  .fiche-heading{font-family:var(--font-mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
-  .fiche-cat-name{font-size:12px;font-weight:700;color:var(--ink-faint);margin:10px 0 6px;}
-  .fiche-item{margin-bottom:8px;}
-  .fiche-item-task{font-size:13.5px;font-weight:600;color:var(--ink);}
-  .fiche-item-note{font-size:13px;color:var(--ink-soft);margin-top:2px;line-height:1.4;}
-  .fiche-empty{font-size:13px;color:var(--ink-faint);}
+  /* Formatage réponses IA */
+  .ai-h1{font-size:17px;font-weight:800;color:var(--ink);margin:10px 0 4px;line-height:1.3;}
+  .ai-h2{font-size:15px;font-weight:700;color:var(--ink);margin:8px 0 3px;line-height:1.3;}
+  .ai-h3{font-size:13.5px;font-weight:700;color:var(--ink);margin:6px 0 2px;}
+  .ai-p{margin:2px 0;line-height:1.6;}
+  .ai-li{display:flex;gap:8px;margin:2px 0;align-items:baseline;}
+  .ai-bullet{color:var(--accent);flex-shrink:0;font-weight:700;}
+  /* Project DNA */
+  .project-dna{font-size:12.5px;color:var(--status-actif);font-style:italic;max-width:440px;line-height:1.4;margin-top:4px;}
 </style>
 </head>
 <body>
@@ -319,7 +332,7 @@
   var generating = false;
   var composeText = "";
   var chatState = {};
-  var ficheOpen = false;
+  var chatProjectOpen = false;
   var noteEditingId = null;
 
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
@@ -381,6 +394,7 @@
       title: raw.title || "Projet",
       emoji: raw.emoji || "✨",
       summary: raw.summary || "",
+      dna: raw.dna || "",
       categories: categories,
       createdAt: raw.createdAt || nowIso(),
       updatedAt: raw.updatedAt || nowIso()
@@ -683,6 +697,7 @@
       '<div class="detail-emoji">'+p.emoji+'</div>'+
       '<div class="detail-title">'+escapeHtml(p.title)+'</div>'+
       (p.summary ? '<div class="detail-summary">'+escapeHtml(p.summary)+'</div>' : '')+
+      (p.dna ? '<div class="project-dna">'+escapeHtml(p.dna)+'</div>' : '')+
       '<div class="detail-status-row"><span class="status-dot '+status+'"></span>'+
         '<span class="detail-status-text">'+STATUS_LABELS[status]+'</span></div>'+
     '</div>'+
@@ -727,10 +742,7 @@
           '<button class="btn" id="add-item-btn" data-category="'+cat.id+'">Ajouter</button>'+
         '</div>'+
         (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(renderItemRow).join("") : '')+
-        '<button class="btn suggest-more-btn" id="suggest-category-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Suggérer la suite</button>'+
-        '<button class="btn fiche-btn" id="fiche-btn">'+sparkleIcon()+' &nbsp;Fiche projet</button>'+
-        renderFicheProjet(p)+
-        renderChatPanel(cat);
+        '<button class="btn suggest-more-btn" id="suggest-category-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Suggérer la suite</button>';
     } else if(!accompli && multiCategory){
       // multiple categories: show them as cards, navigate into each
       bodyHtml = ''+
@@ -754,6 +766,8 @@
         bodyHtml+
       '</div>'+
     '</div>'+
+    renderChatModal(p)+
+    '<button class="chat-icon-btn" id="chat-icon-btn" title="Demander à l\'IA">'+chatIcon()+'</button>'+
     '<div class="toast" id="toast"></div>';
   }
 
@@ -788,16 +802,15 @@
         '<button class="btn" id="add-item-btn" data-category="'+cat.id+'">Ajouter</button>'+
       '</div>'+
       (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(renderItemRow).join("") : '')+
-      '<button class="btn suggest-more-btn" id="suggest-category-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Suggérer</button>'+
-      '<button class="btn fiche-btn" id="fiche-btn">'+sparkleIcon()+' &nbsp;Fiche projet</button>'+
-      renderFicheProjet(p)+
-      renderChatPanel(cat);
+      '<button class="btn suggest-more-btn" id="suggest-category-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Suggérer</button>';
 
     return ''+
     topBarHtml+
     '<div class="detail-scroll" id="detail-scroll">'+
       '<div class="detail-inner">'+ headerHtml + listHtml +'</div>'+
     '</div>'+
+    renderChatModal(p)+
+    '<button class="chat-icon-btn" id="chat-icon-btn" title="Demander à l\'IA">'+chatIcon()+'</button>'+
     '<div class="toast" id="toast"></div>';
   }
 
@@ -820,50 +833,55 @@
     return '<div class="research-panel">'+inner+'</div>';
   }
 
-  function renderChatPanel(cat){
-    var cs = chatState[cat.id] || {messages:[], loading:false};
+  function chatIcon(){
+    return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M3 5a2 2 0 012-2h10a2 2 0 012 2v7a2 2 0 01-2 2H8l-4 2V5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+  }
+
+  function parseAiText(text){
+    return String(text||'').split('\n').map(function(line){
+      if(!line.trim()) return '<div style="height:5px"></div>';
+      var safe = escapeHtml(line);
+      safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      if(/^### /.test(line)) return '<div class="ai-h3">'+safe.slice(4)+'</div>';
+      if(/^## /.test(line))  return '<div class="ai-h2">'+safe.slice(3)+'</div>';
+      if(/^# /.test(line))   return '<div class="ai-h1">'+safe.slice(2)+'</div>';
+      if(/^[-•] /.test(line)) return '<div class="ai-li"><span class="ai-bullet">·</span><span>'+safe.slice(2)+'</span></div>';
+      return '<div class="ai-p">'+safe+'</div>';
+    }).join('');
+  }
+
+  function renderChatModal(p){
+    if(!chatProjectOpen) return '';
+    var cs = chatState[p.id] || {messages:[], loading:false};
     var msgsHtml = '';
     if(!cs.messages.length && !cs.loading){
-      msgsHtml = '<div class="chat-empty">Pose une question sur ce projet…</div>';
+      msgsHtml = '<div class="chat-empty">Pose une question sur ton projet…</div>';
     } else {
       msgsHtml = cs.messages.map(function(m, idx){
         if(m.role === 'user'){
           return '<div class="chat-msg-user"><div class="chat-bubble-user">'+escapeHtml(m.text)+'</div></div>';
         }
         return '<div class="chat-msg-ai">'+
-          '<div class="chat-bubble-ai">'+escapeHtml(m.text)+'</div>'+
-          '<div class="chat-ai-footer"><button class="chat-copy-btn" data-copy-idx="'+idx+'" data-copy-cat="'+escapeHtml(cat.id)+'" title="Copier">'+copyIcon()+' copier</button></div>'+
+          '<div class="chat-bubble-ai">'+parseAiText(m.text)+'</div>'+
+          '<div class="chat-ai-footer"><button class="chat-copy-btn" data-copy-idx="'+idx+'" data-copy-proj="'+escapeHtml(p.id)+'" title="Copier">'+copyIcon()+' copier</button></div>'+
         '</div>';
       }).join('');
     }
     var loadHtml = cs.loading ? '<div class="chat-loading"><div class="loading-spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;"></div>En train de répondre…</div>' : '';
-    return '<div class="chat-panel">'+
-      '<div class="chat-messages" id="chat-msgs-'+escapeHtml(cat.id)+'">'+msgsHtml+'</div>'+
-      loadHtml+
-      '<div class="chat-input-row">'+
-        '<input class="chat-text-input" id="chat-input" data-chat-cat="'+escapeHtml(cat.id)+'" placeholder="Pose une question…"'+(cs.loading?' disabled':'')+'>'+
-        '<button class="chat-send-btn" id="chat-send-btn" data-chat-cat="'+escapeHtml(cat.id)+'"'+(cs.loading?' disabled':'')+'>Envoyer</button>'+
+    return '<div class="chat-modal" id="chat-modal">'+
+      '<div class="chat-modal-box">'+
+        '<div class="chat-modal-header">'+
+          '<div><div class="chat-modal-title">'+chatIcon()+' '+escapeHtml(p.title)+'</div></div>'+
+          '<button class="chat-close-btn" id="chat-close-btn">×</button>'+
+        '</div>'+
+        '<div class="chat-messages" id="chat-msgs-'+escapeHtml(p.id)+'">'+msgsHtml+'</div>'+
+        loadHtml+
+        '<div class="chat-input-row">'+
+          '<input class="chat-text-input" id="chat-input" placeholder="Pose une question…"'+(cs.loading?' disabled':'')+'>'+
+          '<button class="chat-send-btn" id="chat-send-btn" data-proj-id="'+escapeHtml(p.id)+'"'+(cs.loading?' disabled':'')+'>Envoyer</button>'+
+        '</div>'+
       '</div>'+
     '</div>';
-  }
-
-  function renderFicheProjet(p){
-    if(!ficheOpen) return '';
-    var hasNotes = false;
-    var catsHtml = p.categories.map(function(cat){
-      var noted = cat.items.filter(function(it){return it.note && it.note.trim();});
-      if(!noted.length) return '';
-      hasNotes = true;
-      return (p.categories.length > 1 ? '<div class="fiche-cat-name">'+escapeHtml(cat.title)+'</div>' : '')+
-        noted.map(function(it){
-          return '<div class="fiche-item">'+
-            '<div class="fiche-item-task">'+escapeHtml(it.title)+'</div>'+
-            '<div class="fiche-item-note">'+escapeHtml(it.note)+'</div>'+
-          '</div>';
-        }).join('');
-    }).join('');
-    if(!hasNotes) catsHtml = '<div class="fiche-empty">Aucune note pour l\'instant — renseigne tes décisions sur chaque tâche.</div>';
-    return '<div class="fiche-panel"><div class="fiche-heading">Fiche projet</div>'+catsHtml+'</div>';
   }
 
   function renderItemRow(it){
@@ -1019,25 +1037,53 @@
     });
   }
 
-  function generateChatResponse(p, cat, messages){
-    var tasks = cat.items.map(function(it){
-      return it.title + (it.note&&it.note.trim() ? ' [note: '+it.note+']' : '') + (it.done?' (fait)':'');
+  function generateChatResponse(p, messages){
+    var tasks = [];
+    p.categories.forEach(function(cat){
+      cat.items.forEach(function(it){
+        tasks.push((p.categories.length > 1 ? cat.title+' / ' : '')+it.title+
+          (it.note&&it.note.trim() ? ' → '+it.note : '')+(it.done?' (fait)':''));
+      });
     });
-    var systemText = "Tu es un assistant direct et concis qui aide l'utilisateur sur son projet. "+
-      "Projet : \""+p.title+"\" — "+(p.summary||"")+". "+
-      "Catégorie : \""+cat.title+"\". "+
-      "Tâches : "+JSON.stringify(tasks)+". "+
-      "Réponds en 2 à 4 phrases max. Sois opérationnel, sans introduction ni formule de politesse.";
-    var hist = messages.slice(-12);
+    var systemText = "Tu es l'assistant de ce projet. Utilise des titres (# ou ##), du gras (**mot**) "+
+      "et des tirets (- item) quand c'est utile pour la lisibilité. Sois concis et opérationnel. "+
+      "Pas d'introduction, pas de formule de politesse.\n\n"+
+      "PROJET : \""+p.title+"\" — "+(p.dna||p.summary||"")+"\n"+
+      "TÂCHES :\n"+tasks.join('\n');
+    var hist = messages.slice(-20);
     while(hist.length && hist[0].role !== 'user') hist = hist.slice(1);
     var apiMessages = hist.map(function(m){
       return {role:m.role==='user'?'user':'assistant', content:[{type:"text",text:m.text}]};
     });
     return fetch("/api/ai",{
       method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-sonnet-4-6", max_tokens:350, system:systemText, messages:apiMessages})
+      body:JSON.stringify({model:"claude-sonnet-4-6", max_tokens:600, system:systemText, messages:apiMessages})
     }).then(function(res){return res.json();}).then(function(data){
       return (data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n").trim();
+    });
+  }
+
+  function generateProjectDNA(p){
+    var taskSummary = [];
+    var hasNotes = false;
+    p.categories.forEach(function(cat){
+      cat.items.forEach(function(it){
+        var line = (it.done?'✓ ':'• ')+it.title+(it.note&&it.note.trim()?' → '+it.note:'');
+        taskSummary.push(line);
+        if(it.note&&it.note.trim()) hasNotes = true;
+      });
+    });
+    if(!hasNotes) return Promise.resolve(null);
+    var promptText = "Projet : \""+p.title+"\"\nTâches :\n"+taskSummary.join('\n')+"\n\n"+
+      "En une phrase directe (15 mots max), décris l'état actuel du projet et la prochaine priorité. "+
+      "Commence par ce qui est concret. Exemple : \"Budget fixé à 500€, reste à confirmer la date et le lieu.\" "+
+      "Réponds UNIQUEMENT avec la phrase, sans guillemets, sans intro.";
+    return fetch("/api/ai",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-6", max_tokens:60, messages:[{role:"user",content:[{type:"text",text:promptText}]}]})
+    }).then(function(res){return res.json();}).then(function(data){
+      var text = (data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("").trim();
+      return text || null;
     });
   }
 
@@ -1064,30 +1110,38 @@
     });
   }
 
-  function performChatSend(projectId, categoryId, text){
+  function performChatSend(projectId, text){
     var p = findProject(projectId);
-    if(!p) return;
-    var cat = categoryId ? findCategory(p, categoryId) : (p.categories[0]||null);
-    if(!cat || !text.trim()) return;
-    if(!chatState[cat.id]) chatState[cat.id] = {messages:[], loading:false};
-    var cs = chatState[cat.id];
+    if(!p || !text.trim()) return;
+    if(!chatState[p.id]) chatState[p.id] = {messages:[], loading:false};
+    var cs = chatState[p.id];
     if(cs.loading) return;
     cs.messages.push({role:'user', text:text.trim()});
     cs.loading = true;
     render();
-    var el = document.getElementById('chat-msgs-'+cat.id);
+    var el = document.getElementById('chat-msgs-'+p.id);
     if(el) el.scrollTop = el.scrollHeight;
-    generateChatResponse(p, cat, cs.messages).then(function(reply){
+    generateChatResponse(p, cs.messages).then(function(reply){
       cs.messages.push({role:'ai', text:reply});
       cs.loading = false;
       render();
-      var el2 = document.getElementById('chat-msgs-'+cat.id);
-      if(el2) el2.scrollTop = el2.scrollHeight;
+      setTimeout(function(){
+        var el2 = document.getElementById('chat-msgs-'+p.id);
+        if(el2) el2.scrollTop = el2.scrollHeight;
+      }, 50);
     }).catch(function(){
       cs.loading = false;
       cs.messages.push({role:'ai', text:"Désolé, je ne peux pas répondre pour l'instant."});
       render();
     });
+  }
+
+  function performGenerateDNA(projectId){
+    var p = findProject(projectId);
+    if(!p) return;
+    generateProjectDNA(p).then(function(dna){
+      if(dna){ p.dna = dna; persist(); render(); }
+    }).catch(function(){});
   }
 
   function performSaveNote(projectId, itemId, noteText){
@@ -1099,6 +1153,7 @@
     noteEditingId = null;
     p.updatedAt = nowIso();
     persist(); render();
+    performGenerateDNA(projectId);
   }
 
   function performCreateFromIntention(){
@@ -1286,20 +1341,30 @@
     var voirSuiteBtn = document.getElementById("voir-suite-btn");
     if(voirSuiteBtn) voirSuiteBtn.addEventListener("click", function(){ showAllItems = true; render(); });
 
-    // Chat
+    // Chat modal
+    var chatIconBtn = document.getElementById("chat-icon-btn");
+    if(chatIconBtn) chatIconBtn.addEventListener("click", function(){
+      chatProjectOpen = true; render();
+      setTimeout(function(){ var el = document.getElementById('chat-msgs-'+currentProjectId); if(el) el.scrollTop = el.scrollHeight; }, 50);
+    });
+    var chatCloseBtn = document.getElementById("chat-close-btn");
+    if(chatCloseBtn) chatCloseBtn.addEventListener("click", function(){ chatProjectOpen = false; render(); });
+    var chatModal = document.getElementById("chat-modal");
+    if(chatModal) chatModal.addEventListener("click", function(e){ if(e.target === chatModal){ chatProjectOpen = false; render(); } });
     var chatSendBtn = document.getElementById("chat-send-btn");
     var chatInput = document.getElementById("chat-input");
     if(chatSendBtn) chatSendBtn.addEventListener("click", function(){
       if(!chatInput || !chatInput.value.trim()) return;
       var text = chatInput.value; chatInput.value = '';
-      performChatSend(currentProjectId, chatSendBtn.dataset.chatCat, text);
+      performChatSend(currentProjectId, text);
     });
     if(chatInput) chatInput.addEventListener("keydown", function(e){
       if(e.key === "Enter"){ e.preventDefault(); if(chatSendBtn) chatSendBtn.click(); }
+      if(e.key === "Escape"){ chatProjectOpen = false; render(); }
     });
     document.querySelectorAll("[data-copy-idx]").forEach(function(el){
       el.addEventListener("click", function(){
-        var cs = chatState[el.dataset.copyCat];
+        var cs = chatState[el.dataset.copyProj];
         var msg = cs && cs.messages[parseInt(el.dataset.copyIdx, 10)];
         if(!msg) return;
         navigator.clipboard.writeText(msg.text).then(function(){ showToast("Copié"); }).catch(function(){ showToast("Copie impossible"); });
@@ -1325,11 +1390,8 @@
         if(e.key === "Escape"){ noteEditingId = null; render(); }
       });
     });
-    // Fiche projet
-    var ficheBtn = document.getElementById("fiche-btn");
-    if(ficheBtn) ficheBtn.addEventListener("click", function(){ ficheOpen = !ficheOpen; render(); });
-    // Auto-scroll chat
-    document.querySelectorAll("[id^='chat-msgs-']").forEach(function(el){ el.scrollTop = el.scrollHeight; });
+    // Auto-scroll chat si modal ouvert
+    setTimeout(function(){ var el = document.getElementById('chat-msgs-'+currentProjectId); if(el) el.scrollTop = el.scrollHeight; }, 20);
 
     document.querySelectorAll("[data-research-btn]").forEach(function(el){
       el.addEventListener("click", function(){
