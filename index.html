@@ -168,6 +168,44 @@
   .step-check .icon{width:12px;height:12px;}
   .step-title{flex:1;font-size:14px;color:var(--ink);min-width:0;}
   .step-row.done .step-title{color:var(--ink-faint);}
+  .step-row.priority{background:var(--accent-soft);border-color:var(--accent);}
+  .step-row.priority .step-title{font-weight:600;}
+  .step-row{touch-action:pan-y;}
+  .step-row.dragging{opacity:.55;}
+  .step-title-input{
+    flex:1;border:1px solid var(--accent);border-radius:7px;padding:5px 8px;font-size:14px;
+    color:var(--ink);background:var(--canvas-card);min-width:0;font-family:inherit;
+  }
+  .step-title-input:focus{outline:none;}
+  .step-row-ghost{
+    position:fixed;z-index:80;pointer-events:none;box-shadow:0 10px 24px rgba(43,36,32,0.28);
+    border-radius:10px;opacity:.96;
+  }
+  /* PRIORITÉS (page projet) */
+  .priority-block{margin-bottom:18px;}
+  .priority-block-label{
+    font-family:var(--font-mono);font-size:10px;letter-spacing:0.05em;text-transform:uppercase;
+    color:var(--accent);font-weight:700;margin-bottom:8px;
+  }
+  .priority-block-item{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;
+    padding:9px 12px;margin-bottom:6px;font-size:13.5px;color:var(--ink);
+  }
+  .priority-block-title{min-width:0;}
+  .priority-block-cat{font-size:11px;color:var(--accent);flex-shrink:0;}
+  /* DROP STRIP catégories (pendant le drag) */
+  .category-drop-strip{
+    position:fixed;top:0;left:0;right:0;z-index:79;display:none;gap:8px;
+    padding:12px 14px;background:var(--canvas-card);border-bottom:1px solid var(--line);
+    overflow-x:auto;box-shadow:0 4px 14px rgba(43,36,32,0.12);
+  }
+  .category-drop-strip.active{display:flex;}
+  .category-drop-chip{
+    flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px dashed var(--line);
+    font-size:12.5px;color:var(--ink-faint);white-space:nowrap;background:var(--canvas);
+  }
+  .category-drop-chip.drop-hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700;}
   .step-remove{border:none;background:none;color:var(--ink-faint);font-size:16px;line-height:1;padding:2px 4px;flex-shrink:0;}
   .step-remove:hover{color:#9C4632;}
 
@@ -380,6 +418,7 @@
   var chatHomeOpen = false;
   var noteOpenId = null;
   var noteModal = null; // {taskId, noteId (null = nouvelle note), text}
+  var editingItemId = null; // tâche en édition inline (appui court sur le titre)
   var projectNoteEditId = null;
   var projectNoteOpenId = null;
 
@@ -507,6 +546,16 @@
       }
     }
     return null;
+  }
+  function priorityItems(p){
+    var result = [];
+    for(var ci=0; ci<p.categories.length && result.length<3; ci++){
+      var cat = p.categories[ci];
+      for(var ii=0; ii<cat.items.length && result.length<3; ii++){
+        if(!cat.items[ii].done) result.push({item:cat.items[ii], category:cat});
+      }
+    }
+    return result;
   }
   function findItemAnywhere(p, itemId){
     for(var i=0;i<p.categories.length;i++){
@@ -820,6 +869,8 @@
     var accompli = isAccompli(p);
     var items2 = allItems(p);
     var multiCategory = p.categories.length > 1;
+    var priorityList = accompli ? [] : priorityItems(p);
+    var priorityIds = priorityList.map(function(x){ return x.item.id; });
 
     var topBarHtml = ''+
     '<div class="top-bar">'+
@@ -856,6 +907,17 @@
       '</div>';
     }
 
+    var priorityBlockHtml = priorityList.length ? ''+
+      '<div class="priority-block">'+
+        '<div class="priority-block-label">Priorités</div>'+
+        priorityList.map(function(x){
+          return '<div class="priority-block-item">'+
+            '<span class="priority-block-title">'+escapeHtml(x.item.title)+'</span>'+
+            (multiCategory ? '<span class="priority-block-cat">'+escapeHtml(x.category.title)+'</span>' : '')+
+          '</div>';
+        }).join('')+
+      '</div>' : '';
+
     var bodyHtml = "";
     if(!accompli && !multiCategory){
       var cat = p.categories[0] || makeCategory("À faire", []);
@@ -864,7 +926,10 @@
       var suiteHtml = '';
       if(remaining.length > 1){
         if(showAllItems){
-          suiteHtml = '<div class="section-label">Ensuite</div>'+remaining.slice(1).map(renderItemRow).join("");
+          suiteHtml = '<div class="section-label">Ensuite</div>'+
+            '<div class="step-list" data-cat-id="'+cat.id+'">'+
+              remaining.slice(1).map(function(it){ return renderItemUnit(it, priorityIds.indexOf(it.id)>=0); }).join("")+
+            '</div>';
         } else {
           var n = remaining.length - 1;
           suiteHtml = '<button class="voir-suite-link" id="voir-suite-btn">Voir la suite ('+n+' tâche'+(n>1?'s':'')+')</button>';
@@ -876,7 +941,7 @@
           '<input type="text" id="new-item-input" data-category="'+cat.id+'" placeholder="Ajouter un élément…">'+
           '<button class="btn" id="add-item-btn" data-category="'+cat.id+'">Ajouter</button>'+
         '</div>'+
-        (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(renderItemRow).join("") : '')+
+        (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(function(it){ return renderItemUnit(it, false); }).join("") : '')+
         '<button class="btn suggest-more-btn" id="suggest-category-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Suggérer la suite</button>'+
         renderProjectNotes(p, null);
     } else if(!accompli && multiCategory){
@@ -891,7 +956,7 @@
       // accompli: still show the categories/items read-only below the banner, for reference
       bodyHtml = multiCategory
         ? '<div class="section-label">Catégories</div><div class="category-grid">'+p.categories.map(renderCategoryCard).join("")+'</div>'
-        : (p.categories[0]||{items:[]}).items.map(renderItemRow).join("");
+        : (p.categories[0]||{items:[]}).items.map(function(it){ return renderItemUnit(it, false); }).join("");
     }
 
     return ''+
@@ -900,6 +965,7 @@
       '<div class="detail-inner">'+
         headerHtml+
         mainActionHtml+
+        priorityBlockHtml+
         bodyHtml+
       '</div>'+
     '</div>'+
@@ -925,26 +991,38 @@
   function renderCategoryDetail(p, cat){
     var remaining = cat.items.filter(function(it){ return !it.done; });
     var completed = cat.items.filter(function(it){ return it.done; });
+    var priorityIds = priorityItems(p).map(function(x){ return x.item.id; });
+    var otherCategories = p.categories.filter(function(c){ return c.id !== cat.id; });
     var topBarHtml = ''+
     '<div class="top-bar">'+
       '<button class="top-back-btn" id="category-back-btn" title="Retour au projet">'+backIcon()+'</button>'+
       '<button class="top-delete-btn" id="category-delete-btn" title="Supprimer cette catégorie">'+trashIcon()+'</button>'+
     '</div>';
+    var dropStripHtml = otherCategories.length ? ''+
+      '<div class="category-drop-strip" id="category-drop-strip">'+
+        otherCategories.map(function(c){
+          return '<div class="category-drop-chip" data-drop-cat="'+c.id+'">'+escapeHtml(c.title)+'</div>';
+        }).join('')+
+      '</div>' : '';
     var headerHtml = ''+
     '<div class="detail-header">'+
       '<div class="detail-title">'+escapeHtml(cat.title)+'</div>'+
     '</div>';
-    var listHtml = remaining.map(renderItemRow).join("") +
+    var listHtml =
+      '<div class="step-list" data-cat-id="'+cat.id+'">'+
+        remaining.map(function(it){ return renderItemUnit(it, priorityIds.indexOf(it.id)>=0); }).join("")+
+      '</div>'+
       '<div class="add-step-row">'+
         '<input type="text" id="new-item-input" data-category="'+cat.id+'" placeholder="Ajouter un élément…">'+
         '<button class="btn" id="add-item-btn" data-category="'+cat.id+'">Ajouter</button>'+
       '</div>'+
-      (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(renderItemRow).join("") : '')+
+      (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(function(it){ return renderItemUnit(it, false); }).join("") : '')+
       '<button class="btn suggest-more-btn" id="suggest-category-btn" data-category="'+cat.id+'">'+sparkleIcon()+' &nbsp;Suggérer</button>'+
       renderProjectNotes(p, cat.id);
 
     return ''+
     topBarHtml+
+    dropStripHtml+
     '<div class="detail-scroll" id="detail-scroll">'+
       '<div class="detail-inner">'+ headerHtml + listHtml +'</div>'+
     '</div>'+
@@ -1101,19 +1179,27 @@
     '</div>';
   }
 
-  function renderItemRow(it){
+  function renderItemRow(it, isPriority){
     var noteOpen = noteOpenId === it.id;
     var noteCount = (it.notes && it.notes.length) || 0;
     var rowStyle = noteOpen ? 'border-radius:10px 10px 0 0;border-bottom-color:transparent;' : '';
     var badgeHtml = noteCount > 0 ? '<span class="note-badge">'+noteCount+'</span>' : '';
+    var isEditing = editingItemId === it.id;
+    var titleHtml = isEditing
+      ? '<input type="text" class="step-title-input" data-item-title-input="'+it.id+'" value="'+escapeHtml(it.title)+'">'
+      : '<span class="step-title">'+escapeHtml(it.title)+'</span>';
     return ''+
-    '<div class="step-row '+(it.done?"done":"")+'" style="'+rowStyle+'">'+
+    '<div class="step-row '+(it.done?"done":"")+(isPriority?" priority":"")+'" style="'+rowStyle+'">'+
       '<button class="step-check '+(it.done?"checked":"")+'" data-toggle-item="'+it.id+'">'+(it.done?checkIcon():'')+'</button>'+
-      '<span class="step-title">'+escapeHtml(it.title)+'</span>'+
+      titleHtml+
       '<button class="note-icon-btn'+(noteCount>0?' has-notes':'')+'" data-note-open="'+it.id+'" title="Notes">'+noteIcon()+badgeHtml+'</button>'+
       '<button class="step-remove" data-remove-item="'+it.id+'">×</button>'+
     '</div>'+
     renderItemNotePanel(it);
+  }
+
+  function renderItemUnit(it, isPriority){
+    return '<div class="step-item" data-item-id="'+it.id+'">'+renderItemRow(it, isPriority)+'</div>';
   }
 
   function renderLoadingOverlay(){
@@ -1552,6 +1638,159 @@
     });
   }
 
+  /* ---------- tâches : glisser-déposer + édition ---------- */
+
+  function reorderCategoryItems(p, catId, orderedIds){
+    var cat = findCategory(p, catId);
+    if(!cat) return;
+    var byId = {};
+    cat.items.forEach(function(it){ byId[it.id] = it; });
+    var reorderedRemaining = orderedIds.map(function(id){ return byId[id]; }).filter(Boolean);
+    var doneItems = cat.items.filter(function(it){ return it.done; });
+    cat.items = reorderedRemaining.concat(doneItems);
+    p.updatedAt = nowIso();
+    persist(); render();
+  }
+
+  function moveItemToCategory(p, itemId, sourceCatId, targetCatId){
+    if(sourceCatId === targetCatId) return;
+    var sourceCat = findCategory(p, sourceCatId);
+    var targetCat = findCategory(p, targetCatId);
+    if(!sourceCat || !targetCat) return;
+    var idx = sourceCat.items.findIndex(function(it){ return it.id === itemId; });
+    if(idx === -1) return;
+    var item = sourceCat.items.splice(idx, 1)[0];
+    targetCat.items.push(item);
+    p.updatedAt = nowIso();
+    persist(); render();
+    showToast("Déplacé vers "+targetCat.title);
+  }
+
+  function reorderStepItems(listEl, draggedEl, pointerY){
+    var siblings = Array.prototype.slice.call(listEl.querySelectorAll(".step-item[data-item-id]"));
+    for(var i=0; i<siblings.length; i++){
+      var sib = siblings[i];
+      if(sib === draggedEl) continue;
+      var r = sib.getBoundingClientRect();
+      var mid = r.top + r.height/2;
+      if(pointerY < mid){
+        if(sib.previousElementSibling !== draggedEl) listEl.insertBefore(draggedEl, sib);
+        return;
+      }
+    }
+    if(listEl.lastElementChild !== draggedEl) listEl.appendChild(draggedEl);
+  }
+
+  var ITEM_LONG_PRESS_MS = 450;
+  var ITEM_DRAG_THRESHOLD = 10;
+
+  function beginItemDrag(itemEl, listEl, itemId, sourceCatId, pointerId, clientY){
+    var rect = itemEl.getBoundingClientRect();
+    var grabOffsetY = clientY - rect.top;
+    itemEl.classList.add("dragging");
+    if(navigator.vibrate) navigator.vibrate(12);
+
+    var ghost = itemEl.cloneNode(true);
+    ghost.className = "step-item step-row-ghost";
+    ghost.style.left = rect.left + "px";
+    ghost.style.top = rect.top + "px";
+    ghost.style.width = rect.width + "px";
+    document.body.appendChild(ghost);
+
+    var dropStrip = document.getElementById("category-drop-strip");
+    if(dropStrip) dropStrip.classList.add("active");
+    var hoverChip = null;
+
+    function onMove(e){
+      if(e.pointerId !== pointerId) return;
+      e.preventDefault();
+      ghost.style.top = (e.clientY - grabOffsetY) + "px";
+      reorderStepItems(listEl, itemEl, e.clientY);
+
+      if(dropStrip){
+        var found = null;
+        dropStrip.querySelectorAll(".category-drop-chip").forEach(function(chip){
+          var cRect = chip.getBoundingClientRect();
+          if(e.clientX>=cRect.left && e.clientX<=cRect.right && e.clientY>=cRect.top-10 && e.clientY<=cRect.bottom+16){
+            found = chip;
+          }
+        });
+        if(hoverChip && hoverChip !== found) hoverChip.classList.remove("drop-hover");
+        if(found) found.classList.add("drop-hover");
+        hoverChip = found;
+      }
+    }
+
+    function onUp(e){
+      if(e.pointerId !== pointerId) return;
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+      document.removeEventListener("pointercancel", onUp);
+      ghost.remove();
+      itemEl.classList.remove("dragging");
+      if(dropStrip) dropStrip.classList.remove("active");
+
+      var p = findProject(currentProjectId);
+      if(!p) return;
+
+      if(hoverChip){
+        hoverChip.classList.remove("drop-hover");
+        moveItemToCategory(p, itemId, sourceCatId, hoverChip.dataset.dropCat);
+      } else {
+        var orderedIds = Array.prototype.slice.call(listEl.querySelectorAll(".step-item[data-item-id]"))
+          .map(function(el){ return el.dataset.itemId; });
+        reorderCategoryItems(p, sourceCatId, orderedIds);
+      }
+    }
+
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+    document.addEventListener("pointercancel", onUp);
+  }
+
+  function setupItemDragAndTap(){
+    document.querySelectorAll(".step-list").forEach(function(listEl){
+      var sourceCatId = listEl.dataset.catId;
+      listEl.querySelectorAll(".step-item[data-item-id]").forEach(function(itemEl){
+        var itemId = itemEl.dataset.itemId;
+        var pressTimer = null, startX = 0, startY = 0, longPressed = false, moved = false, activePointerId = null;
+
+        itemEl.addEventListener("pointerdown", function(e){
+          if(e.target.closest("button") || e.target.closest("input")) return;
+          if(e.pointerType === "mouse" && e.button !== 0) return;
+          startX = e.clientX; startY = e.clientY; longPressed = false; moved = false;
+          activePointerId = e.pointerId;
+          try{ itemEl.setPointerCapture(activePointerId); }catch(err){}
+          pressTimer = setTimeout(function(){
+            longPressed = true;
+            beginItemDrag(itemEl, listEl, itemId, sourceCatId, activePointerId, e.clientY);
+          }, ITEM_LONG_PRESS_MS);
+        });
+        itemEl.addEventListener("pointermove", function(e){
+          if(e.pointerId !== activePointerId || longPressed) return;
+          if(Math.abs(e.clientX-startX) > ITEM_DRAG_THRESHOLD || Math.abs(e.clientY-startY) > ITEM_DRAG_THRESHOLD){
+            moved = true;
+            clearTimeout(pressTimer);
+          }
+        });
+        itemEl.addEventListener("pointerup", function(e){
+          if(e.pointerId !== activePointerId) return;
+          clearTimeout(pressTimer);
+          if(!longPressed && !moved){
+            editingItemId = itemId;
+            render();
+            setTimeout(function(){
+              var input = document.querySelector('[data-item-title-input="'+itemId+'"]');
+              if(input){ input.focus(); input.select(); }
+            }, 30);
+          }
+          activePointerId = null;
+        });
+        itemEl.addEventListener("pointercancel", function(){ clearTimeout(pressTimer); activePointerId = null; });
+      });
+    });
+  }
+
   /* ---------- global events ---------- */
 
   function bindGlobalEvents(){
@@ -1625,6 +1864,30 @@
         }
       });
     });
+
+    // Titre de tâche — édition inline (appui court)
+    document.querySelectorAll("[data-item-title-input]").forEach(function(el){
+      el.addEventListener("keydown", function(e){
+        if(e.key === "Enter"){ e.preventDefault(); el.blur(); }
+        else if(e.key === "Escape"){ e.preventDefault(); editingItemId = null; render(); }
+      });
+      el.addEventListener("blur", function(){
+        var itemId = el.dataset.itemTitleInput;
+        var newTitle = el.value.trim();
+        editingItemId = null;
+        var p = findProject(currentProjectId);
+        var found = p && findItemAnywhere(p, itemId);
+        if(found && newTitle && newTitle !== found.item.title){
+          found.item.title = newTitle;
+          p.updatedAt = nowIso();
+          persist();
+        }
+        render();
+      });
+    });
+
+    // Tâches — appui court = éditer, appui maintenu = glisser pour réordonner / changer de catégorie
+    setupItemDragAndTap();
 
     var addItemBtn = document.getElementById("add-item-btn");
     if(addItemBtn) addItemBtn.addEventListener("click", function(){
