@@ -780,7 +780,9 @@
   function layoutHomeTreemap(){
     var container = document.getElementById("home-container");
     if(!container || state.projects.length === 0) return;
-    var W = container.clientWidth, viewportH = container.clientHeight;
+    var composeBar = document.getElementById("compose-bar");
+    var composeBarClearance = (composeBar ? composeBar.offsetHeight : 60) + 12;
+    var W = container.clientWidth, viewportH = container.clientHeight - composeBarClearance;
     if(W < 40 || viewportH < 40) return;
 
     var items = state.projects.map(function(p){
