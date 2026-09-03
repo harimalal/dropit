@@ -173,8 +173,9 @@
   .step-row{touch-action:pan-y;}
   .step-row.dragging{opacity:.55;}
   .step-title-input{
-    flex:1;border:1px solid var(--accent);border-radius:7px;padding:5px 8px;font-size:14px;
+    flex:1;border:1px solid var(--accent);border-radius:7px;padding:6px 8px;font-size:14px;
     color:var(--ink);background:var(--canvas-card);min-width:0;font-family:inherit;
+    line-height:1.35;resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-word;
   }
   .step-title-input:focus{outline:none;}
   .step-row-ghost{
@@ -1172,7 +1173,7 @@
     var badgeHtml = noteCount > 0 ? '<span class="note-badge">'+noteCount+'</span>' : '';
     var isEditing = editingItemId === it.id;
     var titleHtml = isEditing
-      ? '<input type="text" class="step-title-input" data-item-title-input="'+it.id+'" value="'+escapeHtml(it.title)+'">'
+      ? '<textarea class="step-title-input" data-item-title-input="'+it.id+'" rows="1">'+escapeHtml(it.title)+'</textarea>'
       : '<span class="step-title">'+escapeHtml(it.title)+'</span>';
     return ''+
     '<div class="step-row '+(it.done?"done":"")+(isPriority?" priority":"")+'" style="'+rowStyle+'">'+
@@ -1213,6 +1214,11 @@
       var ta = document.getElementById("note-modal-textarea");
       if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
     }, 30);
+  }
+
+  function autoGrowTextarea(el){
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
   }
 
   /* ---------- AI generation ---------- */
@@ -1767,7 +1773,7 @@
             render();
             setTimeout(function(){
               var input = document.querySelector('[data-item-title-input="'+itemId+'"]');
-              if(input){ input.focus(); input.select(); }
+              if(input){ input.focus(); input.select(); autoGrowTextarea(input); }
             }, 30);
           }
           activePointerId = null;
@@ -1853,6 +1859,8 @@
 
     // Titre de tâche — édition inline (appui court)
     document.querySelectorAll("[data-item-title-input]").forEach(function(el){
+      autoGrowTextarea(el);
+      el.addEventListener("input", function(){ autoGrowTextarea(el); });
       el.addEventListener("keydown", function(e){
         if(e.key === "Enter"){ e.preventDefault(); el.blur(); }
         else if(e.key === "Escape"){ e.preventDefault(); editingItemId = null; render(); }
