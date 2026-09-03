@@ -53,10 +53,10 @@
   .btn-danger{color:#9C4632;}
 
   /* HOME TREEMAP */
-  .home-container{position:fixed;inset:0;background:var(--line);overflow:hidden;}
-  .home-treemap-inner{position:relative;width:100%;}
+  .home-container{position:fixed;inset:0;background:var(--line);overflow-y:auto;overflow-x:hidden;}
+  .home-treemap-inner{position:relative;width:100%;padding-bottom:70px;}
   .tile{
-    position:absolute;border-radius:16px;padding:4px;
+    position:absolute;border-radius:16px;padding:4px;box-sizing:border-box;
     background:conic-gradient(var(--ring-color,var(--line)) calc(var(--pct,0)*1%), var(--line) 0);
   }
   @media (prefers-reduced-motion:no-preference){.tile{transition:filter .12s ease;}}
@@ -776,6 +776,7 @@
 
   var TREEMAP_UNIT_AREA = 3400; // px² "naturels" par point de poids (tâches + catégories)
   var TREEMAP_MIN_HEIGHT = 130;
+  var MIN_TILE_W = 130, MIN_TILE_H = 92; // garantit un titre jamais tronqué
 
   function layoutHomeTreemap(){
     var container = document.getElementById("home-container");
@@ -788,9 +789,24 @@
     });
     var totalWeight = items.reduce(function(s,x){ return s + x.value; }, 0);
     var naturalHeight = (totalWeight * TREEMAP_UNIT_AREA) / W;
-    var treemapH = Math.min(viewportH, Math.max(TREEMAP_MIN_HEIGHT, naturalHeight));
+    var treemapH = Math.max(TREEMAP_MIN_HEIGHT, naturalHeight);
 
     var rects = computeTreemap(items, W, treemapH);
+    var minArea = MIN_TILE_W * MIN_TILE_H;
+    var guard = 0;
+    while(guard < 8){
+      var smallestW = Infinity, smallestH = Infinity, smallestArea = Infinity;
+      rects.forEach(function(r){
+        smallestW = Math.min(smallestW, r.w);
+        smallestH = Math.min(smallestH, r.h);
+        smallestArea = Math.min(smallestArea, r.w*r.h);
+      });
+      if(smallestW >= MIN_TILE_W && smallestH >= MIN_TILE_H && smallestArea >= minArea) break;
+      treemapH *= 1.25;
+      rects = computeTreemap(items, W, treemapH);
+      guard++;
+    }
+
     var gutter = 3;
 
     var html = rects.map(function(r){
