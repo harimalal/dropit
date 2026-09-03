@@ -264,6 +264,21 @@
   }
   .note-add-area:focus{outline:none;border-color:var(--accent);}
   .note-add-hint{font-size:10.5px;color:var(--ink-faint);margin-top:4px;}
+  .note-add-trigger{
+    width:100%;box-sizing:border-box;text-align:left;border:1px dashed var(--line);border-radius:8px;
+    padding:9px 10px;font-size:13px;color:var(--ink-faint);background:transparent;
+  }
+  .note-add-trigger:hover{border-color:var(--accent);color:var(--accent);}
+  /* NOTE EDIT MODAL (tâche) */
+  .note-edit-modal{position:fixed;inset:0;z-index:55;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
+  .note-edit-modal-box{width:100%;max-width:620px;height:62vh;background:var(--canvas-card);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 32px rgba(43,36,32,0.18);}
+  .note-edit-modal-header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
+  .note-edit-modal-title{font-size:13.5px;font-weight:700;color:var(--ink);}
+  .note-edit-modal-textarea{
+    flex:1;width:100%;box-sizing:border-box;border:none;background:transparent;
+    padding:16px 18px;font-size:15px;color:var(--ink);outline:none;resize:none;font-family:inherit;line-height:1.5;
+  }
+  .note-edit-modal-actions{border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));}
   /* NOTES LIBRES PROJET */
   .project-notes-section{margin-top:14px;}
   .proj-notes-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;display:block;padding-top:12px;border-top:1px solid var(--line);}
@@ -364,7 +379,7 @@
   var chatProjectOpen = false;
   var chatHomeOpen = false;
   var noteOpenId = null;
-  var noteEditId = null;
+  var noteModal = null; // {taskId, noteId (null = nouvelle note), text}
   var projectNoteEditId = null;
   var projectNoteOpenId = null;
 
@@ -889,6 +904,7 @@
       '</div>'+
     '</div>'+
     renderChatModal(p)+
+    renderNoteModal()+
     '<button class="chat-icon-btn" id="chat-icon-btn" title="Demander à l\'IA">'+chatIcon()+'</button>'+
     '<div class="toast" id="toast"></div>';
   }
@@ -933,6 +949,7 @@
       '<div class="detail-inner">'+ headerHtml + listHtml +'</div>'+
     '</div>'+
     renderChatModal(p)+
+    renderNoteModal()+
     '<button class="chat-icon-btn" id="chat-icon-btn" title="Demander à l\'IA">'+chatIcon()+'</button>'+
     '<div class="toast" id="toast"></div>';
   }
@@ -947,25 +964,32 @@
   function renderItemNotePanel(it){
     if(noteOpenId !== it.id) return '';
     var notesHtml = (it.notes||[]).map(function(n){
-      if(noteEditId === n.id){
-        return '<div class="note-entry">'+
-          '<textarea class="note-edit-area" data-note-edit-id="'+n.id+'" data-note-edit-task="'+it.id+'" rows="2">'+escapeHtml(n.text)+'</textarea>'+
-          '<div class="note-edit-actions">'+
-            '<button class="note-edit-ok" data-note-edit-id="'+n.id+'" data-note-edit-task="'+it.id+'">OK</button>'+
-            '<button class="note-edit-cancel">Annuler</button>'+
-          '</div>'+
-        '</div>';
-      }
       return '<div class="note-entry">'+
         '<span class="note-entry-text">'+escapeHtml(n.text)+'</span>'+
-        '<button class="note-pencil-btn" data-note-edit-open="'+n.id+'" title="Modifier">'+pencilIcon()+'</button>'+
+        '<button class="note-pencil-btn" data-note-modal-edit="'+n.id+'" data-note-modal-task="'+it.id+'" title="Modifier">'+pencilIcon()+'</button>'+
         '<button class="note-delete-btn" data-delete-note="'+n.id+'" data-delete-note-task="'+it.id+'">×</button>'+
       '</div>';
     }).join('');
     return '<div class="note-panel">'+
       notesHtml+
-      '<textarea class="note-add-area" data-note-add-task="'+it.id+'" placeholder="Écris, colle ou dicte une note…" rows="2"></textarea>'+
-      '<div class="note-add-hint">Sauvegarde automatique</div>'+
+      '<button class="note-add-trigger" data-note-modal-add="'+it.id+'">+ Ajouter une note</button>'+
+    '</div>';
+  }
+
+  function renderNoteModal(){
+    if(!noteModal) return '';
+    var isNew = !noteModal.noteId;
+    return '<div class="note-edit-modal" id="note-edit-modal">'+
+      '<div class="note-edit-modal-box">'+
+        '<div class="note-edit-modal-header">'+
+          '<div class="note-edit-modal-title">'+(isNew?'Nouvelle note':'Modifier la note')+'</div>'+
+          '<button class="chat-close-btn" id="note-modal-close-btn">×</button>'+
+        '</div>'+
+        '<textarea class="note-edit-modal-textarea" id="note-modal-textarea" placeholder="Écris, colle ou dicte une note…">'+escapeHtml(noteModal.text)+'</textarea>'+
+        '<div class="note-edit-modal-actions">'+
+          '<button class="btn btn-primary" id="note-modal-save-btn" style="flex:1;">Enregistrer</button>'+
+        '</div>'+
+      '</div>'+
     '</div>';
   }
 
@@ -1110,6 +1134,13 @@
     requestAnimationFrame(function(){ t.classList.add("show"); });
     clearTimeout(showToast._timer);
     showToast._timer = setTimeout(function(){ t.classList.remove("show"); }, 1800);
+  }
+
+  function focusNoteModalTextarea(){
+    setTimeout(function(){
+      var ta = document.getElementById("note-modal-textarea");
+      if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+    }, 30);
   }
 
   /* ---------- AI generation ---------- */
@@ -1650,22 +1681,6 @@
         var id = el.dataset.noteOpen;
         noteOpenId = (noteOpenId === id) ? null : id;
         render();
-        if(noteOpenId){
-          setTimeout(function(){
-            var ta = document.querySelector('[data-note-add-task="'+noteOpenId+'"]');
-            if(ta) ta.focus();
-          }, 30);
-        }
-      });
-    });
-    // Notes tâche — sauvegarde auto au blur du textarea
-    document.querySelectorAll("[data-note-add-task]").forEach(function(el){
-      el.addEventListener("blur", function(){
-        if(!el.value.trim()) return;
-        var itemId = el.dataset.noteAddTask;
-        var text = el.value;
-        el.value = '';
-        performAddNote(currentProjectId, itemId, text);
       });
     });
     // Notes tâche — suppression d'une note
@@ -1724,21 +1739,42 @@
     document.querySelectorAll("[data-pn-move]").forEach(function(el){
       el.addEventListener("change", function(){ performMoveProjectNote(currentProjectId, el.dataset.pnMove, el.value||null); });
     });
-    // Note edit — ouvrir
-    document.querySelectorAll("[data-note-edit-open]").forEach(function(el){
-      el.addEventListener("click", function(){ noteEditId = el.dataset.noteEditOpen; render(); });
-    });
-    // Note edit — OK
-    document.querySelectorAll("[data-note-edit-ok]").forEach(function(el){
+    // Note tâche — ouvrir modal (nouvelle note)
+    document.querySelectorAll("[data-note-modal-add]").forEach(function(el){
       el.addEventListener("click", function(){
-        var area = document.querySelector('[data-note-edit-id="'+el.dataset.noteEditId+'"]');
-        if(area) performEditNote(currentProjectId, el.dataset.noteEditTask, el.dataset.noteEditId, area.value);
+        noteModal = {taskId: el.dataset.noteModalAdd, noteId: null, text: ''};
+        render();
+        focusNoteModalTextarea();
       });
     });
-    // Note edit — Annuler
-    document.querySelectorAll(".note-edit-cancel").forEach(function(el){
-      el.addEventListener("click", function(){ noteEditId = null; render(); });
+    // Note tâche — ouvrir modal (édition)
+    document.querySelectorAll("[data-note-modal-edit]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var taskId = el.dataset.noteModalTask, noteId = el.dataset.noteModalEdit;
+        var found = findItemAnywhere(findProject(currentProjectId), taskId);
+        var note = found && (found.item.notes||[]).filter(function(n){ return n.id===noteId; })[0];
+        noteModal = {taskId: taskId, noteId: noteId, text: note ? note.text : ''};
+        render();
+        focusNoteModalTextarea();
+      });
     });
+    // Note tâche modal — fermer sans sauvegarder
+    if(noteModal){
+      var noteModalCloseBtn = document.getElementById("note-modal-close-btn");
+      if(noteModalCloseBtn) noteModalCloseBtn.addEventListener("click", function(){ noteModal = null; render(); });
+      var noteModalEl = document.getElementById("note-edit-modal");
+      if(noteModalEl) noteModalEl.addEventListener("click", function(e){ if(e.target === noteModalEl){ noteModal = null; render(); } });
+      var noteModalSaveBtn = document.getElementById("note-modal-save-btn");
+      if(noteModalSaveBtn) noteModalSaveBtn.addEventListener("click", function(){
+        var ta = document.getElementById("note-modal-textarea");
+        var text = ta ? ta.value : '';
+        if(!text.trim()){ noteModal = null; render(); return; }
+        var taskId = noteModal.taskId, noteId = noteModal.noteId;
+        noteModal = null;
+        if(noteId) performEditNote(currentProjectId, taskId, noteId, text);
+        else performAddNote(currentProjectId, taskId, text);
+      });
+    }
     // Chat — save as note
     document.querySelectorAll("[data-save-note-idx]").forEach(function(el){
       el.addEventListener("click", function(){
