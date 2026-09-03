@@ -1748,7 +1748,7 @@
         var pressTimer = null, startX = 0, startY = 0, longPressed = false, moved = false, activePointerId = null;
 
         itemEl.addEventListener("pointerdown", function(e){
-          if(e.target.closest("button") || e.target.closest("input")) return;
+          if(e.target.closest("button") || e.target.closest("input") || e.target.closest("textarea")) return;
           if(e.pointerType === "mouse" && e.button !== 0) return;
           startX = e.clientX; startY = e.clientY; longPressed = false; moved = false;
           activePointerId = e.pointerId;
