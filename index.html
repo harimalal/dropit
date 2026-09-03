@@ -1773,7 +1773,7 @@
             render();
             setTimeout(function(){
               var input = document.querySelector('[data-item-title-input="'+itemId+'"]');
-              if(input){ input.focus(); input.select(); autoGrowTextarea(input); }
+              if(input){ input.focus(); input.setSelectionRange(input.value.length, input.value.length); autoGrowTextarea(input); }
             }, 30);
           }
           activePointerId = null;
