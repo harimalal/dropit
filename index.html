@@ -52,32 +52,31 @@
   .btn-ghost:hover{background:var(--accent-soft);}
   .btn-danger{color:#9C4632;}
 
-  /* HOME TREEMAP */
-  .home-container{position:fixed;inset:0;background:var(--line);overflow-y:auto;overflow-x:hidden;}
-  .home-treemap-inner{position:relative;width:100%;padding-bottom:70px;}
+  /* HOME BADGES */
+  .home-container{position:fixed;inset:0;background:var(--line);overflow:hidden;}
+  .home-badges{
+    display:flex;flex-wrap:wrap;align-content:flex-start;justify-content:center;
+    gap:8px;padding:10px;width:100%;height:100%;box-sizing:border-box;
+  }
   .tile{
-    position:absolute;border-radius:16px;padding:4px;
+    flex-shrink:0;border-radius:16px;padding:4px;box-sizing:border-box;
     background:conic-gradient(var(--ring-color,var(--line)) calc(var(--pct,0)*1%), var(--line) 0);
   }
   @media (prefers-reduced-motion:no-preference){.tile{transition:filter .12s ease;}}
   .tile:hover{filter:brightness(0.98);}
   .tile-body{
     height:100%;width:100%;border-radius:12px;background:var(--canvas-card);
-    display:flex;flex-direction:column;overflow:hidden;padding:14px;
+    display:flex;flex-direction:column;overflow:hidden;padding:14px;box-sizing:border-box;
   }
   .tile-emoji{line-height:1;}
-  .tile-title{font-weight:800;letter-spacing:-0.01em;line-height:1.2;color:var(--ink);margin-top:6px;
-    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;}
+  .tile-title{font-weight:800;letter-spacing:-0.01em;line-height:1.2;color:var(--ink);margin-top:6px;white-space:nowrap;}
   .tile-meta{margin-top:auto;display:flex;align-items:center;justify-content:space-between;
-    font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);}
+    font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);white-space:nowrap;}
   .tile-status-word{font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
   .tile-status-word.actif{color:var(--status-actif);}
   .tile-status-word.ralentit{color:var(--status-ralentit);}
   .tile-status-word.pause{color:var(--status-pause);}
   .tile-status-word.accompli{color:var(--status-accompli);}
-  .tile.size-tiny .tile-body{padding:8px;justify-content:center;align-items:center;text-align:center;}
-  .tile.size-tiny .tile-title{-webkit-line-clamp:1;margin-top:2px;}
-  .tile.size-tiny .tile-meta{display:none;}
 
   .empty-state{
     position:absolute;inset:24px;border:1px dashed var(--line);border-radius:var(--radius);
@@ -649,60 +648,29 @@
     }, 350);
   }
 
-  /* ---------- treemap math (squarify) ---------- */
+  /* ---------- badge sizing (mesure de texte) ---------- */
 
-  function squarify(items, x, y, w, h, result){
-    if(items.length === 0) return;
-    if(items.length === 1){ result.push({item:items[0], x:x, y:y, w:w, h:h}); return; }
-    function worstRatio(rowValues, length){
-      var sum=0, max=-Infinity, min=Infinity;
-      rowValues.forEach(function(v){ sum+=v; if(v>max)max=v; if(v<min)min=v; });
-      var sq=length*length, sumsq=sum*sum;
-      return Math.max((sq*max)/sumsq, sumsq/(sq*min));
-    }
-    var vertical = w >= h;
-    var length = vertical ? h : w;
-    var row = [items[0]]; var i=1;
-    while(i<items.length){
-      var testRow = row.concat([items[i]]);
-      var cw = worstRatio(row.map(function(r){return r.value;}), length);
-      var tw = worstRatio(testRow.map(function(r){return r.value;}), length);
-      if(tw <= cw){ row = testRow; i++; } else break;
-    }
-    var sum = row.reduce(function(a,b){return a+b.value;},0);
-    var thickness = sum/length; var offset=0;
-    row.forEach(function(it){
-      var len = it.value/thickness;
-      if(vertical){ result.push({item:it, x:x, y:y+offset, w:thickness, h:len}); }
-      else { result.push({item:it, x:x+offset, y:y, w:len, h:thickness}); }
-      offset += len;
-    });
-    var remaining = items.slice(row.length);
-    if(remaining.length){
-      if(vertical) squarify(remaining, x+thickness, y, w-thickness, h, result);
-      else squarify(remaining, x, y+thickness, w, h-thickness, result);
-    }
+  var __measureCanvas = null;
+  function measureTextWidth(text, fontSize, fontWeight){
+    if(!__measureCanvas) __measureCanvas = document.createElement("canvas");
+    var ctx = __measureCanvas.getContext("2d");
+    ctx.font = fontWeight+" "+fontSize+"px -apple-system, BlinkMacSystemFont, sans-serif";
+    return ctx.measureText(text).width;
   }
-  function computeTreemap(rawItems, W, H){
-    var items = rawItems.slice().sort(function(a,b){return b.value-a.value;});
-    var total = items.reduce(function(a,b){return a+b.value;},0) || 1;
-    var scale = (W*H)/total;
-    items.forEach(function(it){ it.value = it.value*scale; });
-    var result = [];
-    squarify(items, 0, 0, W, H, result);
-    return result;
-  }
-  function sizeClassFor(w,h){
-    var area = w*h;
-    if(area < 8500 || w < 80 || h < 62) return "size-tiny";
-    if(area < 20000) return "size-small";
-    if(area < 42000) return "size-medium";
-    return "size-large";
-  }
-  function titleFontSizeFor(w,h){
-    var s = Math.sqrt(w*h);
-    var fs = 11 + (s-70) * (22-11) / (547-70);
-    return Math.round(Math.max(11, Math.min(22, fs)) * 10) / 10;
+
+  var __measureProbe = null;
+  function getMeasureProbe(){
+    if(!__measureProbe){
+      __measureProbe = document.createElement("div");
+      __measureProbe.className = "tile-body";
+      __measureProbe.style.position = "absolute";
+      __measureProbe.style.visibility = "hidden";
+      __measureProbe.style.left = "-9999px";
+      __measureProbe.style.top = "-9999px";
+      __measureProbe.style.height = "auto";
+      document.body.appendChild(__measureProbe);
+    }
+    return __measureProbe;
   }
 
   /* ---------- icons ---------- */
@@ -791,64 +759,73 @@
     '</div>';
   }
 
-  var MIN_TILE_W = 110, MIN_TILE_H = 86;
+  function buildBadgeHtml(p, weight, minWeight, maxWeight, scaleMul){
+    var norm = (maxWeight > minWeight) ? (weight - minWeight) / (maxWeight - minWeight) : 0.5;
+    var fontSize = (13 + norm * 7) * scaleMul;
+    var padH = 16 * scaleMul;
+    var padV = 10 * scaleMul;
+    var emojiSize = Math.max(14, fontSize * 1.35);
+    var titleWidth = measureTextWidth(p.title, fontSize, "800");
+    var width = Math.max(titleWidth + padH * 2 + 4, 76 * scaleMul);
+    var pct = progressPct(p);
+    var status = activityStatus(p);
+    var items2 = allItems(p);
+    var doneCount = items2.filter(function(it){ return it.done; }).length;
+
+    var emojiHtml = '<div class="tile-emoji" style="font-size:'+emojiSize+'px;">'+p.emoji+'</div>';
+    var titleHtml = '<div class="tile-title" style="font-size:'+fontSize+'px;">'+escapeHtml(p.title)+'</div>';
+    var metaHtml = '<div class="tile-meta">'+
+      '<span class="tile-status-word '+status+'">'+STATUS_LABELS[status]+'</span>'+
+      '<span>'+pct+'% · '+doneCount+'/'+items2.length+'</span>'+
+    '</div>';
+
+    var probe = getMeasureProbe();
+    probe.style.width = width+"px";
+    probe.style.padding = padV+"px "+padH+"px";
+    probe.innerHTML = emojiHtml+titleHtml+metaHtml;
+    var heightWithMeta = probe.scrollHeight;
+    probe.innerHTML = emojiHtml+titleHtml;
+    var heightNoMeta = probe.scrollHeight;
+
+    var targetHeight = (58 + norm * 42) * scaleMul;
+    var showMeta, height;
+    if(targetHeight >= heightWithMeta){ showMeta = true; height = targetHeight; }
+    else if(targetHeight >= heightNoMeta){ showMeta = false; height = targetHeight; }
+    else { showMeta = false; height = heightNoMeta; }
+
+    var ringGutter = 8; // padding:4px de chaque côté du .tile (anneau de progression)
+    return ''+
+    '<div class="tile" data-project-id="'+p.id+'" '+
+      'style="width:'+(width+ringGutter)+'px;height:'+(height+ringGutter)+'px;--pct:'+pct+';--ring-color:var(--status-'+status+');" '+
+      'role="button" tabindex="0">'+
+      '<div class="tile-body" style="padding:'+padV+'px '+padH+'px;">'+
+        emojiHtml+titleHtml+(showMeta ? metaHtml : '')+
+      '</div>'+
+    '</div>';
+  }
 
   function layoutHomeTreemap(){
     var container = document.getElementById("home-container");
     if(!container || state.projects.length === 0) return;
-    var width = container.clientWidth, viewportHeight = container.clientHeight;
-    if(width < 40 || viewportHeight < 40) return;
+    var W = container.clientWidth, H = container.clientHeight;
+    if(W < 40 || H < 40) return;
 
-    function makeItems(){
-      return state.projects.map(function(p){
-        return {id:p.id, project:p, value: Math.max(1, allItems(p).length)};
-      });
-    }
+    var weights = state.projects.map(function(p){
+      return {p:p, weight: allItems(p).length + p.categories.length};
+    });
+    var minWeight = Math.min.apply(null, weights.map(function(x){ return x.weight; }));
+    var maxWeight = Math.max.apply(null, weights.map(function(x){ return x.weight; }));
 
-    var height = viewportHeight;
-    var rects = computeTreemap(makeItems(), width, height);
-    var minArea = MIN_TILE_W * MIN_TILE_H;
+    var scaleMul = 1;
     var guard = 0;
-    while(guard < 8){
-      var smallestW = Infinity, smallestH = Infinity, smallestArea = Infinity;
-      rects.forEach(function(r){
-        smallestW = Math.min(smallestW, r.w);
-        smallestH = Math.min(smallestH, r.h);
-        smallestArea = Math.min(smallestArea, r.w*r.h);
-      });
-      if(smallestW >= MIN_TILE_W && smallestH >= MIN_TILE_H && smallestArea >= minArea) break;
-      height *= 1.3;
-      rects = computeTreemap(makeItems(), width, height);
+    while(true){
+      var html = weights.map(function(x){ return buildBadgeHtml(x.p, x.weight, minWeight, maxWeight, scaleMul); }).join("");
+      container.innerHTML = '<div class="home-badges" id="home-badges">'+html+'</div>';
+      var badges = document.getElementById("home-badges");
+      if(badges.scrollHeight <= H + 1 || scaleMul <= 0.5 || guard >= 7) break;
+      scaleMul *= 0.85;
       guard++;
     }
-
-    var gutter = 3;
-
-    var html = rects.map(function(r){
-      var p = r.item.project;
-      var x=r.x+gutter, y=r.y+gutter, w=Math.max(0,r.w-gutter*2), h=Math.max(0,r.h-gutter*2);
-      var sizeClass = sizeClassFor(w,h);
-      var titleFontSize = titleFontSizeFor(w,h);
-      var pct = progressPct(p);
-      var status = activityStatus(p);
-      var showMeta = sizeClass !== "size-tiny";
-      var items2 = allItems(p);
-      var doneCount = items2.filter(function(it){return it.done;}).length;
-      return ''+
-      '<div class="tile '+sizeClass+'" data-project-id="'+p.id+'" '+
-        'style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;--pct:'+pct+';--ring-color:var(--status-'+status+');" '+
-        'role="button" tabindex="0">'+
-        '<div class="tile-body">'+
-          '<div class="tile-emoji" style="font-size:'+Math.max(16,titleFontSize*1.3)+'px;">'+p.emoji+'</div>'+
-          '<div class="tile-title" style="font-size:'+titleFontSize+'px;">'+escapeHtml(p.title)+'</div>'+
-          (showMeta ? '<div class="tile-meta">'+
-            '<span class="tile-status-word '+status+'">'+STATUS_LABELS[status]+'</span>'+
-            '<span>'+pct+'% · '+doneCount+'/'+items2.length+'</span>'+
-          '</div>' : '')+
-        '</div>'+
-      '</div>';
-    }).join("");
-    container.innerHTML = '<div class="home-treemap-inner" style="height:'+Math.ceil(height)+'px;">'+html+'</div>';
 
     container.querySelectorAll("[data-project-id]").forEach(function(el){
       el.addEventListener("click", function(){
