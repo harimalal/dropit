@@ -68,13 +68,7 @@
   .tile-emoji{line-height:1;}
   .tile-title{font-weight:800;letter-spacing:-0.01em;line-height:1.2;color:var(--ink);margin-top:6px;
     display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;}
-  .tile-meta{margin-top:auto;display:flex;align-items:center;justify-content:space-between;
-    font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);}
-  .tile-status-word{font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
-  .tile-status-word.actif{color:var(--status-actif);}
-  .tile-status-word.ralentit{color:var(--status-ralentit);}
-  .tile-status-word.pause{color:var(--status-pause);}
-  .tile-status-word.accompli{color:var(--status-accompli);}
+  .tile-meta{margin-top:auto;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);}
   .tile.size-tiny .tile-body{padding:8px;justify-content:center;align-items:center;text-align:center;}
   .tile.size-tiny .tile-title{-webkit-line-clamp:1;margin-top:2px;}
   .tile.size-tiny .tile-meta{display:none;}
@@ -804,8 +798,6 @@
       var pct = progressPct(p);
       var status = activityStatus(p);
       var showMeta = sizeClass !== "size-tiny";
-      var items2 = allItems(p);
-      var doneCount = items2.filter(function(it){return it.done;}).length;
       return ''+
       '<div class="tile '+sizeClass+'" data-project-id="'+p.id+'" '+
         'style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;--pct:'+pct+';--ring-color:var(--status-'+status+');" '+
@@ -813,10 +805,7 @@
         '<div class="tile-body">'+
           '<div class="tile-emoji" style="font-size:'+Math.max(16,titleFontSize*1.3)+'px;">'+p.emoji+'</div>'+
           '<div class="tile-title" style="font-size:'+titleFontSize+'px;">'+escapeHtml(p.title)+'</div>'+
-          (showMeta ? '<div class="tile-meta">'+
-            '<span class="tile-status-word '+status+'">'+STATUS_LABELS[status]+'</span>'+
-            '<span>'+pct+'% · '+doneCount+'/'+items2.length+'</span>'+
-          '</div>' : '')+
+          (showMeta ? '<div class="tile-meta">'+pct+'%</div>' : '')+
         '</div>'+
       '</div>';
     }).join("");
