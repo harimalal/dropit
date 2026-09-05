@@ -6,8 +6,8 @@
 <title>Dropit</title>
 <style>
   :root{
-    /* Neutres — fond blanc pur (design system v6, retour "encore beige" traité) */
-    --canvas:#FFFFFF;
+    /* Neutres — fond neutre très clair (v13, analyse directe de l'image de référence : ni blanc pur, ni beige) */
+    --canvas:#F8F8F9;
     --canvas-card:#FFFFFF;
     --ink:#2B2420;
     --ink-soft:#7A7168;
@@ -33,25 +33,31 @@
     --status-accompli:#BF5B44;
     --status-accompli-soft:#F3E2DC;
 
-    /* Projet — 8 teintes, une base par teinte → voile 5% (carte) + voile 28% (badge) + solide (checkbox) */
-    --proj-terracotta-card:#FDF7F6; --proj-terracotta-badge:#F5D4CD; --proj-terracotta-solid:#D25C41;
-    --proj-corail-card:#FDF6F8;     --proj-corail-badge:#F5CDD7;     --proj-corail-solid:#D24165;
-    --proj-ambre-card:#FDFAF6;      --proj-ambre-badge:#F5E4CD;      --proj-ambre-solid:#C6872F;
-    --proj-emeraude-card:#F6FDFA;   --proj-emeraude-badge:#CDF5E4;   --proj-emeraude-solid:#27A571;
-    --proj-sarcelle-card:#F6FDFD;   --proj-sarcelle-badge:#CDF5F5;   --proj-sarcelle-solid:#26A1A1;
-    --proj-azur-card:#F6FAFD;       --proj-azur-badge:#CDE4F5;       --proj-azur-solid:#4196D2;
-    --proj-indigo-card:#F7F6FD;     --proj-indigo-badge:#D0CDF5;     --proj-indigo-solid:#4D41D2;
-    --proj-mure-card:#FBF6FD;       --proj-mure-badge:#EBCDF5;       --proj-mure-solid:#AE41D2;
+    /* Projet — 8 teintes, une base par teinte → voile 15% (carte, recalibré v13 sur la référence) + voile 28% (badge plat) + solide (checkbox) */
+    --proj-terracotta-card:#FAE8E4; --proj-terracotta-badge:#F5D4CD; --proj-terracotta-solid:#D25C41;
+    --proj-corail-card:#FAE4E9;     --proj-corail-badge:#F5CDD7;     --proj-corail-solid:#D24165;
+    --proj-ambre-card:#FAF1E4;      --proj-ambre-badge:#F5E4CD;      --proj-ambre-solid:#C6872F;
+    --proj-emeraude-card:#E4FAF1;   --proj-emeraude-badge:#CDF5E4;   --proj-emeraude-solid:#27A571;
+    --proj-sarcelle-card:#E4FAFA;   --proj-sarcelle-badge:#CDF5F5;   --proj-sarcelle-solid:#26A1A1;
+    --proj-azur-card:#E4F1FA;       --proj-azur-badge:#CDE4F5;       --proj-azur-solid:#4196D2;
+    --proj-indigo-card:#E6E4FA;     --proj-indigo-badge:#D0CDF5;     --proj-indigo-solid:#4D41D2;
+    --proj-mure-card:#F4E4FA;       --proj-mure-badge:#EBCDF5;       --proj-mure-solid:#AE41D2;
 
-    /* Badge "effet verre" — translucide + flou (backdrop-filter), pour l'accueil */
-    --proj-terracotta-glass:rgba(221,102,75,0.4); --proj-corail-glass:rgba(221,75,111,0.4); --proj-ambre-glass:rgba(221,160,75,0.4);
-    --proj-emeraude-glass:rgba(75,221,160,0.4);   --proj-sarcelle-glass:rgba(75,221,221,0.4); --proj-azur-glass:rgba(75,160,221,0.4);
-    --proj-indigo-glass:rgba(87,75,221,0.4);      --proj-mure-glass:rgba(184,75,221,0.4);
+    /* Badge "effet verre" — voile translucide (alpha 0.55) + reflet en dégradé, SANS backdrop-filter
+       (le flou d'arrière-plan produisait un halo gris-beige aux coins arrondis — bug de rendu connu) */
+    --proj-terracotta-glass:rgba(221,102,75,0.55); --proj-corail-glass:rgba(221,75,111,0.55); --proj-ambre-glass:rgba(221,160,75,0.55);
+    --proj-emeraude-glass:rgba(75,221,160,0.55);   --proj-sarcelle-glass:rgba(75,221,221,0.55); --proj-azur-glass:rgba(75,160,221,0.55);
+    --proj-indigo-glass:rgba(87,75,221,0.55);      --proj-mure-glass:rgba(184,75,221,0.55);
 
-    /* Voile carte de CATÉGORIE spécifiquement — 1.5% (encore 40% plus léger que le 2.5% précédent) */
-    --proj-terracotta-card-faint:#FEFDFC; --proj-corail-card-faint:#FEFCFD; --proj-ambre-card-faint:#FEFEFC;
-    --proj-emeraude-card-faint:#FCFEFE;   --proj-sarcelle-card-faint:#FCFEFE; --proj-azur-card-faint:#FCFEFE;
-    --proj-indigo-card-faint:#FCFCFE;     --proj-mure-card-faint:#FEFCFE;
+    /* Anneau du treemap — 65% (moins "pur" que le solide 100% du tour précédent, reste net) */
+    --proj-terracotta-ring:#E99C8A; --proj-corail-ring:#E98AA1; --proj-ambre-ring:#E9C18A;
+    --proj-emeraude-ring:#8AE9C1;   --proj-sarcelle-ring:#8AE9E9; --proj-azur-ring:#8AC1E9;
+    --proj-indigo-ring:#928AE9;     --proj-mure-ring:#D18AE9;
+
+    /* Voile carte de CATÉGORIE spécifiquement — 6% (recalibré, était trop pâle à 1.5%) */
+    --proj-terracotta-card-faint:#FDF6F4; --proj-corail-card-faint:#FDF4F6; --proj-ambre-card-faint:#FDF9F4;
+    --proj-emeraude-card-faint:#F4FDF9;   --proj-sarcelle-card-faint:#F4FDFD; --proj-azur-card-faint:#F4F9FD;
+    --proj-indigo-card-faint:#F5F4FD;     --proj-mure-card-faint:#FBF4FD;
 
     /* Voile TÂCHES PRIORITAIRES — 10% (encore 50% plus léger que le 20% précédent) */
     --proj-terracotta-priority:#FCF0ED; --proj-corail-priority:#FCEDF1; --proj-ambre-priority:#FCF6ED;
@@ -122,9 +128,12 @@
   }
   .tile-emoji{
     line-height:1;width:44px;height:44px;border-radius:var(--radius-sm);font-size:31px;
-    background:var(--tile-badge-glass,var(--accent-soft));
-    -webkit-backdrop-filter:blur(8px) saturate(160%);backdrop-filter:blur(8px) saturate(160%);
-    border:none;box-shadow:none;
+    /* Effet verre fiable : voile translucide + reflet en dégradé, sans backdrop-filter
+       (le flou produisait un halo gris-beige aux coins arrondis — bug de rendu écarté) */
+    background:
+      linear-gradient(135deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,.12) 40%, rgba(255,255,255,0) 65%),
+      var(--tile-badge-glass,var(--accent-soft));
+    border:none;box-shadow:none;overflow:hidden;
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
   }
   .tile-title{font-weight:700;letter-spacing:-0.01em;line-height:1.25;color:var(--ink);margin-top:8px;
@@ -927,7 +936,8 @@
       priority:  "var(--proj-"+name+"-priority)",
       btn:       "var(--proj-"+name+"-btn)",
       next:      "var(--proj-"+name+"-next)",
-      glass:     "var(--proj-"+name+"-glass)"
+      glass:     "var(--proj-"+name+"-glass)",
+      ring:      "var(--proj-"+name+"-ring)"
     };
   }
   function escapeHtml(s){
@@ -1512,7 +1522,7 @@
       var pc = projectColorVars(p.id);
       return ''+
       '<div class="tile '+sizeClass+'" data-project-id="'+p.id+'" '+
-        'style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;--pct:'+pct+';--ring-color:'+pc.solid+';'+
+        'style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;--pct:'+pct+';--ring-color:'+pc.ring+';'+
           '--tile-card-bg:'+pc.card+';--tile-badge-glass:'+pc.glass+';" '+
         'role="button" tabindex="0">'+
         '<div class="tile-body">'+

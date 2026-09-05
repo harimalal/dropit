@@ -118,6 +118,18 @@ Conséquence factuelle à connaître : un projet qui ralentit ou est en pause n'
 - Badge de tuile (`.tile-emoji`) : nouveau token `--proj-*-glass` (rgba, alpha 0.4, sur la teinte de base) + `backdrop-filter: blur(8px) saturate(160%)` — effet verre translucide, `border:none` et `box-shadow:none` explicites.
 - Anneau du treemap : couleur reprise de `pc.solid` (opaque, pleine saturation) au lieu de `pc.badge` (voile 28%) — satisfait "100% opacité" demandé. L'arc continue d'encoder le % (inchangé).
 
+## Re-cadrage partiel #11 (2026-09-05) — bug corrigé + recalibrage sur la référence
+
+**Bug identifié et corrigé :** halo gris-beige visible aux coins arrondis des badges. Cause : `backdrop-filter: blur()` combiné à `border-radius` produit un artefact de rendu connu (le flou échantillonne au-delà des limites de l'élément, révélant les teintes chaudes-grises des bordures voisines). Fix : suppression totale de `backdrop-filter`, remplacé par une superposition fiable — voile translucide (rgba alpha 0.55) + dégradé diagonal blanc décroissant (reflet), aucun échantillonnage externe possible, `overflow:hidden` en garde-fou.
+
+**Recalibrage sur relecture directe de l'image de référence** (fournie une seconde fois par l'utilisateur, avec la consigne explicite d'analyser le fond) :
+- Fond d'app : #FFFFFF (blanc pur) → #F8F8F9 (neutre très clair, ni blanc franc ni beige — c'est ce que montre réellement l'image, pas un blanc à 100%)
+- Voile de carte principal : 5% → 15% (les cartes de la référence sont nettement plus colorées que ce qu'on avait poussé après plusieurs tours d'allègement successifs — retour en arrière assumé)
+- Voile carte de catégorie : 1.5% → 6% (même logique, proportionnellement)
+- Anneau du treemap : 100% (solide pur) → 65% de mix — le "100% opacité" demandé au tour précédent a produit une couleur perçue comme trop pure une fois vue en contexte ; 65% reste net et pleinement visible sans être criard
+
+Motif de la méthode : plutôt que d'ajuster à nouveau à l'aveugle sur une description verbale, relecture complète de l'image de référence pixel par pixel (densité de pastel des cartes, ton du fond) avant de fixer les valeurs finales.
+
 ## Décisions d'exécution (non structurantes)
 - 2026-09-05T18:20 — Palette générée par script Python (formule HSL + calcul WCAG réel, pas estimé), voir Décision #1 (agent : Directeur artistique + Auditeur de contraste)
 - 2026-09-05T19:05 — Contraste vert `--status-actif` vs blanc vérifié (4.2, seuil 3:1) avant de l'adopter pour la barre IA (agent : Auditeur de contraste)
