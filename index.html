@@ -1510,8 +1510,11 @@
   function accountFirstName(){
     var email = (session && session.user && session.user.email) || "";
     var local = email.split("@")[0] || "";
-    if(!local) return "";
-    return local.charAt(0).toUpperCase() + local.slice(1);
+    // Ne garder que le tout premier segment (avant un point, tiret ou chiffre) :
+    // "rado.rajaomaria" -> "rado", "jean-dupont" -> "jean", "marie92" -> "marie"
+    var first = local.split(/[.\-_0-9]/)[0] || local;
+    if(!first) return "";
+    return first.charAt(0).toUpperCase() + first.slice(1);
   }
 
   function renderHome(){
