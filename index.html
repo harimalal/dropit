@@ -729,8 +729,13 @@
     renderAuth();
   }
 
-  // Récupère les jetons renvoyés par le fournisseur OAuth dans le fragment
-  // d'URL (#access_token=...) puis nettoie la barre d'adresse.
+  var recoverySession = null; // session tirée du lien "mot de passe oublié", en attente du nouveau mot de passe
+
+  // Récupère les jetons renvoyés dans le fragment d'URL (#access_token=...)
+  // puis nettoie la barre d'adresse. Le lien de réinitialisation renvoie
+  // type=recovery : dans ce cas il ne faut PAS connecter directement
+  // l'utilisateur (bug précédent), mais lui faire choisir un nouveau mot
+  // de passe avant d'entrer dans l'app.
   function consumeOAuthRedirect(){
     var hash = window.location.hash || "";
     if(hash.indexOf("access_token=") < 0){
@@ -742,6 +747,7 @@
       return false;
     }
     var params = new URLSearchParams(hash.slice(1));
+    var isRecovery = params.get("type") === "recovery";
     var s = sessionFromTokenResponse({
       access_token: params.get("access_token"),
       refresh_token: params.get("refresh_token"),
@@ -749,8 +755,46 @@
     });
     history.replaceState(null, "", window.location.pathname);
     if(!s) return false;
+    if(isRecovery){
+      recoverySession = s;
+      authMode = "newpassword";
+      return "recovery";
+    }
     saveSession(s);
     return true;
+  }
+
+  function performSetNewPassword(newPassword){
+    if(authBusy) return;
+    if(!recoverySession){ authError = "Lien expiré. Redemande une réinitialisation."; renderAuth(); return; }
+    if(!newPassword || newPassword.length < 6){
+      authError = "Le mot de passe doit faire au moins 6 caractères."; renderAuth(); return;
+    }
+    authBusy = true; authError = ""; authInfo = ""; renderAuth();
+    fetch(supa.url + "/auth/v1/user", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": supa.anon,
+        "Authorization": "Bearer " + recoverySession.access_token
+      },
+      body: JSON.stringify({password: newPassword})
+    }).then(function(res){
+      return res.json().then(function(data){ return {ok: res.ok, status: res.status, data: data}; });
+    }).then(function(r){
+      authBusy = false;
+      if(!r.ok){ authError = authErrorMessage(r.data, r.status); renderAuth(); return; }
+      // Le jeton de récupération devient un jeton de session valide une fois
+      // le mot de passe posé : pas besoin de forcer une reconnexion.
+      saveSession(recoverySession);
+      recoverySession = null;
+      bootAfterAuth();
+      showToast("Mot de passe mis à jour");
+    }).catch(function(){
+      authBusy = false;
+      authError = "Connexion au serveur impossible. Réessaie.";
+      renderAuth();
+    });
   }
 
   function fetchCurrentUser(){
@@ -1120,7 +1164,38 @@
     return '<svg viewBox="0 0 18 18" fill="currentColor"><path d="M12.9 9.55c-.02-1.86 1.52-2.75 1.59-2.8-.87-1.27-2.22-1.44-2.7-1.46-1.15-.12-2.24.68-2.83.68-.58 0-1.48-.66-2.43-.65-1.25.02-2.4.73-3.05 1.84-1.3 2.26-.33 5.6.93 7.44.62.9 1.35 1.9 2.31 1.87.93-.04 1.28-.6 2.4-.6s1.44.6 2.42.58c1-.02 1.63-.91 2.24-1.82.71-1.04 1-2.06 1.02-2.11-.02-.01-1.96-.75-1.98-2.97zM11.06 3.9c.51-.62.86-1.49.76-2.35-.74.03-1.63.49-2.16 1.11-.47.55-.89 1.43-.78 2.28.83.06 1.67-.42 2.18-1.04z"/></svg>';
   }
 
+  function renderNewPasswordScreen(){
+    var app = document.getElementById("app");
+    var msgHtml = "";
+    if(authError) msgHtml = '<div class="auth-msg error">'+escapeHtml(authError)+'</div>';
+    app.innerHTML =
+    '<div class="auth-screen">'+
+      '<div class="auth-box">'+
+        '<div class="auth-logo">🗂️</div>'+
+        '<div class="auth-title">Nouveau mot de passe</div>'+
+        '<div class="auth-sub">Choisis le mot de passe que tu utiliseras désormais pour te connecter.</div>'+
+        '<form class="auth-form" id="newpw-form" novalidate>'+
+          '<input class="auth-input" id="newpw-input" type="password" placeholder="Nouveau mot de passe" '+
+            'autocomplete="new-password" autocapitalize="off" autocorrect="off">'+
+          '<button class="auth-submit" type="submit"'+(authBusy?' disabled':'')+'>'+(authBusy?'…':'Valider')+'</button>'+
+        '</form>'+
+        msgHtml+
+        '<div class="auth-legal">Une fois validé, tu seras connecté directement.</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="toast" id="toast"></div>';
+
+    var form = document.getElementById("newpw-form");
+    if(form) form.addEventListener("submit", function(e){
+      e.preventDefault();
+      performSetNewPassword((document.getElementById("newpw-input")||{}).value || "");
+    });
+    var input = document.getElementById("newpw-input");
+    if(input && !authBusy) setTimeout(function(){ input.focus(); }, 40);
+  }
+
   function renderAuth(){
+    if(authMode === "newpassword") return renderNewPasswordScreen();
     var app = document.getElementById("app");
     var isSignup = authMode === "signup";
     var isForgot = authMode === "forgot";
@@ -2802,6 +2877,7 @@
         authReady = true;
 
         var fromOAuth = consumeOAuthRedirect();
+        if(fromOAuth === "recovery"){ renderAuth(); return; } // écran "nouveau mot de passe"
         if(!fromOAuth) session = loadSession();
 
         if(!session){ renderAuth(); return; }
