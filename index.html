@@ -111,7 +111,12 @@
   .btn-danger{color:#9C4632;}
 
   /* HOME TREEMAP — design system v5 */
-  .home-container{position:fixed;inset:0;background:var(--canvas);overflow:hidden;}
+  .home-container{position:fixed;inset:0;background:var(--canvas);overflow:hidden;display:flex;flex-direction:column;}
+  .home-greeting{
+    flex-shrink:0;padding:calc(16px + env(safe-area-inset-top)) 20px 8px;
+    font-size:20px;font-weight:800;letter-spacing:-.01em;color:var(--ink);
+  }
+  #home-treemap-zone{flex:1;position:relative;min-height:0;overflow:hidden;}
   .home-treemap-inner{position:relative;width:100%;}
   .tile{
     position:absolute;border-radius:var(--radius-lg);padding:2.5px;box-sizing:border-box;
@@ -1502,12 +1507,23 @@
     return email ? escapeHtml(email.charAt(0).toUpperCase()) : "•";
   }
 
+  function accountFirstName(){
+    var email = (session && session.user && session.user.email) || "";
+    var local = email.split("@")[0] || "";
+    if(!local) return "";
+    return local.charAt(0).toUpperCase() + local.slice(1);
+  }
+
   function renderHome(){
     var hasProjects = state.projects.length > 0;
-    var containerHtml = hasProjects ? '' :
-      '<div class="empty-state"><b>Dis ce que tu veux réaliser.</b><span>Écris une intention en bas — l\'IA construit le projet pour toi.</span></div>';
+    var firstName = accountFirstName();
+    var greetingHtml = '<div class="home-greeting" id="home-greeting">'+
+      "Let's Go" + (firstName ? " ! "+escapeHtml(firstName) : " !") + ' 🔥</div>';
+    var bodyHtml = hasProjects
+      ? '<div id="home-treemap-zone"></div>'
+      : '<div class="empty-state"><b>Dis ce que tu veux réaliser.</b><span>Écris une intention en bas — l\'IA construit le projet pour toi.</span></div>';
     return ''+
-    '<div class="home-container" id="home-container">'+containerHtml+'</div>'+
+    '<div class="home-container" id="home-container">'+greetingHtml+bodyHtml+'</div>'+
     renderComposeBar()+
     renderHomeChatModal()+
     renderTaskList()+
@@ -1568,11 +1584,13 @@
   var TREEMAP_MIN_HEIGHT = 130;
 
   function layoutHomeTreemap(){
-    var container = document.getElementById("home-container");
-    if(!container || state.projects.length === 0) return;
+    var zone = document.getElementById("home-treemap-zone");
+    if(!zone || state.projects.length === 0) return;
+    // La zone est flex:1 dans .home-container (flex column) : sa hauteur exclut déjà
+    // automatiquement la salutation, pas besoin de la soustraire manuellement.
     var composeBar = document.getElementById("compose-bar");
     var composeBarClearance = (composeBar ? composeBar.offsetHeight : 60) + 12;
-    var W = container.clientWidth, viewportH = container.clientHeight - composeBarClearance;
+    var W = zone.clientWidth, viewportH = zone.clientHeight - composeBarClearance;
     if(W < 40 || viewportH < 40) return;
 
     var items = state.projects.map(function(p){
@@ -1607,9 +1625,9 @@
         '</div>'+
       '</div>';
     }).join("");
-    container.innerHTML = '<div class="home-treemap-inner" style="height:'+Math.ceil(treemapH)+'px;">'+html+'</div>';
+    zone.innerHTML = '<div class="home-treemap-inner" style="height:'+Math.ceil(treemapH)+'px;">'+html+'</div>';
 
-    container.querySelectorAll("[data-project-id]").forEach(function(el){
+    zone.querySelectorAll("[data-project-id]").forEach(function(el){
       el.addEventListener("click", function(){
         currentProjectId = el.dataset.projectId;
         showAllItems = false;
