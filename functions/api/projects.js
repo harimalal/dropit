@@ -22,6 +22,18 @@ async function claimLegacyData(env, deviceId) {
   return data;
 }
 
+// Un device_id est partagé par tous les comptes créés depuis le même
+// navigateur. Sans suppression après récupération, chaque nouveau compte
+// créé sur ce navigateur re-réclamerait la même ligne et hériterait des
+// projets d'un compte précédent — la ligne doit être consommée une seule fois.
+async function deleteLegacyData(env, deviceId) {
+  await fetch(
+    env.SUPABASE_URL + "/rest/v1/" + LEGACY_TABLE +
+      "?device_id=eq." + encodeURIComponent(deviceId),
+    { method: "DELETE", headers: supabaseHeaders(env) }
+  );
+}
+
 async function writeUserData(env, userId, data) {
   return fetch(env.SUPABASE_URL + "/rest/v1/" + TABLE + "?on_conflict=user_id", {
     method: "POST",
@@ -58,6 +70,7 @@ export async function onRequestGet(context) {
   const legacy = await claimLegacyData(env, deviceId);
   if (legacy) {
     await writeUserData(env, user.id, legacy);
+    await deleteLegacyData(env, deviceId);
     return json({ data: legacy, migrated: true });
   }
 
