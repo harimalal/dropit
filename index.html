@@ -653,6 +653,65 @@
     position:fixed;inset:0;z-index:100;background:var(--canvas);
     display:flex;align-items:center;justify-content:center;
   }
+
+  /* --- Onboarding première connexion : popup modal (pas plein écran) --- */
+  .onboarding-screen{
+    position:fixed;inset:0;z-index:300;background:rgba(43,36,32,.55);
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  .onboarding-modal{
+    width:100%;max-width:380px;height:min(680px, 92vh);background:var(--canvas);border-radius:24px;
+    overflow:hidden;display:flex;flex-direction:column;position:relative;
+    box-shadow:0 24px 60px rgba(0,0,0,.35);
+  }
+  .ob-modal-header{flex-shrink:0;padding:18px 24px 2px;display:flex;align-items:center;justify-content:center;position:relative;}
+  .ob-modal-logo{display:inline-flex;align-items:center;font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--ink);}
+  .ob-modal-logo .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);margin:0 4px;flex-shrink:0;}
+  .ob-skip{
+    position:absolute;top:16px;right:16px;z-index:5;
+    font-family:var(--font-mono);font-size:11px;color:var(--ink-soft);background:var(--canvas-card);
+    border:1px solid var(--line);border-radius:20px;padding:6px 14px;
+  }
+  .ob-slides{flex:1;position:relative;overflow:hidden;min-height:0;}
+  .ob-slide{
+    position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;transition:opacity .3s ease;
+    pointer-events:none;padding:10px 24px 0;overflow-y:auto;
+  }
+  .ob-slide.active{opacity:1;pointer-events:auto;}
+  .ob-eyebrow{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ob-color, var(--accent));font-weight:700;margin-bottom:6px;text-align:center;}
+  .ob-title{font-size:21px;font-weight:800;letter-spacing:-.02em;color:var(--ink);line-height:1.22;text-align:center;}
+  .ob-shot-frame{width:266px;margin:24px auto 0;position:relative;flex-shrink:0;}
+  .ob-shot-clip{
+    width:266px;border-radius:22px;overflow:hidden;position:relative;
+    box-shadow:0 16px 40px rgba(43,36,32,.18);border:6px solid #1a1a1a;background:#fff;
+  }
+  .ob-shot-clip img{width:266px;display:block;position:absolute;left:0;}
+  .ob-callout{
+    position:absolute;background-repeat:no-repeat;background-color:#fff;
+    box-shadow:0 16px 34px rgba(43,36,32,.3), 0 0 0 3px #fff, 0 0 0 5px rgba(43,36,32,.08);z-index:4;
+  }
+  .ob-pop{
+    position:absolute;background:var(--ob-color, var(--accent));color:#fff;font-size:10.5px;font-weight:700;
+    padding:6px 10px;border-radius:999px;box-shadow:0 8px 18px rgba(43,36,32,.3);
+    white-space:nowrap;z-index:3;transform:rotate(-3deg);
+  }
+  .ob-body{font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin:14px auto 24px;text-align:center;padding:0 4px;max-width:320px;}
+  .ob-footer{flex-shrink:0;padding:14px 24px calc(14px + env(safe-area-inset-bottom));max-width:420px;width:100%;margin:0 auto;box-sizing:border-box;}
+  .ob-dots{display:flex;justify-content:center;gap:6px;margin-bottom:14px;}
+  .ob-dot{width:7px;height:7px;border-radius:50%;background:var(--line);transition:background .2s,width .2s;}
+  .ob-dot.active{background:var(--ob-color, var(--accent));width:20px;border-radius:4px;}
+  .ob-next{
+    width:100%;border:2px solid var(--ob-color, var(--accent));border-radius:12px;padding:14px;
+    font-size:15px;font-weight:800;background:#fff;color:var(--ob-color, var(--accent));
+  }
+  .ob-tagline{font-size:14px;font-weight:700;color:var(--ink);text-align:center;margin-top:10px;line-height:1.45;max-width:300px;margin-left:auto;margin-right:auto;}
+  .ob-features-row{display:flex;gap:18px;align-items:center;margin-top:30px;}
+  .ob-features-thumb{width:120px;height:140px;border-radius:16px;flex-shrink:0;box-shadow:0 10px 24px rgba(43,36,32,.16);background-repeat:no-repeat;}
+  .ob-features-list{flex:1;display:flex;flex-direction:column;gap:14px;}
+  .ob-feature-item{display:flex;gap:9px;align-items:flex-start;}
+  .ob-feature-icon{flex-shrink:0;width:26px;height:26px;border-radius:8px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:13px;}
+  .ob-feature-text{font-size:12.5px;color:var(--ink);line-height:1.4;font-weight:600;padding-top:3px;}
+
   /* Bouton compte (accueil) */
   .account-btn{
     position:fixed;right:16px;top:16px;z-index:45;width:36px;height:36px;
@@ -706,6 +765,194 @@
   var authInfo = "";
   var authReady = false;         // config chargée + session résolue
   var accountSheetOpen = false;
+
+  /* --- Onboarding première connexion --- */
+  var ONBOARDING_KEY = "dropit_onboarding_v1_seen";
+  var onboardingSlideIndex = 0;
+  var ONBOARDING_SLIDES = [
+    {
+      type: "features",
+      color: "#BF5B44",
+      eyebrow: "Plus qu'une todo list",
+      title: "Vos idées, vos projets,<br>vos rêves prennent vie.",
+      thumbImg: "/onboarding/slide-1-home.png",
+      thumbBgSize: "247.4px 535.4px", thumbBgPos: "-1.9px -32.3px",
+      features: [
+        {icon: "✨", text: "Décris une idée, Dropit construit le projet"},
+        {icon: "🎯", text: "Toujours une seule prochaine étape claire"},
+        {icon: "🏆", text: "Tes 3 priorités par projet, d'un coup d'œil"},
+        {icon: "🤖", text: "Un copilote IA qui connaît déjà ton contexte"},
+        {icon: "🎨", text: "Un espace coloré pour chaque projet"}
+      ]
+    },
+    {
+      img: "/onboarding/slide-1-home.png",
+      color: "#C6872F",
+      eyebrow: "Ton tableau de bord",
+      title: "Tous tes projets,<br>en un coup d'œil.",
+      clipHeight: 573, imgTop: 0,
+      pop: {text: "🔥 6 projets actifs", style: "top:-12px;right:-16px;"},
+      callouts: [
+        {style: "left:-48px;top:2px;width:174px;height:204px;border-radius:24px;",
+         bgSize: "359.1px 777.1px", bgPos: "-2.8px -47px"}
+      ],
+      body: "Chaque carte a sa couleur. En bas, décris une idée et laisse Dropit la transformer en projet."
+    },
+    {
+      img: "/onboarding/slide-2-project.png",
+      color: "#D24165",
+      eyebrow: "Une action à la fois",
+      title: "Jamais perdu,<br>toujours une prochaine étape.",
+      clipHeight: 400, imgTop: 0,
+      pop: {text: "🎯 1 seule à la fois", style: "top:-12px;right:-16px;"},
+      callouts: [
+        {style: "left:50%;transform:translateX(-50%);top:112px;width:298px;height:113px;border-radius:20px;",
+         bgSize: "332.5px 719.6px", bgPos: "-17.1px -154.3px"}
+      ],
+      body: "Dropit met en avant l'action la plus utile à faire maintenant. Coche, et la suivante prend sa place automatiquement."
+    },
+    {
+      img: "/onboarding/slide-5-suggest.png",
+      color: "#4196D2",
+      eyebrow: "Jamais à court d'idées",
+      title: "L'IA suggère,<br>tu valides en un tap.",
+      clipHeight: 572, imgTop: 0,
+      pop: {text: "✨ Suggestions IA", style: "top:-12px;right:-16px;"},
+      callouts: [
+        {style: "left:50%;transform:translateX(-50%);top:531px;width:333px;height:50px;border-radius:20px;",
+         bgSize: "332.5px 719.6px", bgPos: "0px -670.2px"}
+      ],
+      body: "Dans chaque catégorie, tape sur l'icône ✨ Suggérer et laisse l'IA proposer les prochaines tâches à faire."
+    },
+    {
+      img: "/onboarding/slide-3-tasklist.png",
+      color: "#AE41D2",
+      eyebrow: "Vue d'ensemble",
+      title: "Tes 3 priorités par projet,<br>toujours visibles.",
+      clipHeight: 575, imgTop: -74,
+      pop: {text: "🏆 Top 3 / projet", style: "top:-12px;right:-16px;"},
+      callouts: [
+        {style: "right:-42px;top:15px;width:79px;height:59px;border-radius:28px;",
+         bgSize: "851.2px 1842.1px", bgPos: "-652.5px -305.5px"}
+      ],
+      body: "D'un swipe depuis l'accueil, retrouve ce qui compte vraiment sur tous tes projets — toutes tes priorités réunies au même endroit."
+    },
+    {
+      img: "/onboarding/slide-4-chat.png",
+      color: "#3F8A5C",
+      eyebrow: "Ton copilote",
+      title: "Pose une question,<br>elle connaît déjà ton projet.",
+      clipHeight: 300, imgTop: -108, frameMarginTop: 40,
+      pop: {text: "🤖 Contexte auto", style: "top:-12px;right:-16px;"},
+      callouts: [
+        {style: "top:-22px;left:-27px;width:319px;height:58px;border-radius:18px;",
+         bgSize: "319.2px 690.78px", bgPos: "0px -193.1px"}
+      ],
+      body: "Décris une idée, demande la suite, fais-toi conseiller — l'IA a déjà le contexte complet de ce que tu es en train de faire."
+    }
+  ];
+
+  function obSlideHtml(slide, idx, activeIdx){
+    var active = idx === activeIdx ? " active" : "";
+
+    if(slide.type === "features"){
+      var itemsHtml = (slide.features || []).map(function(f){
+        return '<div class="ob-feature-item">'+
+          '<div class="ob-feature-icon">'+f.icon+'</div>'+
+          '<div class="ob-feature-text">'+f.text+'</div>'+
+        '</div>';
+      }).join("");
+      return '<div class="ob-slide'+active+'" data-slide="'+idx+'">'+
+        '<div class="ob-eyebrow">'+slide.eyebrow+'</div>'+
+        '<div class="ob-title">'+slide.title+'</div>'+
+        '<div class="ob-features-row">'+
+          '<div class="ob-features-thumb" style="background-image:url(\''+slide.thumbImg+'\');'+
+            'background-size:'+slide.thumbBgSize+';background-position:'+slide.thumbBgPos+';"></div>'+
+          '<div class="ob-features-list">'+itemsHtml+'</div>'+
+        '</div>'+
+      '</div>';
+    }
+
+    var frameStyle = slide.frameMarginTop ? ' style="margin-top:'+slide.frameMarginTop+'px;"' : "";
+    var popHtml = slide.pop
+      ? '<div class="ob-pop" style="'+slide.pop.style+'">'+slide.pop.text+'</div>' : "";
+    var calloutsHtml = (slide.callouts || []).map(function(c){
+      return '<div class="ob-callout" style="'+c.style+'background-image:url(\''+slide.img+'\');'+
+        'background-size:'+c.bgSize+';background-position:'+c.bgPos+';"></div>';
+    }).join("");
+    return '<div class="ob-slide'+active+'" data-slide="'+idx+'">'+
+      '<div class="ob-eyebrow">'+slide.eyebrow+'</div>'+
+      '<div class="ob-title">'+slide.title+'</div>'+
+      '<div class="ob-shot-frame"'+frameStyle+'>'+
+        '<div class="ob-shot-clip" style="height:'+slide.clipHeight+'px;">'+
+          '<img src="'+slide.img+'" style="top:'+slide.imgTop+'px;">'+
+        '</div>'+
+        popHtml + calloutsHtml +
+      '</div>'+
+      '<div class="ob-body">'+slide.body+'</div>'+
+    '</div>';
+  }
+
+  function renderOnboarding(){
+    var slidesHtml = ONBOARDING_SLIDES.map(function(s, i){ return obSlideHtml(s, i, onboardingSlideIndex); }).join("");
+    var dotsHtml = ONBOARDING_SLIDES.map(function(s, i){
+      return '<span class="ob-dot'+(i === onboardingSlideIndex ? " active" : "")+'" data-dot="'+i+'"></span>';
+    }).join("");
+    var isLast = onboardingSlideIndex === ONBOARDING_SLIDES.length - 1;
+    var currentColor = ONBOARDING_SLIDES[onboardingSlideIndex].color || "#BF5B44";
+    return '<div class="onboarding-screen" id="onboarding-screen" style="--ob-color:'+currentColor+';">'+
+     '<div class="onboarding-modal">'+
+      '<div class="ob-modal-header">'+
+        '<div class="ob-modal-logo">DROP<span class="dot"></span>IT</div>'+
+      '</div>'+
+      '<button class="ob-skip" id="ob-skip-btn">Passer</button>'+
+      '<div class="ob-slides">'+slidesHtml+'</div>'+
+      '<div class="ob-footer">'+
+        '<div class="ob-dots">'+dotsHtml+'</div>'+
+        '<button class="ob-next" id="ob-next-btn">'+
+          (isLast ? "Commencer" : "Suivant")+
+        '</button>'+
+      '</div>'+
+     '</div>'+
+    '</div>';
+  }
+
+  function wireOnboarding(){
+    var skip = document.getElementById("ob-skip-btn");
+    var next = document.getElementById("ob-next-btn");
+    if(skip) skip.addEventListener("click", dismissOnboarding);
+    if(next) next.addEventListener("click", function(){
+      if(onboardingSlideIndex < ONBOARDING_SLIDES.length - 1){
+        onboardingSlideIndex++;
+        var el = document.getElementById("onboarding-screen");
+        if(el){
+          var wrap = document.createElement("div");
+          wrap.innerHTML = renderOnboarding();
+          el.replaceWith(wrap.firstChild);
+          wireOnboarding();
+        }
+      } else {
+        dismissOnboarding();
+      }
+    });
+  }
+
+  function dismissOnboarding(){
+    try{ localStorage.setItem(ONBOARDING_KEY, "1"); }catch(e){}
+    var el = document.getElementById("onboarding-screen");
+    if(el) el.remove();
+  }
+
+  function showOnboardingIfNeeded(){
+    var seen = false;
+    try{ seen = localStorage.getItem(ONBOARDING_KEY) === "1"; }catch(e){}
+    if(seen) return;
+    onboardingSlideIndex = 0;
+    var wrap = document.createElement("div");
+    wrap.innerHTML = renderOnboarding();
+    document.body.appendChild(wrap.firstChild);
+    wireOnboarding();
+  }
 
   function loadSession(){
     try{
@@ -3082,6 +3329,7 @@
     authBusy = false; authError = ""; authInfo = "";
     render();
     load();
+    showOnboardingIfNeeded();
     // Rafraîchit le profil en arrière-plan : après un OAuth, le fragment
     // d'URL ne contient pas l'email, seulement les jetons.
     if(!session || !session.user){
