@@ -9,19 +9,19 @@ Ordre imposé : Supabase d'abord, Cloudflare ensuite, push en dernier.
 
 ## Étape 1 — Table Supabase (2 min)
 
-Ouvrir Supabase, projet Dropit, menu SQL Editor, coller ceci, Run :
+ATTENTION : ne pas copier depuis CE fichier, il contient du texte qui n'est
+pas du SQL et l'éditeur Supabase le refusera.
 
-```sql
-create table if not exists dropit_user_data (
-  user_id    uuid primary key references auth.users(id) on delete cascade,
-  data       jsonb       not null default '{"projects":[]}'::jsonb,
-  updated_at timestamptz not null default now()
-);
+Ouvrir le fichier `setup.sql` (à côté de celui-ci, dans /home/radoraj/DROPIT/),
+sélectionner tout son contenu, le coller dans Supabase > SQL Editor, puis Run.
 
--- RLS active sans policy : seule la service_role_key (côté serveur
--- Cloudflare) peut lire ou écrire. Aucun accès direct depuis le navigateur.
-alter table dropit_user_data enable row level security;
-```
+Ce fichier ne contient que du SQL, rien d'autre : aucun risque de coller un
+titre ou un commentaire par erreur.
+
+Ce que ça fait : crée la table `dropit_user_data` (une ligne par utilisateur,
+projets en JSON) et active RLS sans policy, ce qui n'autorise que la
+service_role_key côté serveur Cloudflare. Aucun accès direct depuis le
+navigateur n'est possible.
 
 L'ancienne table dropit_projects n'est pas touchée. Elle sert uniquement à
 récupérer les projets existants lors de la première connexion.
