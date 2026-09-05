@@ -1504,7 +1504,7 @@
       var pc = projectColorVars(p.id);
       return ''+
       '<div class="tile '+sizeClass+'" data-project-id="'+p.id+'" '+
-        'style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;--pct:'+pct+';--ring-color:var(--status-'+status+');'+
+        'style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;--pct:'+pct+';--ring-color:'+pc.badge+';'+
           '--tile-card-bg:'+pc.card+';--tile-badge-bg:'+pc.badge+';" '+
         'role="button" tabindex="0">'+
         '<div class="tile-body">'+

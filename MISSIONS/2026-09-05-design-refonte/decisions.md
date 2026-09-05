@@ -105,6 +105,14 @@ Motif : préférence esthétique explicite, aucune contrainte dure touchée. Ré
 - Tâches prioritaires : `--proj-*-priority` 20% → 10% (50% de moins).
 - Les deux visent le même registre de pâleur que les badges de l'accueil (28%), sans viser une égalité stricte — contraste vérifié, minimum 12.4 sur les 16 valeurs, seuil 4.5.
 
+## Re-cadrage partiel #9 (2026-09-05) — annule une partie du point 2 du gate initial
+
+Ce qui est invalidé : la moitié de la décision du point 2 au gate ("couleur = identité projet + anneau de statut superposé", option C). L'anneau du treemap n'encode plus le statut (actif/ralentit/pause/accompli) — il prend la couleur du badge du projet, sur demande explicite ("aucun contour [différent] sur les badges... la barre de progression autour des badges est de la couleur des badges").
+
+Ce qui tient : l'arc du conic-gradient continue d'encoder la progression en % (mécanisme inchangé), seule sa couleur change de source (statut → projet).
+
+Conséquence factuelle à connaître : un projet qui ralentit ou est en pause n'a plus de signal visuel distinct sur l'accueil — tous les rendus se colorent désormais selon l'identité du projet uniquement. Appliqué tel quel, non re-questionné, car c'est la suite logique de toutes les demandes de cette session (couleur de projet partout, y compris là où c'était jusqu'ici réservé au statut).
+
 ## Décisions d'exécution (non structurantes)
 - 2026-09-05T18:20 — Palette générée par script Python (formule HSL + calcul WCAG réel, pas estimé), voir Décision #1 (agent : Directeur artistique + Auditeur de contraste)
 - 2026-09-05T19:05 — Contraste vert `--status-actif` vs blanc vérifié (4.2, seuil 3:1) avant de l'adopter pour la barre IA (agent : Auditeur de contraste)
