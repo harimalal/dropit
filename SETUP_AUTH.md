@@ -1,139 +1,117 @@
-# Mise en service de l'authentification
+# Authentification — état et reste à faire
 
-Le code est commité en local mais PAS poussé. Ces trois étapes doivent être
-faites avant le push, sinon l'app en ligne tombe (l'API refusera tout).
-
-Ordre imposé : Supabase d'abord, Cloudflare ensuite, push en dernier.
+Mis à jour le 2026-09-05. L'authentification est EN LIGNE et fonctionnelle.
 
 ---
 
-## Étape 1 — Table Supabase (2 min)
+## Ce qui est fait
 
-ATTENTION : ne pas copier depuis CE fichier, il contient du texte qui n'est
-pas du SQL et l'éditeur Supabase le refusera.
+- Table `dropit_user_data` créée dans Supabase, colonnes vérifiées
+  (user_id, data, updated_at), RLS activée sans policy
+- `SUPABASE_ANON_KEY` ajoutée dans Cloudflare Pages (production)
+- `ENABLE_GOOGLE_AUTH=false` : le bouton Google est masqué tant que le
+  fournisseur n'est pas réellement configuré côté Supabase
+- Code poussé et déployé sur https://dropit-dbx.pages.dev
+- Vérifié en production : écran de connexion affiché, aucune erreur console,
+  `/api/projects` et `/api/ai` répondent 401 sans jeton valide
 
-Ouvrir le fichier `setup.sql` (à côté de celui-ci, dans /home/radoraj/DROPIT/),
-sélectionner tout son contenu, le coller dans Supabase > SQL Editor, puis Run.
-
-Ce fichier ne contient que du SQL, rien d'autre : aucun risque de coller un
-titre ou un commentaire par erreur.
-
-Ce que ça fait : crée la table `dropit_user_data` (une ligne par utilisateur,
-projets en JSON) et active RLS sans policy, ce qui n'autorise que la
-service_role_key côté serveur Cloudflare. Aucun accès direct depuis le
-navigateur n'est possible.
-
-L'ancienne table dropit_projects n'est pas touchée. Elle sert uniquement à
-récupérer les projets existants lors de la première connexion.
+Connexion par email et mot de passe : opérationnelle.
 
 ---
 
-## Étape 2 — Variables Cloudflare Pages (3 min)
+## À FAIRE EN PREMIER — vérifier la Site URL
 
-Cloudflare Pages, projet dropit, Settings, Environment variables, Production.
+Point bloquant possible, à contrôler avant de créer ton compte.
 
-Ajouter cette variable (les autres existent déjà) :
+Supabase > Authentication > URL Configuration
 
-    SUPABASE_ANON_KEY = <clé anon>
+- Site URL doit valoir exactement : `https://dropit-dbx.pages.dev`
+- Redirect URLs doit contenir : `https://dropit-dbx.pages.dev/**`
 
-Où la trouver : Supabase, Project Settings, API, section Project API keys,
-ligne `anon` `public`. C'est bien la clé anon, PAS la service_role.
-
-Variables optionnelles :
-
-    ENABLE_GOOGLE_AUTH = true     (défaut : activé)
-    ENABLE_APPLE_AUTH  = true     (défaut : désactivé, à activer plus tard)
-
-Vérifier que SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY sont toujours là.
+Si la Site URL est restée sur la valeur par défaut (`http://localhost:3000`),
+le lien de confirmation reçu par email renverra vers une page morte et tu ne
+pourras pas activer ton compte.
 
 ---
 
-## Étape 3 — Google OAuth (10 min)
+## Créer ton compte
 
-### 3a. Console Google Cloud
+La confirmation par email est ACTIVÉE (`mailer_autoconfirm: false`).
+À l'inscription tu recevras donc un lien à cliquer avant de pouvoir te
+connecter. L'app affiche déjà le message correspondant.
+
+1. Ouvrir https://dropit-dbx.pages.dev
+2. Créer un compte
+3. Cliquer le lien reçu par email
+4. Se connecter
+
+Tes projets actuels seront rattachés automatiquement au compte, à condition
+de te connecter depuis le NAVIGATEUR où tu utilisais déjà l'app (la reprise
+s'appuie sur le device_id stocké en local). Message attendu : "Tes projets
+ont été rattachés à ton compte".
+
+Depuis un autre appareil, connecte-toi d'abord sur le navigateur habituel
+pour déclencher la reprise, ensuite tes projets te suivront partout.
+
+Si l'email n'arrive pas : le SMTP par défaut de Supabase est limité à
+quelques envois par heure et atterrit souvent en indésirables. Pour un usage
+réel, configurer un SMTP dédié dans Supabase > Authentication > Emails.
+
+Alternative pour tester tout de suite sans email : Supabase >
+Authentication > Providers > Email, désactiver "Confirm email". La connexion
+devient immédiate après inscription. À réactiver ensuite.
+
+---
+
+## Optionnel — activer Google (10 min)
+
+### Console Google Cloud
 
 console.cloud.google.com, créer ou sélectionner un projet.
-
-APIs & Services, Credentials, Create Credentials, OAuth client ID,
+APIs & Services > Credentials > Create Credentials > OAuth client ID,
 type Web application.
 
 Dans "Authorized redirect URIs", coller exactement :
 
-    https://<ton-ref-projet>.supabase.co/auth/v1/callback
-
-Le `<ton-ref-projet>` est visible dans ton SUPABASE_URL.
+    https://rcixohoduunxorkzuvde.supabase.co/auth/v1/callback
 
 Récupérer le Client ID et le Client Secret.
 
-### 3b. Supabase
+### Supabase
 
-Supabase, Authentication, Providers, Google, activer.
-Coller le Client ID et le Client Secret, Save.
+Authentication > Providers > Google : activer, coller Client ID et
+Client Secret, Save.
 
-### 3c. URLs de redirection
+### Cloudflare
 
-Supabase, Authentication, URL Configuration :
+Il faut ensuite réafficher le bouton dans l'app. Deux options :
 
-- Site URL : `https://dropit-dbx.pages.dev`
-- Redirect URLs, ajouter : `https://dropit-dbx.pages.dev/**`
-
-Sans cette dernière ligne, Google renvoie vers une page d'erreur après
-l'authentification.
+- Me le dire, je m'en occupe.
+- Ou : Cloudflare Pages > dropit > Settings > Environment variables,
+  passer `ENABLE_GOOGLE_AUTH` à `true`, puis Deployments > Retry deployment.
 
 ---
 
-## Étape 4 — Confirmation d'email
+## Optionnel — activer Apple plus tard
 
-Supabase, Authentication, Providers, Email.
+Nécessite un compte Apple Developer (99 $/an). Ensuite, Supabase >
+Authentication > Providers > Apple : Services ID, Team ID, Key ID et clé
+.p8. Puis `ENABLE_APPLE_AUTH=true` dans Cloudflare. Aucun code à modifier.
 
-Deux options selon ce que tu veux :
-
-- "Confirm email" ACTIVÉ (recommandé en production) : à l'inscription,
-  l'utilisateur reçoit un lien avant de pouvoir se connecter. L'app affiche
-  déjà le message qui va bien.
-- "Confirm email" DÉSACTIVÉ : connexion immédiate après inscription.
-  Plus simple pour tester, à réactiver ensuite.
+Sans Sign in with Apple, l'iPhone reste confortable : les champs sont
+balisés `autocomplete="username"` et `current-password`, donc le trousseau
+iCloud propose de mémoriser puis remplit automatiquement.
 
 ---
 
-## Étape 5 — Push
+## En cas de problème
 
-Une fois les étapes 1 et 2 faites (3 et 4 peuvent attendre si tu te
-contentes de l'email/mot de passe au début) :
+Écran "Service indisponible" : `SUPABASE_ANON_KEY` absente ou déploiement
+n'ayant pas repris les variables. Cloudflare Pages > Deployments >
+Retry deployment.
 
-    cd /home/radoraj/DROPIT && git push origin main
+Déconnexion en boucle : le jeton est refusé par Supabase. Vérifier que la
+clé anon dans Cloudflare correspond bien au projet rcixohoduunxorkzuvde.
 
-Cloudflare redéploie tout seul en 1 à 2 minutes.
-
----
-
-## Vérification après déploiement
-
-1. Ouvrir https://dropit-dbx.pages.dev en navigation privée
-   → l'écran de connexion doit s'afficher
-2. Créer un compte avec ton email
-   → tes projets actuels doivent être rattachés automatiquement,
-     avec le message "Tes projets ont été rattachés à ton compte"
-3. Recharger la page
-   → tu dois rester connecté, sans repasser par le formulaire
-4. Bouton compte en haut à droite, Se déconnecter
-   → retour à l'écran de connexion
-
-Si l'écran "Service indisponible" apparaît : SUPABASE_ANON_KEY manque
-dans Cloudflare, ou le déploiement n'a pas encore repris les variables.
-Dans ce cas, Cloudflare Pages, Deployments, Retry deployment.
-
----
-
-## Activer Apple plus tard
-
-Le code est déjà en place. Il faudra un compte Apple Developer (99 $/an),
-puis dans Supabase, Authentication, Providers, Apple : renseigner
-Services ID, Team ID, Key ID et la clé .p8.
-Enfin, passer ENABLE_APPLE_AUTH à `true` dans Cloudflare.
-Aucune modification de code nécessaire.
-
-Note iPhone sans Apple Sign In : le trousseau iCloud propose déjà de
-mémoriser et remplir automatiquement l'email et le mot de passe. Les champs
-sont balisés (`autocomplete="username"` / `current-password`) pour que iOS
-le fasse correctement.
+Projets non repris après connexion : normal depuis un navigateur autre que
+celui d'origine. Voir la section "Créer ton compte" ci-dessus.
