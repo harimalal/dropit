@@ -48,10 +48,15 @@
     --proj-emeraude-card-faint:#FCFEFE;   --proj-sarcelle-card-faint:#FCFEFE; --proj-azur-card-faint:#FCFEFE;
     --proj-indigo-card-faint:#FCFCFE;     --proj-mure-card-faint:#FEFCFE;
 
-    /* Voile TÂCHES PRIORITAIRES — 20% (distinct du badge 28%) */
-    --proj-terracotta-priority:#F6DED9; --proj-corail-priority:#F6D9E0; --proj-ambre-priority:#F4E7D5;
-    --proj-emeraude-priority:#D4EDE3;   --proj-sarcelle-priority:#D4ECEC; --proj-azur-priority:#D9EAF6;
-    --proj-indigo-priority:#DBD9F6;     --proj-mure-priority:#EFD9F6;
+    /* Voile TÂCHES PRIORITAIRES — 10% (encore 50% plus léger que le 20% précédent) */
+    --proj-terracotta-priority:#FCF0ED; --proj-corail-priority:#FCEDF1; --proj-ambre-priority:#FCF6ED;
+    --proj-emeraude-priority:#EDFCF6;   --proj-sarcelle-priority:#EDFCFC; --proj-azur-priority:#EDF6FC;
+    --proj-indigo-priority:#EEEDFC;     --proj-mure-priority:#F8EDFC;
+
+    /* Voile PROCHAINE ACTION — 14% (encore 50% plus léger que le 28% du badge, réutilisé jusqu'ici) */
+    --proj-terracotta-next:#FAEAE6; --proj-corail-next:#FAE6EB; --proj-ambre-next:#FAF2E6;
+    --proj-emeraude-next:#E6FAF2;   --proj-sarcelle-next:#E6FAFA; --proj-azur-next:#E6F2FA;
+    --proj-indigo-next:#E7E6FA;     --proj-mure-next:#F5E6FA;
 
     /* Voile bouton "C'est fait" — 50% (texte passe en --ink, le blanc n'y tient plus le contraste) */
     --proj-terracotta-btn:#E8AEA0; --proj-corail-btn:#E8A0B2; --proj-ambre-btn:#E2C397;
@@ -166,7 +171,7 @@
 
   /* Composants colorés par l'identité du projet (--current-proj-*, posé sur .detail-scroll) — design system v5 */
   .next-action-card{
-    background:var(--current-proj-badge, var(--accent-soft));border:none;border-radius:var(--radius-lg);padding:16px;
+    background:var(--current-proj-next, var(--accent-soft));border:none;border-radius:var(--radius-lg);padding:16px;
     display:flex;flex-direction:column;gap:8px;margin-bottom:14px;box-shadow:var(--shadow-card);
   }
   .next-action-label{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--current-proj-solid, var(--accent));font-weight:700;}
@@ -913,7 +918,8 @@
       badge:     "var(--proj-"+name+"-badge)",
       solid:     "var(--proj-"+name+"-solid)",
       priority:  "var(--proj-"+name+"-priority)",
-      btn:       "var(--proj-"+name+"-btn)"
+      btn:       "var(--proj-"+name+"-btn)",
+      next:      "var(--proj-"+name+"-next)"
     };
   }
   function escapeHtml(s){
@@ -1813,7 +1819,7 @@
 
     var chatBtnStyle = detailBarHtml ? 'style="bottom:82px;"' : '';
     var pc = projectColorVars(p.id);
-    var scrollStyle = 'style="--current-proj-card:'+pc.card+';--current-proj-card-faint:'+pc.cardFaint+';--current-proj-badge:'+pc.badge+';--current-proj-solid:'+pc.solid+';--current-proj-priority:'+pc.priority+';--current-proj-btn:'+pc.btn+';"';
+    var scrollStyle = 'style="--current-proj-card:'+pc.card+';--current-proj-card-faint:'+pc.cardFaint+';--current-proj-badge:'+pc.badge+';--current-proj-solid:'+pc.solid+';--current-proj-priority:'+pc.priority+';--current-proj-btn:'+pc.btn+';--current-proj-next:'+pc.next+';"';
     return ''+
     topBarHtml+
     '<div class="detail-scroll" id="detail-scroll" '+scrollStyle+'>'+

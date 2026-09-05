@@ -99,6 +99,12 @@ Motif : préférence esthétique explicite, aucune contrainte dure touchée. Ré
 - Tâches prioritaires (`.priority-block-item`, `.step-row.priority`) : nouveau token `--proj-*-priority` à 20% de mix (distinct du badge 28%).
 - Bouton "C'est fait" (`.next-action-row .btn-primary`) : nouveau token `--proj-*-btn` à 50% de mix. **Vérification de contraste faite avant application** : à 50%, le texte blanc tombait à 1.68-2.38 de contraste (très en dessous du seuil 3:1 pour un élément de cette taille) — le texte du bouton passe donc de blanc à `--ink`, qui lui atteint 6.41-9.08 sur les 8 teintes. L'icône checkmark (SVG `currentColor`) suit automatiquement. Le bandeau "Vous l'avez fait" (accompli-banner, distinct du bouton, texte blanc sur solide) n'est pas concerné — pas visé par la demande.
 
+## Re-cadrage partiel #8 (2026-09-05)
+
+- "Prochaine action" (`.next-action-card`) : nouveau token dédié `--proj-*-next` à 14% (50% de moins que le 28% partagé avec le badge jusqu'ici — n'était pas encore distingué).
+- Tâches prioritaires : `--proj-*-priority` 20% → 10% (50% de moins).
+- Les deux visent le même registre de pâleur que les badges de l'accueil (28%), sans viser une égalité stricte — contraste vérifié, minimum 12.4 sur les 16 valeurs, seuil 4.5.
+
 ## Décisions d'exécution (non structurantes)
 - 2026-09-05T18:20 — Palette générée par script Python (formule HSL + calcul WCAG réel, pas estimé), voir Décision #1 (agent : Directeur artistique + Auditeur de contraste)
 - 2026-09-05T19:05 — Contraste vert `--status-actif` vs blanc vérifié (4.2, seuil 3:1) avant de l'adopter pour la barre IA (agent : Auditeur de contraste)
