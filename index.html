@@ -551,11 +551,60 @@
     position:fixed;inset:0;z-index:100;background:var(--canvas);
     overflow-y:auto;display:flex;align-items:center;justify-content:center;padding:24px 20px;
   }
-  .auth-box{width:100%;max-width:360px;}
+  .auth-box{width:100%;max-width:360px;position:relative;z-index:2;}
   .auth-logo{text-align:center;font-size:34px;line-height:1;margin-bottom:10px;}
   .auth-title{font-size:22px;font-weight:800;letter-spacing:-.02em;text-align:center;color:var(--ink);}
   .auth-sub{font-size:13.5px;color:var(--ink-soft);text-align:center;margin-top:6px;line-height:1.5;}
   .auth-form{margin-top:22px;display:flex;flex-direction:column;gap:9px;}
+
+  /* --- Branding écran auth (design system v14) : logo pilule + tagline brute + icônes flottantes --- */
+  .auth-logo-pill{
+    display:inline-flex;align-items:center;gap:2px;padding:12px 26px;border-radius:999px;margin:0 auto;
+    background:var(--canvas-card);box-shadow:0 10px 28px rgba(43,36,32,.12);border:1px solid var(--line);
+  }
+  .auth-brand-row{text-align:center;}
+  .auth-logo-pill .word{font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--ink);}
+  .auth-logo-pill .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);margin:0 5px;flex-shrink:0;}
+  .auth-tagline{
+    margin:16px auto 0;max-width:280px;font-size:13.5px;font-weight:700;color:#000;
+    line-height:1.55;text-align:center;
+  }
+  .auth-float-icon{
+    position:absolute;width:46px;height:46px;border-radius:14px;z-index:1;
+    display:flex;align-items:center;justify-content:center;font-size:22px;
+    box-shadow:0 8px 20px rgba(43,36,32,.14);
+    animation:auth-floaty 4.5s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion:reduce){.auth-float-icon{animation:none;}}
+  @keyframes auth-floaty{
+    0%,100%{transform:translateY(0px) rotate(0deg);}
+    50%{transform:translateY(-9px) rotate(-3deg);}
+  }
+  .auth-badge-count{
+    position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;
+    background:#E6493F;color:#fff;font-size:10px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;padding:0 4px;
+    box-shadow:0 2px 6px rgba(230,73,63,.5);font-family:var(--font-mono);
+  }
+  .auth-fi-label{
+    position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:6px;
+    font-size:9.5px;font-weight:600;color:var(--ink);white-space:nowrap;
+    background:var(--canvas-card);padding:3px 8px;border-radius:7px;box-shadow:0 3px 8px rgba(43,36,32,.10);
+  }
+  /* Positions : groupe haut (2 lignes) au-dessus du bloc centré, groupe bas (2 lignes) ancré au bas
+     du viewport (bottom:) pour rester correct quelle que soit la hauteur d'écran réelle */
+  .afi-1{top:18px;left:14px;background:rgba(210,65,101,.16);color:#D24165;animation-delay:0s;}
+  .afi-2{top:18px;right:14px;background:rgba(65,150,210,.16);color:#4196D2;animation-delay:.6s;}
+  .afi-3{top:126px;left:18px;background:rgba(77,65,210,.16);color:#4D41D2;animation-delay:1.2s;}
+  .afi-4{top:126px;right:18px;background:rgba(198,135,47,.16);color:#C6872F;animation-delay:1.8s;}
+  .afi-5{bottom:250px;left:22px;background:rgba(39,165,113,.16);color:#27A571;animation-delay:2.4s;}
+  .afi-6{bottom:250px;left:50%;margin-left:-23px;background:rgba(38,161,161,.16);color:#26A1A1;animation-delay:3s;}
+  .afi-7{bottom:250px;right:22px;background:rgba(210,102,75,.16);color:#D25C41;animation-delay:.3s;}
+  .afi-8{bottom:130px;left:48px;background:rgba(174,65,210,.16);color:#AE41D2;animation-delay:1.5s;}
+  .afi-9{bottom:130px;right:48px;background:rgba(65,150,210,.16);color:#4196D2;animation-delay:2.1s;}
+  @media (max-height:680px){
+    .afi-5,.afi-6,.afi-7,.afi-8,.afi-9{display:none;} /* écrans courts : on garde seulement le groupe du haut */
+  }
   .auth-input{
     width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:11px;
     padding:13px 15px;font-size:16px;background:var(--canvas-card);color:var(--ink);
@@ -1307,6 +1356,27 @@
     if(input && !authBusy) setTimeout(function(){ input.focus(); }, 40);
   }
 
+  // Icônes flottantes décoratives de l'écran auth — mêmes idées/couleurs que le mockup
+  // MISSIONS/2026-09-05-design-refonte/livrables/mockup-auth-branding.html
+  function renderAuthFloatingIcons(){
+    // Seul le groupe du haut est affiché : sur le vrai formulaire (avec Google, les liens,
+    // le texte légal), le contenu réel dépasse la hauteur d'un mockup isolé — un groupe bas
+    // en position fixe chevauchait le bouton Google et les liens sur les 3 modes. Le groupe
+    // haut reste dégagé sur toutes les tailles d'écran testées. Voir decisions.md re-cadrage.
+    var items = [
+      {cls:"afi-1", emoji:"💝", label:"Anniv chérie"},
+      {cls:"afi-2", emoji:"🚗", label:"Nouvelle voiture"},
+      {cls:"afi-3", emoji:"🎓", label:"Formation", badge:2},
+      {cls:"afi-4", emoji:"💼", label:"Nouveau taf", badge:1}
+    ];
+    return items.map(function(it){
+      return '<div class="auth-float-icon '+it.cls+'">'+it.emoji+
+        '<span class="auth-fi-label">'+escapeHtml(it.label)+'</span>'+
+        (it.badge ? '<span class="auth-badge-count">'+it.badge+'</span>' : '')+
+      '</div>';
+    }).join('');
+  }
+
   function renderAuth(){
     if(authMode === "newpassword") return renderNewPasswordScreen();
     var app = document.getElementById("app");
@@ -1355,9 +1425,13 @@
 
     app.innerHTML =
     '<div class="auth-screen">'+
+      renderAuthFloatingIcons()+
       '<div class="auth-box">'+
-        '<div class="auth-logo">🗂️</div>'+
-        '<div class="auth-title">'+title+'</div>'+
+        '<div class="auth-brand-row">'+
+          '<div class="auth-logo-pill"><span class="word">DROP</span><span class="dot"></span><span class="word">IT</span></div>'+
+          '<div class="auth-tagline">Vos idées, vos projets, vos rêves...<br>Commencez maintenant<br>et laissez-vous guider.</div>'+
+        '</div>'+
+        '<div class="auth-title" style="margin-top:22px;">'+title+'</div>'+
         '<div class="auth-sub">'+sub+'</div>'+
         '<form class="auth-form" id="auth-form" novalidate>'+
           '<input class="auth-input" id="auth-email" type="email" placeholder="Adresse email" '+

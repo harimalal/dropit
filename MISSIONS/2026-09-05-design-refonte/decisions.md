@@ -130,6 +130,18 @@ Conséquence factuelle à connaître : un projet qui ralentit ou est en pause n'
 
 Motif de la méthode : plutôt que d'ajuster à nouveau à l'aveugle sur une description verbale, relecture complète de l'image de référence pixel par pixel (densité de pastel des cartes, ton du fond) avant de fixer les valeurs finales.
 
+## Re-cadrage partiel #12 (2026-09-05) — branding écran auth
+
+Nouveau chantier hors périmètre visuel initial (accueil/projet/catégorie) : habillage des 3 écrans d'authentification (connexion, inscription, mot de passe oublié), à la demande explicite de l'utilisateur, avec mockup dédié construit et itéré séparément (`livrables/mockup-auth-branding.html`, 11 versions).
+
+Contenu final : logo "DROP●IT" en pilule, tagline 3 lignes en texte brut noir sans cadre ("Vos idées, vos projets, vos rêves... Commencez maintenant et laissez-vous guider."), 4 icônes flottantes colorées (anniv chérie, nouvelle voiture, formation, nouveau taf) avec animation de flottement douce et 2 badges de notification.
+
+**Écart au mockup, découvert en conditions réelles :** le mockup isolé (9 icônes, 4 en haut + 5 en bas) ne tenait pas sur le vrai formulaire. Le mockup ne comptait pas le bouton Google, les liens de bascule de mode et le texte légal — sur l'écran réel (surtout le mode connexion, le plus chargé), ce contenu supplémentaire pousse le bas du formulaire bien plus bas que dans la maquette isolée, et le groupe d'icônes du bas (ancré en `bottom:`) chevauchait le bouton "Continuer avec Google" et les liens sur les 3 modes.
+
+Décision : conserver uniquement le groupe du haut (4 icônes), retirer le groupe du bas (5 icônes) de la production. Le groupe du haut reste dégagé sur les 3 modes testés. Motif : fiable > beau — un chevauchement sur un bouton fonctionnel (Google) est disqualifiant, pas un compromis esthétique acceptable. Réversible : oui, le CSS des positions du bas est laissé en place (inutilisé), il suffit de les réintégrer dans `renderAuthFloatingIcons()` si un jour le formulaire est raccourci ou l'écran agrandi.
+
+Vérifié au navigateur (mock server) sur les 3 modes : connexion (avec Google, le plus chargé), inscription, mot de passe oublié — aucun chevauchement sur aucun des trois.
+
 ## Décisions d'exécution (non structurantes)
 - 2026-09-05T18:20 — Palette générée par script Python (formule HSL + calcul WCAG réel, pas estimé), voir Décision #1 (agent : Directeur artistique + Auditeur de contraste)
 - 2026-09-05T19:05 — Contraste vert `--status-actif` vs blanc vérifié (4.2, seuil 3:1) avant de l'adopter pour la barre IA (agent : Auditeur de contraste)

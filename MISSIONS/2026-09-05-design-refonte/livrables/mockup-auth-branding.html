@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test décisif — Auth branding + icônes flottantes</title>
+<style>
+  :root{
+    --canvas:#F8F8F9; --ink:#2B2420; --ink-soft:#7A7168; --line:#EFEBE6; --accent:#BF5B44;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+    --terracotta:#D25C41; --corail:#D24165; --ambre:#C6872F; --emeraude:#27A571;
+    --sarcelle:#26A1A1; --azur:#4196D2; --indigo:#4D41D2; --mure:#AE41D2;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;font-family:var(--font);}
+  .test-banner{background:var(--ink);color:#fff;padding:14px 20px;font-size:12.5px;line-height:1.6;}
+
+  /* Phone en hauteur fixe + flex column centré : le bloc logo+tagline+formulaire
+     reste au milieu quelle que soit sa hauteur réelle, les icônes se répartissent
+     au-dessus et en dessous dans les marges restantes */
+  .phone{
+    max-width:420px;margin:24px auto 60px;border-radius:28px;overflow:hidden;
+    box-shadow:0 20px 60px rgba(43,36,32,.16);position:relative;height:1080px;
+    background:linear-gradient(180deg, #FBF7FF 0%, #F8F8F9 30%, #F8F8F9 100%);
+    display:flex;flex-direction:column;justify-content:center;
+  }
+
+  /* --- Icônes flottantes --- */
+  .float-icon{
+    position:absolute;width:50px;height:50px;border-radius:15px;
+    display:flex;align-items:center;justify-content:center;font-size:24px;
+    box-shadow:0 8px 20px rgba(43,36,32,.14);
+    animation:floaty 4.5s ease-in-out infinite;
+  }
+  @keyframes floaty{
+    0%,100%{transform:translateY(0px) rotate(0deg);}
+    50%{transform:translateY(-10px) rotate(-3deg);}
+  }
+  .badge-count{
+    position:absolute;top:-6px;right:-6px;min-width:19px;height:19px;border-radius:10px;
+    background:#E6493F;color:#fff;font-size:10.5px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;padding:0 4px;
+    box-shadow:0 2px 6px rgba(230,73,63,.5);font-family:var(--font-mono);
+  }
+  /* 4 icônes au-dessus du bloc centré, 5 en dessous — répartition aussi égale que possible
+     sur 9 icônes. Le bloc logo+tagline+formulaire occupe le centre (~320-640px sur 960px de
+     hauteur) : toutes les icônes restent à distance de sécurité de cette zone. */
+  .fi-1{top:20px;left:14px;background:rgba(210,65,101,.16);color:var(--corail);animation-delay:0s;}
+  .fi-2{top:20px;right:14px;background:rgba(65,150,210,.16);color:var(--azur);animation-delay:.6s;}
+  .fi-3{top:150px;left:18px;background:rgba(77,65,210,.16);color:var(--indigo);animation-delay:1.2s;}
+  .fi-4{top:150px;right:18px;background:rgba(198,135,47,.16);color:var(--ambre);animation-delay:1.8s;}
+
+  .fi-5{top:800px;left:22px;background:rgba(39,165,113,.16);color:var(--emeraude);animation-delay:2.4s;}
+  .fi-6{top:800px;left:50%;margin-left:-25px;background:rgba(38,161,161,.16);color:var(--sarcelle);animation-delay:3s;}
+  .fi-7{top:800px;right:22px;background:rgba(210,102,75,.16);color:var(--terracotta);animation-delay:.3s;}
+  .fi-8{top:942px;left:52px;background:rgba(174,65,210,.16);color:var(--mure);animation-delay:1.5s;}
+  .fi-9{top:942px;right:52px;background:rgba(65,150,210,.16);color:var(--azur);animation-delay:2.1s;}
+
+  /* Label harmonisé : même pilule pour toutes les icônes */
+  .fi-label{
+    position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:6px;
+    font-size:10.5px;font-weight:600;color:var(--ink);white-space:nowrap;
+    background:#fff;padding:3px 9px;border-radius:8px;box-shadow:0 3px 8px rgba(43,36,32,.10);
+  }
+
+  /* --- Logo + tagline : tagline forcée sur sa propre ligne, cadre net, texte noir --- */
+  .brand-zone{padding:0 20px;text-align:center;position:relative;z-index:2;}
+  .logo-pill{
+    display:inline-flex;align-items:center;gap:2px;padding:12px 26px;border-radius:999px;
+    background:#fff;box-shadow:0 10px 28px rgba(43,36,32,.12);border:1px solid var(--line);
+  }
+  .logo-pill .word{font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--ink);}
+  .logo-pill .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);margin:0 5px;flex-shrink:0;}
+  /* Aucune mise en forme : texte brut, pas de fond, pas d'ombre, pas de cadre */
+  .tagline-badge{
+    margin:16px auto 0;max-width:280px;
+    font-size:13.5px;font-weight:700;color:#000;line-height:1.55;text-align:center;
+  }
+
+  /* --- Formulaire (inchangé fonctionnellement) --- */
+  .auth-form-zone{padding:32px 24px 0;position:relative;z-index:2;}
+  .auth-input{
+    width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:11px;
+    padding:13px 15px;font-size:15px;background:#fff;color:var(--ink);margin-bottom:9px;
+  }
+  .auth-submit{
+    width:100%;border:none;border-radius:11px;padding:14px;font-size:15px;font-weight:700;
+    background:var(--accent);color:#fff;margin-top:3px;
+  }
+  .auth-switch{text-align:center;margin-top:16px;font-size:13px;color:var(--ink-soft);}
+  .auth-switch a{color:var(--accent);font-weight:600;text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<div class="test-banner">
+  <b>Test décisif — Auth branding v3</b><br>
+  Formulaire centré verticalement (flex sur toute la hauteur) · 4 icônes au-dessus, 5 en dessous (aussi équilibré que possible sur 9) · Tagline sur sa propre ligne sous le logo, cadre noir net, texte noir.
+</div>
+
+<div class="phone">
+  <div class="float-icon fi-1">💝<span class="fi-label">Anniv chérie</span></div>
+  <div class="float-icon fi-2">🚗<span class="fi-label">Nouvelle voiture</span></div>
+  <div class="float-icon fi-3">🎓<span class="fi-label">Formation</span>
+    <span class="badge-count">2</span>
+  </div>
+  <div class="float-icon fi-4">💼<span class="fi-label">Nouveau taf</span>
+    <span class="badge-count">1</span>
+  </div>
+  <div class="float-icon fi-5">💶<span class="fi-label">5000€</span></div>
+  <div class="float-icon fi-6">🗽<span class="fi-label">Voyage NY</span>
+    <span class="badge-count">4</span>
+  </div>
+  <div class="float-icon fi-7">🏠<span class="fi-label">Nouvel appart</span></div>
+  <div class="float-icon fi-8">🧘<span class="fi-label">Bien-être</span>
+    <span class="badge-count">3</span>
+  </div>
+  <div class="float-icon fi-9">📚<span class="fi-label">Lecture</span></div>
+
+  <div class="brand-zone">
+    <div class="logo-pill">
+      <span class="word">DROP</span><span class="dot"></span><span class="word">IT</span>
+    </div>
+    <div class="tagline-badge">Vos idées, vos projets, vos rêves...<br>Commencez maintenant<br>et laissez-vous guider.</div>
+  </div>
+
+  <div class="auth-form-zone">
+    <input class="auth-input" placeholder="Adresse email">
+    <input class="auth-input" placeholder="Mot de passe" type="password">
+    <button class="auth-submit">Se connecter</button>
+    <div class="auth-switch">Pas encore de compte ? <a href="#">Créer un compte</a></div>
+  </div>
+</div>
+
+</body>
+</html>
