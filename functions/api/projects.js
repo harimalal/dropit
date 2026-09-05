@@ -77,14 +77,35 @@ export async function onRequestGet(context) {
   return json({ data: EMPTY });
 }
 
+// Plafonds larges au-dessus de tout usage réel observé, pour empêcher un
+// compte (bug client ou abus volontaire) de gonfler indéfiniment sa ligne
+// dropit_user_data — sans jamais gêner un utilisateur normal.
+const MAX_BODY_BYTES = 500 * 1024; // 500 Ko
+const MAX_PROJECTS = 300;
+
 export async function onRequestPost(context) {
-  const { env } = context;
+  const { env, request } = context;
   const { user, error } = await requireUser(context);
   if (error) return error;
 
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (contentLength > MAX_BODY_BYTES) {
+    return json({ error: "Payload trop volumineux" }, 413);
+  }
+
+  let rawText;
+  try {
+    rawText = await request.text();
+  } catch {
+    return json({ error: "Invalid JSON body" }, 400);
+  }
+  if (rawText.length > MAX_BODY_BYTES) {
+    return json({ error: "Payload trop volumineux" }, 413);
+  }
+
   let body;
   try {
-    body = await context.request.json();
+    body = JSON.parse(rawText);
   } catch {
     return json({ error: "Invalid JSON body" }, 400);
   }
@@ -92,6 +113,9 @@ export async function onRequestPost(context) {
   const state = body && body.state;
   if (!state || !Array.isArray(state.projects)) {
     return json({ error: "state required" }, 400);
+  }
+  if (state.projects.length > MAX_PROJECTS) {
+    return json({ error: "Trop de projets" }, 400);
   }
 
   const res = await writeUserData(env, user.id, state);

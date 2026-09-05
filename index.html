@@ -1463,19 +1463,43 @@
   }
 
   var saveTimer = null;
-  function persist(){
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(function(){
-      apiFetch("/api/projects", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({state: state})
-      }).catch(function(err){
-        if(err && err.message === "unauthorized") return;
-        showToast("Échec de l'enregistrement");
-      });
-    }, 350);
+  var pendingSave = false;
+
+  function sendSaveNow(){
+    pendingSave = false;
+    apiFetch("/api/projects", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({state: state}),
+      keepalive: true // survit à la fermeture de l'onglet si déclenché juste avant
+    }).catch(function(err){
+      if(err && err.message === "unauthorized") return;
+      showToast("Échec de l'enregistrement");
+    });
   }
+
+  function persist(){
+    pendingSave = true;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(sendSaveNow, 350);
+  }
+
+  // Sans ceci, une action faite dans les 350ms avant la fermeture de l'onglet
+  // (ou le passage en arrière-plan sur mobile) est perdue silencieusement :
+  // le debounce n'a pas eu le temps de partir. On force l'envoi immédiat dès
+  // que la page devient invisible, tant qu'une sauvegarde est en attente.
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "hidden" && pendingSave){
+      clearTimeout(saveTimer);
+      sendSaveNow();
+    }
+  });
+  window.addEventListener("pagehide", function(){
+    if(pendingSave){
+      clearTimeout(saveTimer);
+      sendSaveNow();
+    }
+  });
 
   /* ---------- treemap math (squarify) ---------- */
 
