@@ -43,6 +43,11 @@
     --proj-indigo-card:#F7F6FD;     --proj-indigo-badge:#D0CDF5;     --proj-indigo-solid:#4D41D2;
     --proj-mure-card:#FBF6FD;       --proj-mure-badge:#EBCDF5;       --proj-mure-solid:#AE41D2;
 
+    /* Badge "effet verre" — translucide + flou (backdrop-filter), pour l'accueil */
+    --proj-terracotta-glass:rgba(221,102,75,0.4); --proj-corail-glass:rgba(221,75,111,0.4); --proj-ambre-glass:rgba(221,160,75,0.4);
+    --proj-emeraude-glass:rgba(75,221,160,0.4);   --proj-sarcelle-glass:rgba(75,221,221,0.4); --proj-azur-glass:rgba(75,160,221,0.4);
+    --proj-indigo-glass:rgba(87,75,221,0.4);      --proj-mure-glass:rgba(184,75,221,0.4);
+
     /* Voile carte de CATÉGORIE spécifiquement — 1.5% (encore 40% plus léger que le 2.5% précédent) */
     --proj-terracotta-card-faint:#FEFDFC; --proj-corail-card-faint:#FEFCFD; --proj-ambre-card-faint:#FEFEFC;
     --proj-emeraude-card-faint:#FCFEFE;   --proj-sarcelle-card-faint:#FCFEFE; --proj-azur-card-faint:#FCFEFE;
@@ -117,7 +122,9 @@
   }
   .tile-emoji{
     line-height:1;width:44px;height:44px;border-radius:var(--radius-sm);font-size:31px;
-    background:var(--tile-badge-bg,var(--accent-soft));
+    background:var(--tile-badge-glass,var(--accent-soft));
+    -webkit-backdrop-filter:blur(8px) saturate(160%);backdrop-filter:blur(8px) saturate(160%);
+    border:none;box-shadow:none;
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
   }
   .tile-title{font-weight:700;letter-spacing:-0.01em;line-height:1.25;color:var(--ink);margin-top:8px;
@@ -919,7 +926,8 @@
       solid:     "var(--proj-"+name+"-solid)",
       priority:  "var(--proj-"+name+"-priority)",
       btn:       "var(--proj-"+name+"-btn)",
-      next:      "var(--proj-"+name+"-next)"
+      next:      "var(--proj-"+name+"-next)",
+      glass:     "var(--proj-"+name+"-glass)"
     };
   }
   function escapeHtml(s){
@@ -1504,8 +1512,8 @@
       var pc = projectColorVars(p.id);
       return ''+
       '<div class="tile '+sizeClass+'" data-project-id="'+p.id+'" '+
-        'style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;--pct:'+pct+';--ring-color:'+pc.badge+';'+
-          '--tile-card-bg:'+pc.card+';--tile-badge-bg:'+pc.badge+';" '+
+        'style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;--pct:'+pct+';--ring-color:'+pc.solid+';'+
+          '--tile-card-bg:'+pc.card+';--tile-badge-glass:'+pc.glass+';" '+
         'role="button" tabindex="0">'+
         '<div class="tile-body">'+
           '<div class="tile-emoji" style="font-size:'+(sizeClass==='size-tiny'?22:31)+'px;">'+p.emoji+'</div>'+

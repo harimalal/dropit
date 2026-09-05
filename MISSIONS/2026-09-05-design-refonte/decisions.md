@@ -113,6 +113,11 @@ Ce qui tient : l'arc du conic-gradient continue d'encoder la progression en % (m
 
 Conséquence factuelle à connaître : un projet qui ralentit ou est en pause n'a plus de signal visuel distinct sur l'accueil — tous les rendus se colorent désormais selon l'identité du projet uniquement. Appliqué tel quel, non re-questionné, car c'est la suite logique de toutes les demandes de cette session (couleur de projet partout, y compris là où c'était jusqu'ici réservé au statut).
 
+## Re-cadrage partiel #10 (2026-09-05)
+
+- Badge de tuile (`.tile-emoji`) : nouveau token `--proj-*-glass` (rgba, alpha 0.4, sur la teinte de base) + `backdrop-filter: blur(8px) saturate(160%)` — effet verre translucide, `border:none` et `box-shadow:none` explicites.
+- Anneau du treemap : couleur reprise de `pc.solid` (opaque, pleine saturation) au lieu de `pc.badge` (voile 28%) — satisfait "100% opacité" demandé. L'arc continue d'encoder le % (inchangé).
+
 ## Décisions d'exécution (non structurantes)
 - 2026-09-05T18:20 — Palette générée par script Python (formule HSL + calcul WCAG réel, pas estimé), voir Décision #1 (agent : Directeur artistique + Auditeur de contraste)
 - 2026-09-05T19:05 — Contraste vert `--status-actif` vs blanc vérifié (4.2, seuil 3:1) avant de l'adopter pour la barre IA (agent : Auditeur de contraste)
