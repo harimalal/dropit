@@ -1,87 +1,88 @@
-function supabaseHeaders(env) {
-  return {
-    "Content-Type": "application/json",
-    "apikey": env.SUPABASE_SERVICE_ROLE_KEY,
-    "Authorization": "Bearer " + env.SUPABASE_SERVICE_ROLE_KEY
-  };
+import { json, supabaseHeaders, requireUser } from "../_lib/auth.js";
+
+const TABLE = "dropit_user_data";
+const LEGACY_TABLE = "dropit_projects";
+const EMPTY = { projects: [] };
+
+// Récupère les données de l'ancienne table (clé device_id) pour les rattacher
+// au compte lors de la première connexion. Sans cela, les projets créés avant
+// l'authentification seraient inaccessibles.
+async function claimLegacyData(env, deviceId) {
+  if (!deviceId) return null;
+  const res = await fetch(
+    env.SUPABASE_URL + "/rest/v1/" + LEGACY_TABLE +
+      "?device_id=eq." + encodeURIComponent(deviceId) + "&select=data",
+    { headers: supabaseHeaders(env) }
+  );
+  if (!res.ok) return null;
+  const rows = await res.json();
+  if (!Array.isArray(rows) || rows.length === 0) return null;
+  const data = rows[0].data;
+  if (!data || !Array.isArray(data.projects) || data.projects.length === 0) return null;
+  return data;
+}
+
+async function writeUserData(env, userId, data) {
+  return fetch(env.SUPABASE_URL + "/rest/v1/" + TABLE + "?on_conflict=user_id", {
+    method: "POST",
+    headers: { ...supabaseHeaders(env), "Prefer": "resolution=merge-duplicates" },
+    body: JSON.stringify({
+      user_id: userId,
+      data: data,
+      updated_at: new Date().toISOString()
+    })
+  });
 }
 
 export async function onRequestGet(context) {
   const { env, request } = context;
-  const url = new URL(request.url);
-  const deviceId = url.searchParams.get("device_id");
-
-  if (!deviceId) {
-    return new Response(JSON.stringify({ error: "device_id required" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" }
-    });
-  }
+  const { user, error } = await requireUser(context);
+  if (error) return error;
 
   const res = await fetch(
-    env.SUPABASE_URL + "/rest/v1/dropit_projects?device_id=eq." + encodeURIComponent(deviceId) + "&select=data",
+    env.SUPABASE_URL + "/rest/v1/" + TABLE +
+      "?user_id=eq." + encodeURIComponent(user.id) + "&select=data",
     { headers: supabaseHeaders(env) }
   );
+  if (!res.ok) return json({ error: await res.text() }, 500);
 
   const rows = await res.json();
 
-  if (!Array.isArray(rows) || rows.length === 0) {
-    return new Response(JSON.stringify({ data: { projects: [] } }), {
-      headers: { "Content-Type": "application/json" }
-    });
+  if (Array.isArray(rows) && rows.length > 0) {
+    return json({ data: rows[0].data || EMPTY });
   }
 
-  return new Response(JSON.stringify({ data: rows[0].data }), {
-    headers: { "Content-Type": "application/json" }
-  });
+  // Aucune ligne pour ce compte : première connexion.
+  // On tente de récupérer les projets créés en mode device_id.
+  const deviceId = new URL(request.url).searchParams.get("device_id");
+  const legacy = await claimLegacyData(env, deviceId);
+  if (legacy) {
+    await writeUserData(env, user.id, legacy);
+    return json({ data: legacy, migrated: true });
+  }
+
+  return json({ data: EMPTY });
 }
 
 export async function onRequestPost(context) {
-  const { env, request } = context;
+  const { env } = context;
+  const { user, error } = await requireUser(context);
+  if (error) return error;
 
   let body;
   try {
-    body = await request.json();
+    body = await context.request.json();
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" }
-    });
+    return json({ error: "Invalid JSON body" }, 400);
   }
 
-  const { device_id, state } = body;
-  if (!device_id || !state) {
-    return new Response(JSON.stringify({ error: "device_id and state required" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" }
-    });
+  const state = body && body.state;
+  if (!state || !Array.isArray(state.projects)) {
+    return json({ error: "state required" }, 400);
   }
 
-  const res = await fetch(
-    env.SUPABASE_URL + "/rest/v1/dropit_projects",
-    {
-      method: "POST",
-      headers: {
-        ...supabaseHeaders(env),
-        "Prefer": "resolution=merge-duplicates"
-      },
-      body: JSON.stringify({
-        device_id: device_id,
-        data: state,
-        updated_at: new Date().toISOString()
-      })
-    }
-  );
+  const res = await writeUserData(env, user.id, state);
+  if (!res.ok) return json({ error: await res.text() }, 500);
 
-  if (!res.ok) {
-    const err = await res.text();
-    return new Response(JSON.stringify({ error: err }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
-  }
-
-  return new Response(JSON.stringify({ ok: true }), {
-    headers: { "Content-Type": "application/json" }
-  });
+  return json({ ok: true });
 }

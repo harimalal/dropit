@@ -457,6 +457,79 @@
   .dfb-btn.secondary:hover{border-color:var(--accent);color:var(--accent);}
   .dfb-btn:disabled{opacity:.35;}
   .dfb-btn .icon{width:16px;height:16px;}
+
+  /* ÉCRAN D'AUTHENTIFICATION */
+  .auth-screen{
+    position:fixed;inset:0;z-index:100;background:var(--canvas);
+    overflow-y:auto;display:flex;align-items:center;justify-content:center;padding:24px 20px;
+  }
+  .auth-box{width:100%;max-width:360px;}
+  .auth-logo{text-align:center;font-size:34px;line-height:1;margin-bottom:10px;}
+  .auth-title{font-size:22px;font-weight:800;letter-spacing:-.02em;text-align:center;color:var(--ink);}
+  .auth-sub{font-size:13.5px;color:var(--ink-soft);text-align:center;margin-top:6px;line-height:1.5;}
+  .auth-form{margin-top:22px;display:flex;flex-direction:column;gap:9px;}
+  .auth-input{
+    width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:11px;
+    padding:13px 15px;font-size:16px;background:var(--canvas-card);color:var(--ink);
+  }
+  .auth-input:focus{outline:none;border-color:var(--accent);}
+  .auth-submit{
+    width:100%;border:none;border-radius:11px;padding:14px;font-size:15px;font-weight:700;
+    background:var(--accent);color:#fff;margin-top:3px;
+  }
+  .auth-submit:hover{background:#A34936;}
+  .auth-submit:disabled{opacity:.5;}
+  .auth-divider{
+    display:flex;align-items:center;gap:10px;margin:18px 0 14px;
+    font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;
+  }
+  .auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:var(--line);}
+  .auth-oauth-btn{
+    width:100%;border:1px solid var(--line);border-radius:11px;padding:12px;
+    background:var(--canvas-card);color:var(--ink);font-size:14.5px;font-weight:600;
+    display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:9px;
+  }
+  .auth-oauth-btn:hover{border-color:var(--accent);}
+  .auth-oauth-btn svg{width:18px;height:18px;flex-shrink:0;}
+  .auth-switch{
+    text-align:center;margin-top:18px;font-size:13.5px;color:var(--ink-soft);
+  }
+  .auth-link{
+    background:none;border:none;color:var(--accent);font-size:13.5px;font-weight:600;
+    padding:2px 4px;text-decoration:underline;
+  }
+  .auth-msg{
+    border-radius:10px;padding:11px 13px;font-size:13px;line-height:1.5;margin-top:14px;
+  }
+  .auth-msg.error{background:#FBEAE5;color:#9C4632;border:1px solid #E9C4B8;}
+  .auth-msg.info{background:var(--status-actif-soft);color:var(--status-actif);border:1px solid #BFD9C8;}
+  .auth-legal{
+    text-align:center;font-size:11px;color:var(--ink-faint);margin-top:20px;line-height:1.5;
+  }
+  .auth-boot{
+    position:fixed;inset:0;z-index:100;background:var(--canvas);
+    display:flex;align-items:center;justify-content:center;
+  }
+  /* Bouton compte (accueil) */
+  .account-btn{
+    position:fixed;right:16px;top:16px;z-index:45;width:36px;height:36px;
+    border-radius:50%;background:var(--canvas-card);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;color:var(--ink-soft);
+    box-shadow:0 4px 12px rgba(43,36,32,0.12);font-size:13px;font-weight:700;
+  }
+  .account-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .account-sheet{
+    position:fixed;inset:0;z-index:70;background:rgba(43,36,32,0.38);
+    display:flex;align-items:flex-end;justify-content:center;
+  }
+  .account-sheet-box{
+    width:100%;max-width:620px;background:var(--canvas-card);
+    border-radius:20px 20px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+    box-shadow:0 -8px 32px rgba(43,36,32,0.18);
+  }
+  .account-email{font-size:14.5px;font-weight:700;color:var(--ink);word-break:break-all;}
+  .account-meta{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);margin-top:3px;}
+  .account-actions{margin-top:18px;display:flex;flex-direction:column;gap:8px;}
 </style>
 </head>
 <body>
@@ -478,6 +551,218 @@
     }
     return id;
   }
+
+  /* ================= AUTHENTIFICATION ================= */
+
+  var SESSION_KEY = "dropit-session";
+  var supa = {url:null, anon:null, providers:{google:true, apple:false}};
+  var session = null;            // {access_token, refresh_token, expires_at, user}
+  var authMode = "login";        // "login" | "signup" | "forgot"
+  var authBusy = false;
+  var authError = "";
+  var authInfo = "";
+  var authReady = false;         // config chargée + session résolue
+  var accountSheetOpen = false;
+
+  function loadSession(){
+    try{
+      var raw = localStorage.getItem(SESSION_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+  function saveSession(s){
+    session = s;
+    if(s) localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+    else localStorage.removeItem(SESSION_KEY);
+  }
+  function sessionFromTokenResponse(data){
+    if(!data || !data.access_token) return null;
+    return {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      // 60 s de marge pour ne jamais envoyer un jeton qui expire en vol
+      expires_at: Date.now() + ((data.expires_in || 3600) - 60) * 1000,
+      user: data.user || null
+    };
+  }
+
+  function supaFetch(path, opts){
+    opts = opts || {};
+    return fetch(supa.url + path, {
+      method: opts.method || "POST",
+      headers: {"Content-Type":"application/json", "apikey": supa.anon},
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    });
+  }
+
+  function refreshSession(){
+    if(!session || !session.refresh_token) return Promise.resolve(null);
+    return supaFetch("/auth/v1/token?grant_type=refresh_token", {
+      body: {refresh_token: session.refresh_token}
+    }).then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(data){
+        var s = sessionFromTokenResponse(data);
+        saveSession(s);
+        return s;
+      }).catch(function(){ return null; });
+  }
+
+  // Garantit un jeton valide avant chaque appel API.
+  function ensureToken(){
+    if(!session) return Promise.resolve(null);
+    if(Date.now() < session.expires_at) return Promise.resolve(session.access_token);
+    return refreshSession().then(function(s){ return s ? s.access_token : null; });
+  }
+
+  // Remplace fetch() pour tous les appels /api/* : injecte le jeton et
+  // déconnecte proprement si le serveur répond 401.
+  function apiFetch(url, opts){
+    opts = opts || {};
+    return ensureToken().then(function(token){
+      if(!token) return Promise.reject(new Error("no-session"));
+      var headers = {};
+      var k;
+      if(opts.headers) for(k in opts.headers) headers[k] = opts.headers[k];
+      headers["Authorization"] = "Bearer " + token;
+      var next = {headers: headers};
+      for(k in opts) if(k !== "headers") next[k] = opts[k];
+      return fetch(url, next);
+    }).then(function(res){
+      if(res.status === 401){ signOut(); return Promise.reject(new Error("unauthorized")); }
+      return res;
+    });
+  }
+
+  function authErrorMessage(data, status){
+    var raw = (data && (data.error_description || data.msg || data.error || data.message)) || "";
+    var s = String(raw).toLowerCase();
+    if(s.indexOf("invalid login") >= 0 || s.indexOf("invalid credentials") >= 0)
+      return "Email ou mot de passe incorrect.";
+    if(s.indexOf("already registered") >= 0 || s.indexOf("already been registered") >= 0)
+      return "Un compte existe déjà avec cet email. Connecte-toi.";
+    if(s.indexOf("password") >= 0 && s.indexOf("6") >= 0)
+      return "Le mot de passe doit faire au moins 6 caractères.";
+    if(s.indexOf("email not confirmed") >= 0)
+      return "Confirme ton email avant de te connecter — vérifie ta boîte de réception.";
+    if(s.indexOf("rate limit") >= 0 || status === 429)
+      return "Trop de tentatives. Réessaie dans une minute.";
+    if(s.indexOf("unable to validate email") >= 0 || s.indexOf("invalid email") >= 0)
+      return "Adresse email invalide.";
+    return raw || "Une erreur est survenue. Réessaie.";
+  }
+
+  function performEmailAuth(email, password){
+    if(authBusy) return;
+    email = String(email||"").trim();
+    if(!email || !password){
+      authError = "Renseigne ton email et ton mot de passe."; renderAuth(); return;
+    }
+    if(authMode === "signup" && password.length < 6){
+      authError = "Le mot de passe doit faire au moins 6 caractères."; renderAuth(); return;
+    }
+    authBusy = true; authError = ""; authInfo = ""; renderAuth();
+
+    var path = authMode === "signup" ? "/auth/v1/signup" : "/auth/v1/token?grant_type=password";
+    supaFetch(path, {body: {email: email, password: password}})
+      .then(function(res){
+        return res.json().then(function(data){ return {ok: res.ok, status: res.status, data: data}; });
+      })
+      .then(function(r){
+        authBusy = false;
+        if(!r.ok){ authError = authErrorMessage(r.data, r.status); renderAuth(); return; }
+
+        var s = sessionFromTokenResponse(r.data);
+        if(!s){
+          // Signup sans jeton : Supabase exige une confirmation par email.
+          authMode = "login";
+          authInfo = "Compte créé. Ouvre le lien de confirmation reçu par email, puis connecte-toi.";
+          renderAuth();
+          return;
+        }
+        saveSession(s);
+        bootAfterAuth();
+      })
+      .catch(function(){
+        authBusy = false;
+        authError = "Connexion au serveur impossible. Vérifie ta connexion internet.";
+        renderAuth();
+      });
+  }
+
+  function performOAuth(provider){
+    if(!supa.url) return;
+    var redirect = window.location.origin + window.location.pathname;
+    window.location.href = supa.url + "/auth/v1/authorize?provider=" + provider +
+      "&redirect_to=" + encodeURIComponent(redirect);
+  }
+
+  function performPasswordReset(email){
+    if(authBusy) return;
+    email = String(email||"").trim();
+    if(!email){ authError = "Renseigne ton email."; renderAuth(); return; }
+    authBusy = true; authError = ""; authInfo = ""; renderAuth();
+    supaFetch("/auth/v1/recover", {
+      body: {email: email, redirect_to: window.location.origin + window.location.pathname}
+    }).then(function(){
+      authBusy = false; authMode = "login";
+      authInfo = "Si un compte existe pour cet email, un lien de réinitialisation vient d'être envoyé.";
+      renderAuth();
+    }).catch(function(){
+      authBusy = false; authError = "Envoi impossible. Réessaie."; renderAuth();
+    });
+  }
+
+  function signOut(){
+    var token = session && session.access_token;
+    if(token && supa.url){
+      fetch(supa.url + "/auth/v1/logout", {
+        method: "POST",
+        headers: {"apikey": supa.anon, "Authorization": "Bearer " + token}
+      }).catch(function(){});
+    }
+    saveSession(null);
+    state = {projects: []};
+    currentProjectId = null; currentCategoryId = null;
+    taskListOpen = false; accountSheetOpen = false;
+    chatState = {}; tlSelectedProjects = [];
+    authMode = "login"; authError = ""; authInfo = "";
+    renderAuth();
+  }
+
+  // Récupère les jetons renvoyés par le fournisseur OAuth dans le fragment
+  // d'URL (#access_token=...) puis nettoie la barre d'adresse.
+  function consumeOAuthRedirect(){
+    var hash = window.location.hash || "";
+    if(hash.indexOf("access_token=") < 0){
+      if(hash.indexOf("error=") >= 0){
+        var ep = new URLSearchParams(hash.slice(1));
+        authError = ep.get("error_description") || "Connexion annulée.";
+        history.replaceState(null, "", window.location.pathname);
+      }
+      return false;
+    }
+    var params = new URLSearchParams(hash.slice(1));
+    var s = sessionFromTokenResponse({
+      access_token: params.get("access_token"),
+      refresh_token: params.get("refresh_token"),
+      expires_in: parseInt(params.get("expires_in") || "3600", 10)
+    });
+    history.replaceState(null, "", window.location.pathname);
+    if(!s) return false;
+    saveSession(s);
+    return true;
+  }
+
+  function fetchCurrentUser(){
+    return ensureToken().then(function(token){
+      if(!token) return null;
+      return fetch(supa.url + "/auth/v1/user", {
+        headers: {"apikey": supa.anon, "Authorization": "Bearer " + token}
+      }).then(function(r){ return r.ok ? r.json() : null; });
+    }).catch(function(){ return null; });
+  }
+
+  /* ================= FIN AUTHENTIFICATION ================= */
 
   var state = {projects: []};
   var currentProjectId = null; // null = home
@@ -694,8 +979,10 @@
   /* ---------- persistence ---------- */
 
   function load(){
+    // device_id transmis uniquement pour la reprise des projets créés
+    // avant l'authentification ; le serveur scope tout sur le compte.
     var deviceId = getOrCreateDeviceId();
-    fetch("/api/projects?device_id=" + encodeURIComponent(deviceId))
+    return apiFetch("/api/projects?device_id=" + encodeURIComponent(deviceId))
       .then(function(res){ return res.json(); })
       .then(function(json){
         var parsed = json.data || {};
@@ -706,20 +993,28 @@
           persist();
         }
         render();
+        if(json.migrated) showToast("Tes projets ont été rattachés à ton compte");
       })
-      .catch(function(){ state = defaultData(); render(); });
+      .catch(function(err){
+        if(err && err.message === "unauthorized") return; // signOut a déjà pris la main
+        state = defaultData();
+        render();
+        showToast("Chargement impossible — données locales affichées");
+      });
   }
 
   var saveTimer = null;
   function persist(){
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function(){
-      var deviceId = getOrCreateDeviceId();
-      fetch("/api/projects", {
+      apiFetch("/api/projects", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({device_id: deviceId, state: state})
-      }).catch(function(){ showToast("Échec de l'enregistrement"); });
+        body: JSON.stringify({state: state})
+      }).catch(function(err){
+        if(err && err.message === "unauthorized") return;
+        showToast("Échec de l'enregistrement");
+      });
     }, 350);
   }
 
@@ -818,6 +1113,132 @@
     if(generating) renderLoadingOverlay();
   }
 
+  function googleIcon(){
+    return '<svg viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 01-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 009 18z"/><path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 010-3.44V4.95H.96a9 9 0 000 8.1l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.46 3.44 1.35l2.58-2.58A9 9 0 00.96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>';
+  }
+  function appleIcon(){
+    return '<svg viewBox="0 0 18 18" fill="currentColor"><path d="M12.9 9.55c-.02-1.86 1.52-2.75 1.59-2.8-.87-1.27-2.22-1.44-2.7-1.46-1.15-.12-2.24.68-2.83.68-.58 0-1.48-.66-2.43-.65-1.25.02-2.4.73-3.05 1.84-1.3 2.26-.33 5.6.93 7.44.62.9 1.35 1.9 2.31 1.87.93-.04 1.28-.6 2.4-.6s1.44.6 2.42.58c1-.02 1.63-.91 2.24-1.82.71-1.04 1-2.06 1.02-2.11-.02-.01-1.96-.75-1.98-2.97zM11.06 3.9c.51-.62.86-1.49.76-2.35-.74.03-1.63.49-2.16 1.11-.47.55-.89 1.43-.78 2.28.83.06 1.67-.42 2.18-1.04z"/></svg>';
+  }
+
+  function renderAuth(){
+    var app = document.getElementById("app");
+    var isSignup = authMode === "signup";
+    var isForgot = authMode === "forgot";
+
+    var title = isSignup ? "Créer un compte" : isForgot ? "Mot de passe oublié" : "Bon retour";
+    var sub = isSignup
+      ? "Tes projets sont synchronisés et te suivent sur tous tes appareils."
+      : isForgot
+        ? "Entre ton email, on t'envoie un lien pour choisir un nouveau mot de passe."
+        : "Connecte-toi pour retrouver tes projets.";
+
+    var msgHtml = "";
+    if(authError) msgHtml = '<div class="auth-msg error">'+escapeHtml(authError)+'</div>';
+    else if(authInfo) msgHtml = '<div class="auth-msg info">'+escapeHtml(authInfo)+'</div>';
+
+    var submitLabel = authBusy
+      ? "…"
+      : isSignup ? "Créer mon compte" : isForgot ? "Envoyer le lien" : "Se connecter";
+
+    var passwordHtml = isForgot ? "" :
+      '<input class="auth-input" id="auth-password" type="password" placeholder="Mot de passe" '+
+        'autocomplete="'+(isSignup ? "new-password" : "current-password")+'" '+
+        'autocapitalize="off" autocorrect="off">';
+
+    // Les fournisseurs OAuth n'ont pas de sens sur l'écran de réinitialisation.
+    var oauthHtml = "";
+    if(!isForgot && (supa.providers.google || supa.providers.apple)){
+      oauthHtml = '<div class="auth-divider">ou</div>'+
+        (supa.providers.google
+          ? '<button class="auth-oauth-btn" id="auth-google">'+googleIcon()+' Continuer avec Google</button>' : '')+
+        (supa.providers.apple
+          ? '<button class="auth-oauth-btn" id="auth-apple">'+appleIcon()+' Continuer avec Apple</button>' : '');
+    }
+
+    var switchHtml;
+    if(isForgot){
+      switchHtml = '<div class="auth-switch"><button class="auth-link" data-auth-mode="login">Retour à la connexion</button></div>';
+    } else if(isSignup){
+      switchHtml = '<div class="auth-switch">Déjà un compte ?<button class="auth-link" data-auth-mode="login">Se connecter</button></div>';
+    } else {
+      switchHtml = '<div class="auth-switch">Pas encore de compte ?<button class="auth-link" data-auth-mode="signup">Créer un compte</button></div>'+
+        '<div class="auth-switch" style="margin-top:8px;"><button class="auth-link" data-auth-mode="forgot">Mot de passe oublié ?</button></div>';
+    }
+
+    app.innerHTML =
+    '<div class="auth-screen">'+
+      '<div class="auth-box">'+
+        '<div class="auth-logo">🗂️</div>'+
+        '<div class="auth-title">'+title+'</div>'+
+        '<div class="auth-sub">'+sub+'</div>'+
+        '<form class="auth-form" id="auth-form" novalidate>'+
+          '<input class="auth-input" id="auth-email" type="email" placeholder="Adresse email" '+
+            'autocomplete="username" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false">'+
+          passwordHtml+
+          '<button class="auth-submit" type="submit"'+(authBusy?' disabled':'')+'>'+submitLabel+'</button>'+
+        '</form>'+
+        msgHtml+
+        oauthHtml+
+        switchHtml+
+        '<div class="auth-legal">Tes données sont stockées de façon privée et rattachées à ton compte.</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="toast" id="toast"></div>';
+
+    bindAuthEvents();
+    var emailEl = document.getElementById("auth-email");
+    if(emailEl && !authBusy) setTimeout(function(){ emailEl.focus(); }, 40);
+  }
+
+  function bindAuthEvents(){
+    var form = document.getElementById("auth-form");
+    if(form) form.addEventListener("submit", function(e){
+      e.preventDefault();
+      var email = (document.getElementById("auth-email")||{}).value || "";
+      var pwEl = document.getElementById("auth-password");
+      if(authMode === "forgot") performPasswordReset(email);
+      else performEmailAuth(email, pwEl ? pwEl.value : "");
+    });
+
+    document.querySelectorAll("[data-auth-mode]").forEach(function(el){
+      el.addEventListener("click", function(e){
+        e.preventDefault();
+        authMode = el.dataset.authMode;
+        authError = ""; authInfo = "";
+        renderAuth();
+      });
+    });
+
+    var g = document.getElementById("auth-google");
+    if(g) g.addEventListener("click", function(){ performOAuth("google"); });
+    var a = document.getElementById("auth-apple");
+    if(a) a.addEventListener("click", function(){ performOAuth("apple"); });
+  }
+
+  function renderAccountSheet(){
+    if(!accountSheetOpen) return "";
+    var email = (session && session.user && session.user.email) || "Compte connecté";
+    var provider = (session && session.user && session.user.app_metadata &&
+      session.user.app_metadata.provider) || "email";
+    var providerLabel = provider === "google" ? "Google" : provider === "apple" ? "Apple" : "Email";
+    var count = state.projects.length;
+    return '<div class="account-sheet" id="account-sheet">'+
+      '<div class="account-sheet-box">'+
+        '<div class="account-email">'+escapeHtml(email)+'</div>'+
+        '<div class="account-meta">'+providerLabel+' · '+count+' projet'+(count>1?'s':'')+' synchronisé'+(count>1?'s':'')+'</div>'+
+        '<div class="account-actions">'+
+          '<button class="btn" id="account-close-btn">Fermer</button>'+
+          '<button class="btn btn-danger" id="account-signout-btn">Se déconnecter</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function accountInitial(){
+    var email = (session && session.user && session.user.email) || "";
+    return email ? escapeHtml(email.charAt(0).toUpperCase()) : "•";
+  }
+
   function renderHome(){
     var hasProjects = state.projects.length > 0;
     var containerHtml = hasProjects ? '' :
@@ -827,6 +1248,8 @@
     renderComposeBar()+
     renderHomeChatModal()+
     renderTaskList()+
+    '<button class="account-btn" id="account-btn" title="Mon compte">'+accountInitial()+'</button>'+
+    renderAccountSheet()+
     (hasProjects ? '<button class="chat-icon-btn" id="chat-home-icon-btn" title="Demander à l\'IA" style="bottom:76px;">'+chatIcon()+'</button>' : '')+
     (hasProjects ? '<div class="home-swipe-hint">← Swipe pour voir toutes les tâches</div>' : '')+
     '<div class="toast" id="toast"></div>';
@@ -1018,7 +1441,7 @@
     if(input) input.disabled = true;
     var btn = document.getElementById('tl-suggest-btn');
     if(btn) btn.disabled = true;
-    fetch('/api/ai',{
+    apiFetch("/api/ai",{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:400,messages:[{role:'user',content:[{type:'text',text:prompt}]}]})
     }).then(function(r){return r.json();}).then(function(data){
@@ -1488,7 +1911,7 @@
       "Ordonne les catégories et leurs éléments dans l'ordre logique où ils doivent être traités : le tout premier élément de la première catégorie doit être la prochaine action la plus utile à faire maintenant.";
 
     return Promise.resolve().then(function(){
-      return fetch("/api/ai", {
+      return apiFetch("/api/ai", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({
@@ -1516,7 +1939,7 @@
       'Réponds UNIQUEMENT avec un tableau JSON de chaînes, sans texte autour, sans balises markdown : ["élément a","élément b"]';
 
     return Promise.resolve().then(function(){
-      return fetch("/api/ai", {
+      return apiFetch("/api/ai", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({
@@ -1548,7 +1971,7 @@
       '{"type":"new_category","category":{"title":"...","items":["élément 1","élément 2"]}}';
 
     return Promise.resolve().then(function(){
-      return fetch("/api/ai", {
+      return apiFetch("/api/ai", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
         body: JSON.stringify({
@@ -1584,7 +2007,7 @@
     var apiMessages = hist.map(function(m){
       return {role:m.role==='user'?'user':'assistant', content:[{type:"text",text:m.text}]};
     });
-    return fetch("/api/ai",{
+    return apiFetch("/api/ai",{
       method:"POST", headers:{"Content-Type":"application/json"},
       body:JSON.stringify({model:"claude-sonnet-4-6", max_tokens:600, system:systemText, messages:apiMessages})
     }).then(function(res){return res.json();}).then(function(data){
@@ -1608,7 +2031,7 @@
       "En une phrase directe (15 mots max), décris l'état actuel du projet et la prochaine priorité. "+
       "Commence par ce qui est concret. Exemple : \"Budget fixé à 500€, reste à confirmer la date et le lieu.\" "+
       "Réponds UNIQUEMENT avec la phrase, sans guillemets, sans intro.";
-    return fetch("/api/ai",{
+    return apiFetch("/api/ai",{
       method:"POST", headers:{"Content-Type":"application/json"},
       body:JSON.stringify({model:"claude-sonnet-4-6", max_tokens:60, messages:[{role:"user",content:[{type:"text",text:promptText}]}]})
     }).then(function(res){return res.json();}).then(function(data){
@@ -1734,7 +2157,7 @@
     var apiMessages = hist.map(function(m){
       return {role:m.role==='user'?'user':'assistant', content:[{type:"text",text:m.text}]};
     });
-    return fetch("/api/ai",{
+    return apiFetch("/api/ai",{
       method:"POST", headers:{"Content-Type":"application/json"},
       body:JSON.stringify({model:"claude-sonnet-4-6", max_tokens:700, system:systemText, messages:apiMessages})
     }).then(function(res){return res.json();}).then(function(data){
@@ -1941,6 +2364,24 @@
         persist(); render();
       }
     });
+    // Compte — ouvrir / fermer / déconnexion
+    var accountBtn = document.getElementById("account-btn");
+    if(accountBtn) accountBtn.addEventListener("click", function(){
+      accountSheetOpen = true; render();
+    });
+    var accountCloseBtn = document.getElementById("account-close-btn");
+    if(accountCloseBtn) accountCloseBtn.addEventListener("click", function(){
+      accountSheetOpen = false; render();
+    });
+    var accountSheet = document.getElementById("account-sheet");
+    if(accountSheet) accountSheet.addEventListener("click", function(e){
+      if(e.target === accountSheet){ accountSheetOpen = false; render(); }
+    });
+    var accountSignoutBtn = document.getElementById("account-signout-btn");
+    if(accountSignoutBtn) accountSignoutBtn.addEventListener("click", function(){
+      signOut();
+    });
+
     // Task list — barre de saisie
     var tlAddBtn = document.getElementById('tl-add-btn');
     var tlInput  = document.getElementById('tl-compose-input');
@@ -2329,7 +2770,61 @@
     }
   }, {passive: true, capture: true});
 
-  load();
+  /* ---------- séquence de démarrage ---------- */
+
+  // Enchaînement : config Supabase → jetons OAuth éventuels dans l'URL →
+  // session existante → données. Tant que ce n'est pas résolu on affiche
+  // un écran neutre, pour ne jamais faire clignoter le formulaire de
+  // connexion devant un utilisateur déjà authentifié.
+  function bootAfterAuth(){
+    authBusy = false; authError = ""; authInfo = "";
+    render();
+    load();
+    // Rafraîchit le profil en arrière-plan : après un OAuth, le fragment
+    // d'URL ne contient pas l'email, seulement les jetons.
+    if(!session || !session.user){
+      fetchCurrentUser().then(function(user){
+        if(user && session){ session.user = user; saveSession(session); render(); }
+      });
+    }
+  }
+
+  function boot(){
+    document.getElementById("app").innerHTML =
+      '<div class="auth-boot"><div class="loading-spinner"></div></div>';
+
+    fetch("/api/config")
+      .then(function(r){ return r.ok ? r.json() : Promise.reject(new Error("config")); })
+      .then(function(cfg){
+        supa.url = cfg.supabaseUrl;
+        supa.anon = cfg.supabaseAnonKey;
+        if(cfg.providers) supa.providers = cfg.providers;
+        authReady = true;
+
+        var fromOAuth = consumeOAuthRedirect();
+        if(!fromOAuth) session = loadSession();
+
+        if(!session){ renderAuth(); return; }
+
+        // Session en mémoire : on la valide avant d'afficher quoi que ce soit.
+        return ensureToken().then(function(token){
+          if(!token){ saveSession(null); renderAuth(); return; }
+          bootAfterAuth();
+        });
+      })
+      .catch(function(){
+        document.getElementById("app").innerHTML =
+          '<div class="auth-screen"><div class="auth-box">'+
+            '<div class="auth-logo">🗂️</div>'+
+            '<div class="auth-title">Service indisponible</div>'+
+            '<div class="auth-sub">La configuration du serveur n\'a pas pu être chargée. '+
+            'Vérifie ta connexion et recharge la page.</div>'+
+            '<button class="auth-submit" onclick="location.reload()" style="margin-top:20px;">Recharger</button>'+
+          '</div></div>';
+      });
+  }
+
+  boot();
 })();
 </script>
 </body>
