@@ -424,6 +424,16 @@
     padding:5px 13px;pointer-events:none;white-space:nowrap;
     box-shadow:0 2px 8px rgba(43,36,32,0.08);
   }
+  /* Barre de saisie dans la task list */
+  .tl-compose-bar{
+    flex-shrink:0;background:var(--canvas-card);border-top:1px solid var(--line);
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    display:flex;align-items:center;gap:8px;box-shadow:0 -4px 16px rgba(43,36,32,0.10);
+  }
+  .tl-target-label{
+    flex-shrink:0;font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);
+    white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis;
+  }
 
   /* BARRE FIXE DÉTAIL (catégorie/tâches & projet) */
   .detail-fixed-bar{
@@ -956,6 +966,83 @@
     '</div>';
   }
 
+  function tlTargetProject(){
+    if(tlSelectedProjects.length === 1) return findProject(tlSelectedProjects[0]);
+    var actives = state.projects.filter(function(p){ return !isAccompli(p); });
+    var pool = actives.length ? actives : state.projects;
+    return pool.slice().sort(function(a,b){ return new Date(b.updatedAt)-new Date(a.updatedAt); })[0] || null;
+  }
+
+  function renderTaskListBar(){
+    var p = tlTargetProject();
+    if(!p || !state.projects.length) return '';
+    var showLabel = state.projects.length > 1 && tlSelectedProjects.length !== 1;
+    var labelHtml = showLabel
+      ? '<span class="tl-target-label">'+p.emoji+' '+escapeHtml(p.title.slice(0,14)+(p.title.length>14?'…':''))+'</span>'
+      : '';
+    return '<div class="tl-compose-bar">'+
+      labelHtml+
+      '<input class="dfb-input" id="tl-compose-input" type="text" placeholder="Ajouter ou décrire…" autocomplete="off">'+
+      '<button class="dfb-btn secondary" id="tl-suggest-btn" title="Suggérer">'+sparkleIcon()+'</button>'+
+      '<button class="dfb-btn primary" id="tl-add-btn" title="Ajouter">'+checkIcon()+'</button>'+
+    '</div>';
+  }
+
+  function performTlSuggest(){
+    var p = tlTargetProject();
+    if(!p || generating) return;
+    var input = document.getElementById('tl-compose-input');
+    var text = input ? input.value.trim() : '';
+    var doneT  = allItems(p).filter(function(it){return it.done;}).map(function(it){return it.title;});
+    var undoneT = allItems(p).filter(function(it){return !it.done;}).map(function(it){return it.title;});
+    var ctx = 'Projet : '+p.title+(p.summary?' — '+p.summary:'')+
+      '\nTâches faites : '+JSON.stringify(doneT)+
+      '\nTâches restantes : '+JSON.stringify(undoneT);
+    var prompt;
+    if(!text){
+      prompt = ctx+'\n\n'+
+        'Propose 2 à 4 nouvelles tâches concrètes et courtes (5-10 mots) qui font LOGIQUEMENT avancer ce projet. '+
+        'Déduis depuis ce qui est déjà fait et ce qui reste. Ne répète aucune tâche existante.\n'+
+        'Réponds UNIQUEMENT avec un tableau JSON : ["tâche 1","tâche 2"]';
+    } else {
+      prompt = ctx+'\n\nTexte de l\'utilisateur : "'+text+'"\n\n'+
+        'Transforme ce texte en 1 à 5 tâches concrètes et distinctes pour ce projet.\n'+
+        'Règles strictes :\n'+
+        '- Liste de choses → une tâche active par élément, reformulée\n'+
+        '- Question → tâches qui y répondent concrètement\n'+
+        '- Instructions ou étapes → une tâche par étape\n'+
+        '- Ne jamais recopier mot pour mot ; formuler en verbe d\'action court\n'+
+        'Réponds UNIQUEMENT avec un tableau JSON : ["tâche 1","tâche 2"]';
+    }
+    generating = true;
+    if(input) input.disabled = true;
+    var btn = document.getElementById('tl-suggest-btn');
+    if(btn) btn.disabled = true;
+    fetch('/api/ai',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:400,messages:[{role:'user',content:[{type:'text',text:prompt}]}]})
+    }).then(function(r){return r.json();}).then(function(data){
+      generating = false;
+      var out = (data.content||[]).filter(function(b){return b.type==='text';}).map(function(b){return b.text;}).join('\n');
+      var items = JSON.parse(out.replace(/```json|```/g,'').trim());
+      if(!Array.isArray(items)||!items.length) throw new Error();
+      if(!p.categories.length) p.categories.push(makeCategory('À faire',[]));
+      var cat = p.categories[0];
+      items.slice(0,5).forEach(function(t){ if(t&&t.trim()) cat.items.push(makeItem(t.trim())); });
+      p.updatedAt = nowIso();
+      persist();
+      if(input) input.value = '';
+      render();
+      showToast(items.length+' tâche'+(items.length>1?'s':'')+' ajoutée'+(items.length>1?'s':''));
+    }).catch(function(){
+      generating = false;
+      if(input) input.disabled = false;
+      var b2 = document.getElementById('tl-suggest-btn');
+      if(b2) b2.disabled = false;
+      showToast('Suggestion indisponible');
+    });
+  }
+
   function renderTaskList(){
     var tasks = buildFlatTasks();
     var totalUndone = state.projects.reduce(function(s,p){
@@ -984,6 +1071,7 @@
       '</div>'+
       '<div class="tl-filter-row">'+filterLabel+filterChips+'</div>'+
       '<div class="tasklist-scroll" id="tl-scroll">'+rows+'</div>'+
+      renderTaskListBar()+
     '</div>';
   }
 
@@ -1853,6 +1941,24 @@
         persist(); render();
       }
     });
+    // Task list — barre de saisie
+    var tlAddBtn = document.getElementById('tl-add-btn');
+    var tlInput  = document.getElementById('tl-compose-input');
+    if(tlAddBtn) tlAddBtn.addEventListener('click', function(){
+      if(!tlInput) return;
+      var text = tlInput.value.trim(); if(!text) return;
+      var p = tlTargetProject(); if(!p) return;
+      if(!p.categories.length) p.categories.push(makeCategory('À faire',[]));
+      p.categories[0].items.push(makeItem(text));
+      p.updatedAt = nowIso(); tlInput.value = '';
+      persist(); render();
+    });
+    if(tlInput) tlInput.addEventListener('keydown', function(e){
+      if(e.key==='Enter'){ e.preventDefault(); if(tlAddBtn) tlAddBtn.click(); }
+    });
+    var tlSuggestBtn = document.getElementById('tl-suggest-btn');
+    if(tlSuggestBtn) tlSuggestBtn.addEventListener('click', performTlSuggest);
+
     // Task list — fermer (bouton retour)
     var tlBackBtn = document.getElementById("tl-back-btn");
     if(tlBackBtn) tlBackBtn.addEventListener("click", function(){
@@ -2187,17 +2293,26 @@
   });
 
   /* ---------- swipe detection (home ↔ task list) ---------- */
-  var swipeStartX = null, swipeStartY = null;
-  document.addEventListener('touchstart', function(e){
+  // capture:true = reçoit l'événement avant les enfants (tiles, scrolls, etc.)
+  // touchmove lock = distingue swipe H vs V avant le touchend
+  var swipeStartX = null, swipeStartY = null, swipeLocked = null;
+  window.addEventListener('touchstart', function(e){
     swipeStartX = e.touches[0].clientX;
     swipeStartY = e.touches[0].clientY;
-  }, {passive: true});
-  document.addEventListener('touchend', function(e){
+    swipeLocked = null;
+  }, {passive: true, capture: true});
+  window.addEventListener('touchmove', function(e){
+    if(swipeStartX === null || swipeLocked) return;
+    var mdx = Math.abs(e.touches[0].clientX - swipeStartX);
+    var mdy = Math.abs(e.touches[0].clientY - swipeStartY);
+    if(mdx > 8 || mdy > 8) swipeLocked = mdx >= mdy ? 'h' : 'v';
+  }, {passive: true, capture: true});
+  window.addEventListener('touchend', function(e){
     if(swipeStartX === null) return;
     var dx = e.changedTouches[0].clientX - swipeStartX;
-    var dy = Math.abs(e.changedTouches[0].clientY - swipeStartY);
-    swipeStartX = null;
-    if(dy > 60) return; // swipe vertical → ignorer
+    var locked = swipeLocked;
+    swipeStartX = null; swipeStartY = null; swipeLocked = null;
+    if(locked !== 'h') return; // swipe vertical ou ambigu → ignorer
     if(!currentProjectId && !taskListOpen && dx < -80 && state.projects.length > 0){
       taskListOpen = true;
       render();
@@ -2212,7 +2327,7 @@
         setTimeout(function(){ taskListOpen = false; render(); }, 280);
       }
     }
-  }, {passive: true});
+  }, {passive: true, capture: true});
 
   load();
 })();
