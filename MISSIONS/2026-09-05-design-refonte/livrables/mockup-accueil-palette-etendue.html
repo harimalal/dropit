@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test décisif v4 — Accueil Palette Étendue</title>
+<style>
+  :root{
+    /* --- Chrome : fond quasi blanc (v5 — encore allégé) --- */
+    --canvas:#FCFBFA; --canvas-card:#FFFFFF; --ink:#2B2420; --ink-soft:#7A7168; --ink-faint:#A79E93;
+    --line:#EFEBE6; --accent:#BF5B44; --accent-soft:#F3E2DC;
+    --status-actif:#3F8A5C; --status-actif-soft:#E3EFE6; --status-ralentit:#C48A2E; --status-pause:#A79E93; --status-accompli:#BF5B44;
+    --radius-card:18px; --radius-md:12px; --radius-sm:10px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+
+    /* --- Primitives Palette Étendue v5 : UN ton de base par projet, deux voiles de transparence ---
+         (8% = fond de carte, encore allégé depuis 12% ; 28% = badge, inchangé — écart entre les deux
+         renforcé pour que le badge se détache plus nettement du fond) */
+    --p-terracotta-base:#DD664B; --p-terracotta-card:#FCF3F1; --p-terracotta-badge:#F5D4CD;
+    --p-corail-base:#DD4B6F;     --p-corail-card:#FCF1F3;     --p-corail-badge:#F5CDD7;
+    --p-ambre-base:#DDA04B;      --p-ambre-card:#FCF7F1;      --p-ambre-badge:#F5E4CD;
+    --p-emeraude-base:#4BDDA0;   --p-emeraude-card:#F1FCF7;   --p-emeraude-badge:#CDF5E4;
+    --p-sarcelle-base:#4BDDDD;   --p-sarcelle-card:#F1FCFC;   --p-sarcelle-badge:#CDF5F5;
+    --p-azur-base:#4BA0DD;       --p-azur-card:#F1F7FC;       --p-azur-badge:#CDE4F5;
+    --p-indigo-base:#574BDD;     --p-indigo-card:#F2F1FC;     --p-indigo-badge:#D0CDF5;
+    --p-mure-base:#B84BDD;       --p-mure-card:#F9F1FC;       --p-mure-badge:#EBCDF5;
+
+    /* Solide réservé UNIQUEMENT au composant checkbox (coche blanche dessus, contraste vérifié 3:1+) */
+    --p-emeraude-solid:#27A571; --p-sarcelle-solid:#26A1A1; /* exemples, les 6 autres suivent le même calcul */
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--canvas);font-family:var(--font);color:var(--ink);}
+
+  .test-banner{background:var(--ink); color:#fff; padding:14px 20px; font-size:12.5px; line-height:1.6;}
+  .test-banner b{color:#fff;}
+  .test-banner .fixes{margin-top:6px; opacity:.85;}
+  .test-banner .flag{margin-top:6px; color:#FFD9A0;}
+
+  .phone{
+    max-width:420px; margin:24px auto 60px; background:var(--canvas); border-radius:24px;
+    box-shadow:0 20px 60px rgba(43,36,32,.14); overflow:hidden; min-height:820px; position:relative;
+  }
+
+  .greeting{padding:22px 20px 4px;}
+  .greeting h1{font-size:21px; font-weight:800; margin:0; letter-spacing:-.01em;}
+  .greeting p{font-size:13px; color:var(--ink-soft); margin:4px 0 0;}
+
+  /* Gap resserré, pas de grille de points visible (retire l'impression de vide) */
+  .treemap{padding:16px; display:flex; flex-direction:column; gap:8px; overflow:hidden;}
+  .row{display:flex; gap:8px; min-width:0;}
+  .tile{
+    border-radius:var(--radius-card); position:relative; min-width:0;
+    background:var(--card-bg); color:var(--ink);
+    /* anneau de statut : bordure fine plutôt que conic-gradient épais — plus premium, moins "diagramme"
+       + léger relief (v5) : la carte se détache maintenant un peu du fond, comme demandé */
+    box-shadow:inset 0 0 0 2px var(--ring-color), 0 2px 10px rgba(43,36,32,.07);
+    padding:16px; display:flex; flex-direction:column; align-items:center; text-align:center;
+  }
+  .tile.big{flex:1.6; height:172px; justify-content:flex-start;}
+  .tile.med{flex:1; height:126px; justify-content:center;}
+  .tile.small{flex:1; height:96px; justify-content:center;}
+
+  /* Badge : voile translucide (28%), agrandi (v5, +4px) */
+  .badge{
+    width:44px; height:44px; border-radius:var(--radius-sm); background:var(--badge-bg);
+    display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;
+  }
+  .tile.small .badge{width:36px; height:36px; font-size:18px;}
+
+  /* Icône + titre : centrés, empilés, sur TOUTES les tailles (v4 — remplace v3) */
+  .tile-head{display:flex; flex-direction:column; align-items:center; gap:8px; min-width:0; width:100%;}
+  .tile-title{font-weight:700; font-size:14px; line-height:1.25; min-width:0;
+    display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;}
+  .tile.small .tile-title{font-size:12px;}
+  .tile-meta{margin-top:8px; font-family:var(--font-mono); font-size:10px; color:var(--ink-soft); font-weight:600;}
+
+  .compose{
+    position:absolute; left:0; right:0; bottom:0; padding:12px; display:flex; gap:8px;
+    background:var(--canvas-card); border-top:1px solid var(--line);
+  }
+  .compose .input-wrap{
+    flex:1; display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:22px;
+    padding:0 16px; background:var(--canvas);
+  }
+  .compose .input-wrap .sparkle{font-size:15px; flex-shrink:0;}
+  .compose input{flex:1; border:none; outline:none; padding:11px 0; font-size:14px; background:transparent; color:var(--ink);}
+  .compose button{
+    width:40px; height:40px; border-radius:50%; border:none; background:var(--status-actif); color:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+    box-shadow:0 0 0 6px var(--status-actif-soft);
+  }
+
+  .legend{max-width:420px; margin:0 auto 40px; padding:0 20px; font-size:12.5px; color:var(--ink-soft); line-height:1.7;}
+  .legend b{color:var(--ink);}
+</style>
+</head>
+<body>
+
+<div class="test-banner">
+  <b>Test décisif v5</b> — ajustements de finition.
+  <div class="fixes">✓ Fond de carte encore allégé (12%→8%) · ✓ Badges agrandis (40px→44px) · ✓ Léger relief ajouté sur les cartes (ombre douce 0 2px 10px) · ✓ Fond d'app encore éclairci, tend vers le blanc (#F8F7F5→#FCFBFA)</div>
+  <div class="flag">Fond d'app confirmé neutre partout (validé) — cette étape pousse encore plus près du blanc pur.</div>
+</div>
+
+<div class="phone">
+  <div class="greeting">
+    <h1>Let's Go ! Rado 🔥</h1>
+    <p>3 projets en cours</p>
+  </div>
+
+  <div class="treemap">
+    <div class="row">
+      <div class="tile big" style="--card-bg:var(--p-emeraude-card); --badge-bg:var(--p-emeraude-badge); --ring-color:var(--status-actif);">
+        <div class="tile-head">
+          <div class="badge">🌴</div>
+          <div class="tile-title">Bali cet été</div>
+        </div>
+        <div class="tile-meta">2/5 · 40%</div>
+      </div>
+      <div class="tile med" style="--card-bg:var(--p-corail-card); --badge-bg:var(--p-corail-badge); --ring-color:var(--status-ralentit);">
+        <div class="tile-head">
+          <div class="badge">🎂</div>
+          <div class="tile-title">Anniversaire de Julie</div>
+        </div>
+        <div class="tile-meta">3/5 · 60%</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="tile med" style="--card-bg:var(--p-azur-card); --badge-bg:var(--p-azur-badge); --ring-color:var(--status-actif);">
+        <div class="tile-head">
+          <div class="badge">📦</div>
+          <div class="tile-title">Déménagement</div>
+        </div>
+        <div class="tile-meta">2/10 · 20%</div>
+      </div>
+      <div class="tile small" style="--card-bg:var(--p-mure-card); --badge-bg:var(--p-mure-badge); --ring-color:var(--status-pause);">
+        <div class="tile-head">
+          <div class="badge">💪</div>
+          <div class="tile-title">Reprendre le sport</div>
+        </div>
+      </div>
+      <div class="tile small" style="--card-bg:var(--p-indigo-card); --badge-bg:var(--p-indigo-badge); --ring-color:var(--status-actif);">
+        <div class="tile-head">
+          <div class="badge">📚</div>
+          <div class="tile-title">Lecture du mois</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="compose">
+    <div class="input-wrap">
+      <span class="sparkle">✨</span>
+      <input type="text" placeholder="On aimerait partir à Bali en septembre…" readonly>
+    </div>
+    <button>➤</button>
+  </div>
+</div>
+
+<div class="legend">
+  <b>Mécanique des tokens (v4) :</b> une seule couleur de base par projet, déclinée en 2 voiles de transparence
+  (12% carte, 28% badge — le badge est plus opaque, comme demandé). Le composant checkbox "fait" (ailleurs
+  dans l'app) garde un ton solide séparé, calculé pour le contraste — c'est un composant différent (coche
+  blanche dessus), pas le même besoin que le badge de tuile (emoji seul, pas de texte dessus).
+</div>
+
+</body>
+</html>
