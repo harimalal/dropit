@@ -49,6 +49,7 @@
     min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;
     position:relative;overflow:hidden;padding:56px 20px;
   }
+  .full-section.hero{background:#FFFFFF;}
   .blob{position:absolute;border-radius:50%;filter:blur(46px);z-index:0;pointer-events:none;}
 
   /* ---------- HERO ---------- */
@@ -94,6 +95,11 @@
   .crop-card{
     border-radius:22px;overflow:hidden;box-shadow:0 24px 54px rgba(43,36,32,.22);background:#fff;
     background-repeat:no-repeat;
+  }
+  .crop-wrap{position:relative;}
+  .callout{
+    position:absolute;background-repeat:no-repeat;background-color:#fff;
+    box-shadow:0 16px 34px rgba(43,36,32,.3), 0 0 0 3px #fff, 0 0 0 5px rgba(43,36,32,.08);z-index:2;
   }
   .flow-arrow{display:none;}
   .sparkle-flank{display:none;}
@@ -176,7 +182,10 @@
       <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="benefit-visual" style="gap:14px;">
         <span class="sparkle-flank">✨</span>
-        <div class="crop-card" style="width:340px;height:675.6px;background-image:url('onboarding/slide-2-project.png');background-size:340px 735.8px;background-position:0px -13.1px;"></div>
+        <div class="crop-wrap">
+          <div class="crop-card" style="width:340px;height:675.6px;background-image:url('onboarding/slide-2-project.png');background-size:340px 735.8px;background-position:0px -13.1px;"></div>
+          <div class="callout" style="width:380px;height:144.4px;border-radius:20px;left:50%;transform:translateX(-50%);top:130px;background-image:url('onboarding/slide-2-project.png');background-size:423.4px 916.3px;background-position:-21.7px -196.5px;"></div>
+        </div>
         <span class="sparkle-flank">✨</span>
       </div>
     </div>
@@ -190,13 +199,16 @@
     <div class="benefit-inner">
       <div class="benefit-text">
         <div class="benefit-eyebrow" style="color:#4196D2;">Jamais bloqué</div>
-        <div class="benefit-title">Plus d'idée ?<br>L'IA en propose une autre.</div>
-        <div class="benefit-body">Un tap sur Suggérer, et l'IA analyse ton projet pour proposer la suite. Toujours toi qui valides.</div>
+        <div class="benefit-title">Laisse-toi guider,<br>suggestion en 1 clic.</div>
+        <div class="benefit-body">Un tap sur Suggérer : l'IA analyse ton projet et ajoute directement les prochaines tâches. Toujours toi qui décides de les garder.</div>
       </div>
       <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
       <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="benefit-visual">
-        <div class="crop-card" style="width:340px;height:610.3px;background-image:url('onboarding/slide-5-suggest.png');background-size:340px 735.8px;background-position:0px -13.1px;"></div>
+        <div class="crop-wrap">
+          <div class="crop-card" style="width:340px;height:610.3px;background-image:url('onboarding/slide-5-suggest.png');background-size:340px 735.8px;background-position:0px -13.1px;"></div>
+          <div class="callout" style="width:92px;height:92px;border-radius:46px;right:-30px;bottom:60px;background-image:url('onboarding/slide-5-suggest.png');background-size:780px 1688px;background-position:-580px -1584px;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -209,7 +221,7 @@
     <div class="benefit-inner reverse">
       <div class="benefit-text">
         <div class="benefit-eyebrow" style="color:#AE41D2;">Tout au même endroit</div>
-        <div class="benefit-title">Chaque projet,<br>ses 3 priorités.</div>
+        <div class="benefit-title">Reste focus,<br>3 top priorités à gérer.</div>
         <div class="benefit-body">D'un geste, retrouve ce qui compte vraiment sur chacun de tes projets — plus besoin de fouiller.</div>
       </div>
       <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
@@ -235,25 +247,6 @@
       <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="benefit-visual">
         <div class="crop-card" style="width:360px;height:277px;background-image:url('onboarding/slide-4-chat.png');background-size:360px 779.6px;background-position:0px -218px;"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="full-section" style="background:linear-gradient(180deg,#FDF3E4 0%,#F8F8F9 75%);">
-  <div class="blob" style="width:360px;height:360px;background:#BF5B44;opacity:.38;top:-120px;right:-100px;"></div>
-  <div class="blob" style="width:220px;height:220px;background:#BF5B44;opacity:.2;bottom:-60px;left:-60px;"></div>
-  <div class="benefit-section">
-    <div class="benefit-inner reverse">
-      <div class="benefit-text">
-        <div class="benefit-eyebrow" style="color:#BF5B44;">En manque d'inspiration ?</div>
-        <div class="benefit-title">Demande à l'IA.<br>Suggestion en 1 clic.</div>
-        <div class="benefit-body">Tape une idée, même vague. Dropit la transforme en projet actionnable — ou complète celui que tu as déjà, sans effort.</div>
-      </div>
-      <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-      <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <div class="benefit-visual">
-        <div class="crop-card" style="width:340px;height:256.3px;background-image:url('onboarding/slide-1-home.png');background-size:340px 735.8px;background-position:0px -479.5px;"></div>
       </div>
     </div>
   </div>
