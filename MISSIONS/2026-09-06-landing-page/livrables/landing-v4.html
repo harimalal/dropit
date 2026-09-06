@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dropit — Arrête de perdre tes idées.</title>
+<style>
+  :root{
+    --canvas:#F8F8F9; --canvas-card:#FFFFFF; --ink:#2B2420; --ink-soft:#7A7168; --ink-faint:#A79E93;
+    --line:#EFEBE6; --accent:#BF5B44; --cta:#9CECCB; --cta-hover:#7FE0B5;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{font-family:var(--font);background:var(--canvas);color:var(--ink);overflow-x:hidden;}
+
+  /* ---------- Header sticky ---------- */
+  .site-header{
+    position:fixed;top:0;left:0;right:0;z-index:50;display:flex;justify-content:center;padding:14px 20px;
+    opacity:0;transform:translateY(-16px);transition:opacity .4s ease, transform .4s ease, background .2s ease;
+    pointer-events:none;
+  }
+  .site-header.visible{opacity:1;transform:translateY(0);pointer-events:auto;}
+  .site-header-pill{
+    display:inline-flex;align-items:center;gap:2px;padding:9px 20px;border-radius:999px;
+    background:rgba(255,255,255,.85);backdrop-filter:blur(10px);box-shadow:0 8px 22px rgba(43,36,32,.12);
+    border:1px solid var(--line);
+  }
+  .site-header-pill .word{font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--ink);}
+  .site-header-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);margin:0 3px;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:48px 20px;position:relative;overflow:hidden;
+  }
+  .blob{position:absolute;border-radius:50%;filter:blur(50px);opacity:.35;z-index:0;pointer-events:none;}
+  .hb-1{width:260px;height:260px;background:#4BDDA0;top:-80px;left:-80px;}
+  .hb-2{width:240px;height:240px;background:#DD664B;bottom:-90px;right:-70px;}
+  .hb-3{width:200px;height:200px;background:#4BA0DD;top:45%;right:-60px;opacity:.22;}
+
+  .hero-content{position:relative;z-index:1;width:100%;max-width:680px;}
+  .hero-logo-pill{
+    display:inline-flex;align-items:center;gap:2px;padding:10px 22px;border-radius:999px;margin-bottom:24px;
+    background:var(--canvas-card);box-shadow:0 10px 28px rgba(43,36,32,.12);border:1px solid var(--line);
+  }
+  .hero-logo-pill .word{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--ink);}
+  .hero-logo-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);margin:0 3px;}
+
+  .hero-emoji{font-size:38px;display:block;margin-bottom:6px;animation:float 3.4s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0) rotate(-4deg);}50%{transform:translateY(-8px) rotate(4deg);}}
+
+  .hero-title{font-size:clamp(36px,11vw,92px);font-weight:800;letter-spacing:-.035em;line-height:1.03;color:var(--ink);}
+  .hero-sub{margin-top:20px;font-size:clamp(16px,2vw,19px);color:var(--ink-soft);line-height:1.55;max-width:420px;margin-left:auto;margin-right:auto;}
+  .hero-cta{
+    margin-top:32px;display:inline-block;width:100%;max-width:340px;border:none;border-radius:14px;
+    padding:17px 32px;font-size:16px;font-weight:800;background:var(--cta);color:var(--ink);cursor:pointer;
+    box-shadow:0 14px 30px rgba(43,36,32,.16);transition:transform .15s ease, background .15s ease;
+  }
+  .hero-cta:hover{background:var(--cta-hover);transform:translateY(-2px);}
+  .hero-proof{margin-top:14px;font-size:12.5px;color:var(--ink-faint);}
+  .hero-scroll-hint{
+    margin-top:44px;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-faint);display:flex;flex-direction:column;align-items:center;gap:6px;
+  }
+  .hero-scroll-hint svg{animation:bounce 1.8s ease-in-out infinite;}
+  @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
+
+  /* ---------- BENEFICES ---------- */
+  .benefits{max-width:1080px;margin:0 auto;padding:0 20px 40px;}
+  .benefit-row{
+    position:relative;overflow:hidden;display:flex;flex-direction:column;gap:14px;padding:44px 16px;
+    text-align:center;border-radius:28px;
+    opacity:0;transform:translateY(28px);transition:opacity .7s ease, transform .7s ease;
+  }
+  .benefit-row.in-view{opacity:1;transform:translateY(0);}
+  .benefit-emoji{position:relative;z-index:1;font-size:34px;display:inline-block;margin-bottom:2px;}
+  .benefit-eyebrow{
+    position:relative;z-index:1;
+    font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+    margin-bottom:8px;
+  }
+  .benefit-title{position:relative;z-index:1;font-size:clamp(26px,7vw,48px);font-weight:800;letter-spacing:-.025em;line-height:1.12;color:var(--ink);}
+  .benefit-body{position:relative;z-index:1;margin-top:10px;font-size:15px;color:var(--ink-soft);line-height:1.55;max-width:340px;margin-left:auto;margin-right:auto;}
+
+  .benefit-visual{position:relative;z-index:1;display:flex;justify-content:center;align-items:center;gap:0;}
+  .crop-card{
+    border-radius:20px;overflow:hidden;box-shadow:0 20px 44px rgba(43,36,32,.18);background:#fff;
+    background-repeat:no-repeat;
+  }
+  .flow-arrow{display:none;}
+  .flow-arrow-mobile{
+    position:relative;z-index:1;display:flex;justify-content:center;margin:2px 0;color:var(--ink-faint);
+  }
+  .flow-arrow-mobile svg{animation:arrowbob 2s ease-in-out infinite;}
+  @keyframes arrowbob{0%,100%{transform:translateY(0);}50%{transform:translateY(5px);}}
+
+  /* ---------- CTA finale ---------- */
+  .final-cta{text-align:center;padding:64px 20px 80px;background:var(--canvas-card);border-top:1px solid var(--line);}
+  .final-cta-emoji{font-size:40px;display:block;margin-bottom:14px;}
+  .final-cta-title{font-size:clamp(28px,7vw,52px);font-weight:800;letter-spacing:-.03em;max-width:560px;margin:0 auto;line-height:1.15;}
+  .final-cta .hero-cta{margin-top:28px;}
+  .final-cta .hero-proof{margin-top:12px;}
+
+  /* ================= TABLETTE / DESKTOP ================= */
+  @media (min-width:760px){
+    .hero{padding:60px 24px;}
+    .blob{filter:blur(70px);}
+    .hb-1{width:420px;height:420px;top:-120px;left:-100px;}
+    .hb-2{width:380px;height:380px;bottom:-140px;right:-100px;}
+    .hb-3{width:300px;height:300px;top:40%;right:10%;}
+    .hero-cta{width:auto;}
+
+    .benefits{padding:0 24px 80px;display:flex;flex-direction:column;gap:20px;}
+    .benefit-row{
+      flex-direction:row;align-items:center;gap:8px;padding:70px 56px;text-align:left;
+    }
+    .benefit-row.reverse{flex-direction:row-reverse;}
+    .benefit-text{flex:1;min-width:0;}
+    .benefit-body{margin-left:0;margin-right:0;}
+    .benefit-visual{flex-shrink:0;}
+    .flow-arrow-mobile{display:none;}
+    .flow-arrow{display:block;flex-shrink:0;width:70px;color:var(--ink-faint);opacity:.55;}
+    .benefit-row.reverse .flow-arrow{transform:scaleX(-1);}
+  }
+</style>
+</head>
+<body>
+
+<div class="site-header" id="site-header">
+  <div class="site-header-pill"><span class="word">DROP</span><span class="dot"></span><span class="word">IT</span></div>
+</div>
+
+<section class="hero">
+  <div class="blob hb-1"></div>
+  <div class="blob hb-2"></div>
+  <div class="blob hb-3"></div>
+  <div class="hero-content">
+    <div class="hero-logo-pill"><span class="word">DROP</span><span class="dot"></span><span class="word">IT</span></div>
+    <span class="hero-emoji">💡</span>
+    <div class="hero-title">Arrête de perdre<br>tes idées.</div>
+    <div class="hero-sub">Décris une idée en une phrase. L'IA construit le plan. Toi, tu coches.</div>
+    <button class="hero-cta">Essayer gratuitement — 30 secondes</button>
+    <div class="hero-proof">Aucune carte bancaire requise</div>
+    <div class="hero-scroll-hint">
+      Découvrir
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+</section>
+
+<section class="benefits">
+
+  <div class="benefit-row">
+    <div class="blob" style="width:260px;height:260px;background:#C6872F;top:-60px;right:-80px;"></div>
+    <div class="benefit-text">
+      <span class="benefit-emoji">💡</span>
+      <div class="benefit-eyebrow" style="color:#C6872F;">De l'idée au plan</div>
+      <div class="benefit-title">Dis-le une fois.<br>Dropit organise tout.</div>
+      <div class="benefit-body">Une phrase décrivant ton idée suffit. L'IA construit un plan d'action structuré, prêt à cocher.</div>
+    </div>
+    <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+    <div class="flow-arrow-mobile"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="benefit-visual">
+      <div class="crop-card" style="width:300px;height:351px;background-image:url('slide-1-home.png');background-size:618.9px 1339.6px;background-position:-4.76px -80.9px;"></div>
+    </div>
+  </div>
+
+  <div class="benefit-row reverse">
+    <div class="blob" style="width:220px;height:220px;background:#D24165;bottom:-70px;left:-70px;"></div>
+    <div class="benefit-text">
+      <span class="benefit-emoji">✅</span>
+      <div class="benefit-eyebrow" style="color:#D24165;">Une seule chose à la fois</div>
+      <div class="benefit-title">Toujours savoir<br>quoi faire ensuite.</div>
+      <div class="benefit-body">Une seule action affichée : la plus utile, maintenant. Tu coches, la suivante prend sa place.</div>
+    </div>
+    <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+    <div class="flow-arrow-mobile"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="benefit-visual">
+      <div class="crop-card" style="width:320px;height:122px;background-image:url('slide-2-project.png');background-size:356.5px 771.3px;background-position:-18.3px -165.5px;"></div>
+    </div>
+  </div>
+
+  <div class="benefit-row">
+    <div class="blob" style="width:240px;height:240px;background:#4196D2;top:-70px;left:20%;"></div>
+    <div class="benefit-text">
+      <span class="benefit-emoji">✨</span>
+      <div class="benefit-eyebrow" style="color:#4196D2;">Jamais bloqué</div>
+      <div class="benefit-title">Plus d'idée ?<br>L'IA en propose une autre.</div>
+      <div class="benefit-body">Un tap sur Suggérer, et l'IA analyse ton projet pour proposer la suite. Toujours toi qui valides.</div>
+    </div>
+    <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+    <div class="flow-arrow-mobile"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="benefit-visual">
+      <div class="crop-card" style="width:320px;height:118px;background-image:url('slide-5-suggest.png');background-size:320px 692.9px;background-position:0px -574.5px;"></div>
+    </div>
+  </div>
+
+  <div class="benefit-row reverse">
+    <div class="blob" style="width:250px;height:250px;background:#AE41D2;bottom:-80px;right:10%;"></div>
+    <div class="benefit-text">
+      <span class="benefit-emoji">🎯</span>
+      <div class="benefit-eyebrow" style="color:#AE41D2;">Tout au même endroit</div>
+      <div class="benefit-title">Chaque projet,<br>ses 3 priorités.</div>
+      <div class="benefit-body">D'un geste, retrouve ce qui compte vraiment sur chacun de tes projets — plus besoin de fouiller.</div>
+    </div>
+    <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+    <div class="flow-arrow-mobile"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="benefit-visual">
+      <div class="crop-card" style="width:320px;height:230px;background-image:url('slide-3-tasklist.png');background-size:320px 692.9px;background-position:0px -69.8px;"></div>
+    </div>
+  </div>
+
+  <div class="benefit-row">
+    <div class="blob" style="width:230px;height:230px;background:#3F8A5C;top:-60px;right:-60px;"></div>
+    <div class="benefit-text">
+      <span class="benefit-emoji">💬</span>
+      <div class="benefit-eyebrow" style="color:#3F8A5C;">Ton copilote</div>
+      <div class="benefit-title">Elle connaît déjà<br>ton projet.</div>
+      <div class="benefit-body">Pose une question, demande un conseil — pas besoin de tout réexpliquer. Le contexte est déjà là.</div>
+    </div>
+    <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+    <div class="flow-arrow-mobile"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="benefit-visual">
+      <div class="crop-card" style="width:320px;height:246px;background-image:url('slide-4-chat.png');background-size:320px 692.9px;background-position:0px -193.8px;"></div>
+    </div>
+  </div>
+
+</section>
+
+<section class="final-cta">
+  <span class="final-cta-emoji">🚀</span>
+  <div class="final-cta-title">Ta prochaine idée mérite mieux qu'une note oubliée.</div>
+  <button class="hero-cta">Essayer gratuitement — 30 secondes</button>
+  <div class="hero-proof">Aucune carte bancaire requise</div>
+</section>
+
+<script>
+  // Header sticky : apparaît après avoir quitté le hero
+  var header = document.getElementById('site-header');
+  var hero = document.querySelector('.hero');
+  var headerObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      header.classList.toggle('visible', !e.isIntersecting);
+    });
+  }, {threshold: 0});
+  headerObs.observe(hero);
+
+  // Animation d'entrée au scroll pour chaque section bénéfice
+  var rows = document.querySelectorAll('.benefit-row');
+  var rowObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting) e.target.classList.add('in-view');
+    });
+  }, {threshold: 0.2});
+  rows.forEach(function(r){ rowObs.observe(r); });
+</script>
+
+</body>
+</html>

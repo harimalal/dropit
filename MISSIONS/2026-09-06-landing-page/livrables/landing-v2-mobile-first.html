@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dropit — Arrête de perdre tes idées.</title>
+<style>
+  :root{
+    --canvas:#F8F8F9; --canvas-card:#FFFFFF; --ink:#2B2420; --ink-soft:#7A7168; --ink-faint:#A79E93;
+    --line:#EFEBE6; --accent:#BF5B44; --cta:#9CECCB; --cta-hover:#7FE0B5;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{font-family:var(--font);background:var(--canvas);color:var(--ink);overflow-x:hidden;}
+
+  /* ================= MOBILE (base) ================= */
+
+  /* ---------- HERO : juste la promesse ---------- */
+  .hero{
+    min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:48px 20px;position:relative;overflow:hidden;
+  }
+  .hero-blob{position:absolute;border-radius:50%;filter:blur(50px);opacity:.35;z-index:0;}
+  .hb-1{width:260px;height:260px;background:#4BDDA0;top:-80px;left:-80px;}
+  .hb-2{width:240px;height:240px;background:#DD664B;bottom:-90px;right:-70px;}
+  .hb-3{width:200px;height:200px;background:#4BA0DD;top:45%;right:-60px;opacity:.22;}
+
+  .hero-content{position:relative;z-index:1;width:100%;max-width:640px;}
+  .hero-logo-pill{
+    display:inline-flex;align-items:center;gap:2px;padding:10px 22px;border-radius:999px;margin-bottom:28px;
+    background:var(--canvas-card);box-shadow:0 10px 28px rgba(43,36,32,.12);border:1px solid var(--line);
+  }
+  .hero-logo-pill .word{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--ink);}
+  .hero-logo-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);margin:0 3px;}
+
+  .hero-title{font-size:clamp(28px,8vw,64px);font-weight:800;letter-spacing:-.03em;line-height:1.1;color:var(--ink);}
+  .hero-sub{
+    margin-top:18px;font-size:16px;color:var(--ink-soft);line-height:1.55;
+    max-width:400px;margin-left:auto;margin-right:auto;
+  }
+  .hero-cta{
+    margin-top:32px;display:inline-block;width:100%;max-width:340px;border:none;border-radius:14px;
+    padding:17px 32px;font-size:16px;font-weight:800;background:var(--cta);color:var(--ink);cursor:pointer;
+    box-shadow:0 14px 30px rgba(43,36,32,.16);transition:transform .15s ease, background .15s ease;
+  }
+  .hero-cta:hover{background:var(--cta-hover);transform:translateY(-2px);}
+  .hero-proof{margin-top:14px;font-size:12.5px;color:var(--ink-faint);}
+  .hero-scroll-hint{
+    margin-top:44px;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-faint);display:flex;flex-direction:column;align-items:center;gap:6px;
+  }
+  .hero-scroll-hint svg{animation:bounce 1.8s ease-in-out infinite;}
+  @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
+
+  /* ---------- BENEFICES : empilé sur mobile ---------- */
+  .benefits{max-width:1080px;margin:0 auto;padding:8px 20px 60px;}
+  .benefit-row{
+    display:flex;flex-direction:column;gap:28px;padding:48px 0;border-bottom:1px solid var(--line);
+    text-align:center;
+  }
+  .benefit-row:last-child{border-bottom:none;}
+  .benefit-eyebrow{
+    font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+    margin-bottom:10px;
+  }
+  .benefit-title{font-size:clamp(21px,5.5vw,36px);font-weight:800;letter-spacing:-.02em;line-height:1.2;color:var(--ink);}
+  .benefit-body{margin-top:12px;font-size:15px;color:var(--ink-soft);line-height:1.55;max-width:360px;margin-left:auto;margin-right:auto;}
+
+  .benefit-visual{display:flex;justify-content:center;}
+  .phone-frame{
+    width:220px;border-radius:22px;overflow:hidden;border:6px solid #1a1a1a;
+    box-shadow:0 20px 44px rgba(43,36,32,.2);background:#fff;flex-shrink:0;
+  }
+  .phone-frame img{width:100%;display:block;}
+
+  /* ---------- CTA finale ---------- */
+  .final-cta{
+    text-align:center;padding:64px 20px 80px;background:var(--canvas-card);border-top:1px solid var(--line);
+  }
+  .final-cta-title{font-size:clamp(24px,6vw,42px);font-weight:800;letter-spacing:-.02em;max-width:520px;margin:0 auto;line-height:1.2;}
+  .final-cta .hero-cta{margin-top:26px;}
+  .final-cta .hero-proof{margin-top:12px;}
+
+  /* ================= TABLETTE / DESKTOP (enrichissement) ================= */
+  @media (min-width:760px){
+    .hero{padding:60px 24px;}
+    .hero-blob{filter:blur(70px);}
+    .hb-1{width:420px;height:420px;top:-120px;left:-100px;}
+    .hb-2{width:380px;height:380px;bottom:-140px;right:-100px;}
+    .hb-3{width:300px;height:300px;top:40%;right:10%;}
+    .hero-cta{width:auto;}
+
+    .benefits{padding:24px 24px 100px;}
+    .benefit-row{
+      flex-direction:row;align-items:center;gap:64px;padding:90px 0;text-align:left;
+    }
+    .benefit-row.reverse{flex-direction:row-reverse;}
+    .benefit-text{flex:1;min-width:0;}
+    .benefit-body{margin-left:0;margin-right:0;}
+    .benefit-visual{flex:1;min-width:0;}
+    .phone-frame{width:270px;border-width:7px;border-radius:26px;box-shadow:0 30px 60px rgba(43,36,32,.22);}
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-blob hb-1"></div>
+  <div class="hero-blob hb-2"></div>
+  <div class="hero-blob hb-3"></div>
+  <div class="hero-content">
+    <div class="hero-logo-pill"><span class="word">DROP</span><span class="dot"></span><span class="word">IT</span></div>
+    <div class="hero-title">Arrête de perdre<br>tes idées.</div>
+    <div class="hero-sub">Décris une idée en une phrase. L'IA construit le plan. Toi, tu coches.</div>
+    <button class="hero-cta">Essayer gratuitement — 30 secondes</button>
+    <div class="hero-proof">Aucune carte bancaire requise</div>
+    <div class="hero-scroll-hint">
+      Découvrir
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+  </div>
+</section>
+
+<section class="benefits">
+
+  <div class="benefit-row">
+    <div class="benefit-text">
+      <div class="benefit-eyebrow" style="color:#C6872F;">Plus qu'une todo list</div>
+      <div class="benefit-title">Une phrase suffit.<br>Dropit fait le reste.</div>
+      <div class="benefit-body">Pas besoin de réfléchir à la structure. Décris ton idée, l'IA construit un plan d'action complet en quelques secondes.</div>
+    </div>
+    <div class="benefit-visual">
+      <div class="phone-frame"><img src="slide-1-home.png" alt="Accueil Dropit"></div>
+    </div>
+  </div>
+
+  <div class="benefit-row reverse">
+    <div class="benefit-text">
+      <div class="benefit-eyebrow" style="color:#D24165;">Une action à la fois</div>
+      <div class="benefit-title">Fini la todo list<br>qui donne le vertige.</div>
+      <div class="benefit-body">Dropit affiche une seule action à la fois : la plus utile, maintenant. Tu coches, la suivante apparaît. Zéro décision à prendre.</div>
+    </div>
+    <div class="benefit-visual">
+      <div class="phone-frame"><img src="slide-2-project.png" alt="Prochaine action"></div>
+    </div>
+  </div>
+
+  <div class="benefit-row">
+    <div class="benefit-text">
+      <div class="benefit-eyebrow" style="color:#4196D2;">Jamais à court d'idées</div>
+      <div class="benefit-title">Bloqué ?<br>L'IA propose la suite.</div>
+      <div class="benefit-body">Un tap sur Suggérer, et l'IA analyse ton projet pour proposer les prochaines étapes concrètes. Toujours toi qui valides.</div>
+    </div>
+    <div class="benefit-visual">
+      <div class="phone-frame"><img src="slide-5-suggest.png" alt="Suggestion IA"></div>
+    </div>
+  </div>
+
+  <div class="benefit-row reverse">
+    <div class="benefit-text">
+      <div class="benefit-eyebrow" style="color:#AE41D2;">Vue d'ensemble</div>
+      <div class="benefit-title">Tous tes projets.<br>3 priorités chacun.</div>
+      <div class="benefit-body">D'un geste, retrouve les 3 tâches qui comptent vraiment sur chacun de tes projets. Plus besoin de fouiller.</div>
+    </div>
+    <div class="benefit-visual">
+      <div class="phone-frame"><img src="slide-3-tasklist.png" alt="Priorités"></div>
+    </div>
+  </div>
+
+  <div class="benefit-row">
+    <div class="benefit-text">
+      <div class="benefit-eyebrow" style="color:#3F8A5C;">Ton copilote</div>
+      <div class="benefit-title">Une IA qui connaît<br>déjà ton projet.</div>
+      <div class="benefit-body">Pose une question, demande un conseil — pas besoin de tout réexpliquer à chaque fois. Le contexte est déjà là.</div>
+    </div>
+    <div class="benefit-visual">
+      <div class="phone-frame"><img src="slide-4-chat.png" alt="Chat IA"></div>
+    </div>
+  </div>
+
+</section>
+
+<section class="final-cta">
+  <div class="final-cta-title">Ta prochaine idée mérite mieux qu'une liste oubliée.</div>
+  <button class="hero-cta">Essayer gratuitement — 30 secondes</button>
+  <div class="hero-proof">Aucune carte bancaire requise</div>
+</section>
+
+</body>
+</html>

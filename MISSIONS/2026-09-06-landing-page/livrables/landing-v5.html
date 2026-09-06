@@ -4,20 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dropit — Arrête de perdre tes idées.</title>
-<script>
-  // Un visiteur déjà connecté (session valide en localStorage) passe direct
-  // à l'app plutôt que de revoir la page marketing à chaque visite.
-  (function(){
-    try {
-      var raw = localStorage.getItem("dropit-session");
-      if(!raw) return;
-      var s = JSON.parse(raw);
-      if(s && s.access_token && Date.now() < s.expires_at){
-        window.location.replace("app.html");
-      }
-    } catch(e){}
-  })();
-</script>
 <style>
   :root{
     --canvas:#F8F8F9; --canvas-card:#FFFFFF; --ink:#2B2420; --ink-soft:#7A7168; --ink-faint:#A79E93;
@@ -60,13 +46,15 @@
   .hero-logo-pill .word{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--ink);}
   .hero-logo-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);margin:0 3px;}
 
+  .hero-emoji{font-size:44px;display:block;margin-bottom:8px;animation:float 3.4s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0) rotate(-4deg);}50%{transform:translateY(-8px) rotate(4deg);}}
+
   .hero-title{font-size:clamp(38px,12vw,96px);font-weight:800;letter-spacing:-.035em;line-height:1.02;color:var(--ink);}
-  .hero-sub{margin-top:30px;font-size:clamp(16px,2vw,19px);color:var(--ink-soft);line-height:1.55;max-width:420px;margin-left:auto;margin-right:auto;}
+  .hero-sub{margin-top:20px;font-size:clamp(16px,2vw,19px);color:var(--ink-soft);line-height:1.55;max-width:420px;margin-left:auto;margin-right:auto;}
   .cta-btn{
     margin-top:32px;display:inline-block;width:100%;max-width:340px;border:none;border-radius:14px;
     padding:17px 32px;font-size:16px;font-weight:800;background:var(--cta);color:var(--ink);cursor:pointer;
     box-shadow:0 14px 30px rgba(43,36,32,.16);transition:transform .15s ease, background .15s ease;
-    text-decoration:none;text-align:center;
   }
   .cta-btn:hover{background:var(--cta-hover);transform:translateY(-2px);}
   .cta-proof{margin-top:14px;font-size:12.5px;color:var(--ink-faint);}
@@ -80,15 +68,16 @@
   /* ---------- BENEFICES (chaque bénéfice = une section plein écran) ---------- */
   .benefit-section{max-width:1080px;margin:0 auto;width:100%;}
   .benefit-inner{
-    position:relative;z-index:1;display:flex;flex-direction:column;gap:12px;text-align:center;width:100%;
+    position:relative;z-index:1;display:flex;flex-direction:column;gap:20px;text-align:center;width:100%;
     opacity:0;transform:translateY(32px);transition:opacity .7s ease, transform .7s ease;
   }
   .benefit-inner.in-view{opacity:1;transform:translateY(0);}
+  .benefit-emoji{font-size:46px;display:inline-block;}
   .benefit-eyebrow{
     font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;
   }
-  .benefit-title{font-size:clamp(30px,8.5vw,58px);font-weight:800;letter-spacing:-.03em;line-height:1.08;color:var(--ink);margin-top:6px;}
-  .benefit-body{font-size:16px;color:var(--ink-soft);line-height:1.6;max-width:360px;margin:16px auto 0;}
+  .benefit-title{font-size:clamp(30px,8.5vw,58px);font-weight:800;letter-spacing:-.03em;line-height:1.08;color:var(--ink);}
+  .benefit-body{font-size:16px;color:var(--ink-soft);line-height:1.6;max-width:360px;margin:0 auto;}
 
   .benefit-visual{display:flex;justify-content:center;align-items:center;}
   .crop-card{
@@ -96,12 +85,12 @@
     background-repeat:no-repeat;
   }
   .flow-arrow{display:none;}
-  .sparkle-flank{display:none;}
   .flow-arrow-mobile{display:flex;justify-content:center;color:var(--ink-faint);opacity:.7;}
   .flow-arrow-mobile svg{animation:arrowbob 2s ease-in-out infinite;}
   @keyframes arrowbob{0%,100%{transform:translateY(0);}50%{transform:translateY(5px);}}
 
   /* ---------- CTA finale ---------- */
+  .final-cta-emoji{font-size:44px;display:block;margin-bottom:14px;}
   .final-cta-title{font-size:clamp(30px,8vw,56px);font-weight:800;letter-spacing:-.03em;max-width:600px;margin:0 auto;line-height:1.12;text-align:center;}
 
   /* ================= TABLETTE / DESKTOP ================= */
@@ -113,7 +102,6 @@
     .benefit-text{flex:1;min-width:0;}
     .benefit-body{margin-left:0;margin-right:0;}
     .benefit-visual{flex-shrink:0;}
-    .sparkle-flank{display:inline-block;font-size:28px;flex-shrink:0;}
     .flow-arrow-mobile{display:none;}
     .flow-arrow{display:block;flex-shrink:0;width:76px;color:var(--ink-faint);opacity:.6;}
     .benefit-inner.reverse .flow-arrow{transform:scaleX(-1);}
@@ -132,9 +120,10 @@
   <div class="blob" style="width:260px;height:260px;background:#4BA0DD;opacity:.3;top:40%;right:-80px;"></div>
   <div class="hero-content">
     <div class="hero-logo-pill"><span class="word">DROP</span><span class="dot"></span><span class="word">IT</span></div>
+    <span class="hero-emoji">💡</span>
     <div class="hero-title">Arrête de perdre<br>tes idées.</div>
     <div class="hero-sub">Décris une idée en une phrase. L'IA construit le plan. Toi, tu coches.</div>
-    <a class="cta-btn" href="app.html">Essayer gratuitement — 30 secondes</a>
+    <button class="cta-btn">Essayer gratuitement — 30 secondes</button>
     <div class="cta-proof">Aucune carte bancaire requise</div>
     <div class="scroll-hint">
       Découvrir
@@ -149,6 +138,7 @@
   <div class="benefit-section">
     <div class="benefit-inner">
       <div class="benefit-text">
+        <span class="benefit-emoji">💡</span>
         <div class="benefit-eyebrow" style="color:#C6872F;">De l'idée au plan</div>
         <div class="benefit-title">Dis-le une fois.<br>Dropit organise tout.</div>
         <div class="benefit-body">Une phrase décrivant ton idée suffit. L'IA construit un plan d'action structuré, prêt à cocher.</div>
@@ -156,7 +146,7 @@
       <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
       <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="benefit-visual">
-        <div class="crop-card" style="width:340px;height:392.3px;background-image:url('onboarding/slide-1-home.png');background-size:340px 735.8px;background-position:0px 0px;"></div>
+        <div class="crop-card" style="width:320px;height:374px;background-image:url('slide-1-home.png');background-size:660.4px 1428.4px;background-position:-5.1px -86.3px;"></div>
       </div>
     </div>
   </div>
@@ -168,16 +158,15 @@
   <div class="benefit-section">
     <div class="benefit-inner reverse">
       <div class="benefit-text">
+        <span class="benefit-emoji">✅</span>
         <div class="benefit-eyebrow" style="color:#D24165;">Une seule chose à la fois</div>
         <div class="benefit-title">Toujours savoir<br>quoi faire ensuite.</div>
         <div class="benefit-body">Une seule action affichée : la plus utile, maintenant. Tu coches, la suivante prend sa place.</div>
       </div>
       <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
       <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <div class="benefit-visual" style="gap:14px;">
-        <span class="sparkle-flank">✨</span>
-        <div class="crop-card" style="width:340px;height:675.6px;background-image:url('onboarding/slide-2-project.png');background-size:340px 735.8px;background-position:0px -13.1px;"></div>
-        <span class="sparkle-flank">✨</span>
+      <div class="benefit-visual">
+        <div class="crop-card" style="width:360px;height:137px;background-image:url('slide-2-project.png');background-size:401px 867.7px;background-position:-20.6px -186.2px;"></div>
       </div>
     </div>
   </div>
@@ -189,6 +178,7 @@
   <div class="benefit-section">
     <div class="benefit-inner">
       <div class="benefit-text">
+        <span class="benefit-emoji">✨</span>
         <div class="benefit-eyebrow" style="color:#4196D2;">Jamais bloqué</div>
         <div class="benefit-title">Plus d'idée ?<br>L'IA en propose une autre.</div>
         <div class="benefit-body">Un tap sur Suggérer, et l'IA analyse ton projet pour proposer la suite. Toujours toi qui valides.</div>
@@ -196,7 +186,7 @@
       <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
       <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="benefit-visual">
-        <div class="crop-card" style="width:340px;height:610.3px;background-image:url('onboarding/slide-5-suggest.png');background-size:340px 735.8px;background-position:0px -13.1px;"></div>
+        <div class="crop-card" style="width:360px;height:133px;background-image:url('slide-5-suggest.png');background-size:360px 779.6px;background-position:0px -646.3px;"></div>
       </div>
     </div>
   </div>
@@ -208,6 +198,7 @@
   <div class="benefit-section">
     <div class="benefit-inner reverse">
       <div class="benefit-text">
+        <span class="benefit-emoji">🎯</span>
         <div class="benefit-eyebrow" style="color:#AE41D2;">Tout au même endroit</div>
         <div class="benefit-title">Chaque projet,<br>ses 3 priorités.</div>
         <div class="benefit-body">D'un geste, retrouve ce qui compte vraiment sur chacun de tes projets — plus besoin de fouiller.</div>
@@ -215,7 +206,7 @@
       <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
       <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="benefit-visual">
-        <div class="crop-card" style="width:360px;height:259px;background-image:url('onboarding/slide-3-tasklist.png');background-size:360px 779.6px;background-position:0px -78.5px;"></div>
+        <div class="crop-card" style="width:360px;height:259px;background-image:url('slide-3-tasklist.png');background-size:360px 779.6px;background-position:0px -78.5px;"></div>
       </div>
     </div>
   </div>
@@ -227,6 +218,7 @@
   <div class="benefit-section">
     <div class="benefit-inner">
       <div class="benefit-text">
+        <span class="benefit-emoji">💬</span>
         <div class="benefit-eyebrow" style="color:#3F8A5C;">Ton copilote</div>
         <div class="benefit-title">Elle connaît déjà<br>ton projet.</div>
         <div class="benefit-body">Pose une question, demande un conseil — pas besoin de tout réexpliquer. Le contexte est déjà là.</div>
@@ -234,26 +226,7 @@
       <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
       <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="benefit-visual">
-        <div class="crop-card" style="width:360px;height:277px;background-image:url('onboarding/slide-4-chat.png');background-size:360px 779.6px;background-position:0px -218px;"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="full-section" style="background:linear-gradient(180deg,#FDF3E4 0%,#F8F8F9 75%);">
-  <div class="blob" style="width:360px;height:360px;background:#BF5B44;opacity:.38;top:-120px;right:-100px;"></div>
-  <div class="blob" style="width:220px;height:220px;background:#BF5B44;opacity:.2;bottom:-60px;left:-60px;"></div>
-  <div class="benefit-section">
-    <div class="benefit-inner reverse">
-      <div class="benefit-text">
-        <div class="benefit-eyebrow" style="color:#BF5B44;">En manque d'inspiration ?</div>
-        <div class="benefit-title">Demande à l'IA.<br>Suggestion en 1 clic.</div>
-        <div class="benefit-body">Tape une idée, même vague. Dropit la transforme en projet actionnable — ou complète celui que tu as déjà, sans effort.</div>
-      </div>
-      <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-      <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <div class="benefit-visual">
-        <div class="crop-card" style="width:340px;height:256.3px;background-image:url('onboarding/slide-1-home.png');background-size:340px 735.8px;background-position:0px -479.5px;"></div>
+        <div class="crop-card" style="width:360px;height:277px;background-image:url('slide-4-chat.png');background-size:360px 779.6px;background-position:0px -218px;"></div>
       </div>
     </div>
   </div>
@@ -263,8 +236,9 @@
   <div class="blob" style="width:320px;height:320px;background:#4BDDA0;opacity:.35;top:-100px;left:-90px;"></div>
   <div class="blob" style="width:300px;height:300px;background:#DD664B;opacity:.3;bottom:-100px;right:-90px;"></div>
   <div style="position:relative;z-index:1;text-align:center;">
+    <span class="final-cta-emoji">🚀</span>
     <div class="final-cta-title">Ta prochaine idée mérite<br>mieux qu'une note oubliée.</div>
-    <a class="cta-btn" href="app.html">Essayer gratuitement — 30 secondes</a>
+    <button class="cta-btn">Essayer gratuitement — 30 secondes</button>
     <div class="cta-proof">Aucune carte bancaire requise</div>
   </div>
 </section>

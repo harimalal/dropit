@@ -4,20 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dropit — Arrête de perdre tes idées.</title>
-<script>
-  // Un visiteur déjà connecté (session valide en localStorage) passe direct
-  // à l'app plutôt que de revoir la page marketing à chaque visite.
-  (function(){
-    try {
-      var raw = localStorage.getItem("dropit-session");
-      if(!raw) return;
-      var s = JSON.parse(raw);
-      if(s && s.access_token && Date.now() < s.expires_at){
-        window.location.replace("app.html");
-      }
-    } catch(e){}
-  })();
-</script>
 <style>
   :root{
     --canvas:#F8F8F9; --canvas-card:#FFFFFF; --ink:#2B2420; --ink-soft:#7A7168; --ink-faint:#A79E93;
@@ -66,7 +52,6 @@
     margin-top:32px;display:inline-block;width:100%;max-width:340px;border:none;border-radius:14px;
     padding:17px 32px;font-size:16px;font-weight:800;background:var(--cta);color:var(--ink);cursor:pointer;
     box-shadow:0 14px 30px rgba(43,36,32,.16);transition:transform .15s ease, background .15s ease;
-    text-decoration:none;text-align:center;
   }
   .cta-btn:hover{background:var(--cta-hover);transform:translateY(-2px);}
   .cta-proof{margin-top:14px;font-size:12.5px;color:var(--ink-faint);}
@@ -134,7 +119,7 @@
     <div class="hero-logo-pill"><span class="word">DROP</span><span class="dot"></span><span class="word">IT</span></div>
     <div class="hero-title">Arrête de perdre<br>tes idées.</div>
     <div class="hero-sub">Décris une idée en une phrase. L'IA construit le plan. Toi, tu coches.</div>
-    <a class="cta-btn" href="app.html">Essayer gratuitement — 30 secondes</a>
+    <button class="cta-btn">Essayer gratuitement — 30 secondes</button>
     <div class="cta-proof">Aucune carte bancaire requise</div>
     <div class="scroll-hint">
       Découvrir
@@ -156,7 +141,7 @@
       <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
       <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="benefit-visual">
-        <div class="crop-card" style="width:340px;height:392.3px;background-image:url('onboarding/slide-1-home.png');background-size:340px 735.8px;background-position:0px 0px;"></div>
+        <div class="crop-card" style="width:340px;height:392.3px;background-image:url('slide-1-home.png');background-size:340px 735.8px;background-position:0px 0px;"></div>
       </div>
     </div>
   </div>
@@ -176,7 +161,7 @@
       <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="benefit-visual" style="gap:14px;">
         <span class="sparkle-flank">✨</span>
-        <div class="crop-card" style="width:340px;height:675.6px;background-image:url('onboarding/slide-2-project.png');background-size:340px 735.8px;background-position:0px -13.1px;"></div>
+        <div class="crop-card" style="width:340px;height:675.6px;background-image:url('slide-2-project.png');background-size:340px 735.8px;background-position:0px -13.1px;"></div>
         <span class="sparkle-flank">✨</span>
       </div>
     </div>
@@ -196,7 +181,7 @@
       <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
       <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="benefit-visual">
-        <div class="crop-card" style="width:340px;height:610.3px;background-image:url('onboarding/slide-5-suggest.png');background-size:340px 735.8px;background-position:0px -13.1px;"></div>
+        <div class="crop-card" style="width:340px;height:610.3px;background-image:url('slide-5-suggest.png');background-size:340px 735.8px;background-position:0px -13.1px;"></div>
       </div>
     </div>
   </div>
@@ -215,7 +200,7 @@
       <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
       <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="benefit-visual">
-        <div class="crop-card" style="width:360px;height:259px;background-image:url('onboarding/slide-3-tasklist.png');background-size:360px 779.6px;background-position:0px -78.5px;"></div>
+        <div class="crop-card" style="width:360px;height:259px;background-image:url('slide-3-tasklist.png');background-size:360px 779.6px;background-position:0px -78.5px;"></div>
       </div>
     </div>
   </div>
@@ -234,7 +219,7 @@
       <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
       <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="benefit-visual">
-        <div class="crop-card" style="width:360px;height:277px;background-image:url('onboarding/slide-4-chat.png');background-size:360px 779.6px;background-position:0px -218px;"></div>
+        <div class="crop-card" style="width:360px;height:277px;background-image:url('slide-4-chat.png');background-size:360px 779.6px;background-position:0px -218px;"></div>
       </div>
     </div>
   </div>
@@ -253,7 +238,7 @@
       <svg class="flow-arrow" viewBox="0 0 100 40" fill="none"><path d="M2 20 Q 40 4, 80 20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="5 6"/><path d="M70 12 L82 20 L69 27" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
       <div class="flow-arrow-mobile"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <div class="benefit-visual">
-        <div class="crop-card" style="width:340px;height:256.3px;background-image:url('onboarding/slide-1-home.png');background-size:340px 735.8px;background-position:0px -479.5px;"></div>
+        <div class="crop-card" style="width:340px;height:256.3px;background-image:url('slide-1-home.png');background-size:340px 735.8px;background-position:0px -479.5px;"></div>
       </div>
     </div>
   </div>
@@ -264,7 +249,7 @@
   <div class="blob" style="width:300px;height:300px;background:#DD664B;opacity:.3;bottom:-100px;right:-90px;"></div>
   <div style="position:relative;z-index:1;text-align:center;">
     <div class="final-cta-title">Ta prochaine idée mérite<br>mieux qu'une note oubliée.</div>
-    <a class="cta-btn" href="app.html">Essayer gratuitement — 30 secondes</a>
+    <button class="cta-btn">Essayer gratuitement — 30 secondes</button>
     <div class="cta-proof">Aucune carte bancaire requise</div>
   </div>
 </section>
