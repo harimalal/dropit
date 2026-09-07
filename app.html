@@ -2541,16 +2541,30 @@
     });
   }
 
-  function generateCategorySuggestion(p, cat){
+  function generateCategorySuggestion(p, cat, userText){
     var doneTitles = cat.items.filter(function(it){return it.done;}).map(function(it){return it.title;});
     var remainingTitles = cat.items.filter(function(it){return !it.done;}).map(function(it){return it.title;});
-    var promptText = ""+
+    var ctx = ""+
       "Projet : "+p.title+" — "+p.summary+"\n"+
       "Catégorie : "+cat.title+"\n"+
-      "Éléments déjà faits dans cette catégorie : "+JSON.stringify(doneTitles)+"\n"+
-      "Éléments restants dans cette catégorie : "+JSON.stringify(remainingTitles)+"\n\n"+
-      "Propose 1 à 3 nouveaux éléments concrets et courts qui manquent dans CETTE catégorie spécifiquement, sans répéter ceux déjà listés.\n"+
-      'Réponds UNIQUEMENT avec un tableau JSON de chaînes, sans texte autour, sans balises markdown : ["élément a","élément b"]';
+      "Éléments faits dans cette catégorie : "+JSON.stringify(doneTitles)+"\n"+
+      "Éléments restants dans cette catégorie : "+JSON.stringify(remainingTitles);
+    var promptText;
+    if(!userText){
+      promptText = ctx+"\n\n"+
+        "Propose 1 à 3 nouveaux éléments concrets et courts qui manquent dans CETTE catégorie spécifiquement, sans répéter ceux déjà listés.\n"+
+        'Réponds UNIQUEMENT avec un tableau JSON de chaînes, sans texte autour, sans balises markdown : ["élément a","élément b"]';
+    } else {
+      promptText = ctx+'\n\nTexte de l\'utilisateur : "'+userText+'"\n\n'+
+        'Transforme ce texte en 1 à 3 nouveaux éléments concrets pour CETTE catégorie spécifiquement.\n'+
+        'Règles strictes :\n'+
+        '- Liste de choses → une tâche active par élément, reformulée\n'+
+        '- Question → tâches qui y répondent concrètement\n'+
+        '- Instructions → une tâche par étape\n'+
+        '- Ne jamais recopier mot pour mot ; formuler en verbe d\'action court\n'+
+        '- Ne pas répéter ce qui existe déjà dans la catégorie\n'+
+        'Réponds UNIQUEMENT avec un tableau JSON de chaînes, sans texte autour : ["élément a","élément b"]';
+    }
 
     return Promise.resolve().then(function(){
       return apiFetch("/api/ai", {
@@ -2569,14 +2583,16 @@
     });
   }
 
-  function generateProjectSuggestion(p){
+  function generateProjectSuggestion(p, userText){
     var categoriesSummary = p.categories.map(function(cat){
       return {id:cat.id, title:cat.title, items: cat.items.map(function(it){ return {title:it.title, done:it.done}; })};
     });
-    var promptText = ""+
+    var ctx = ""+
       "Projet : "+p.title+" — "+p.summary+"\n"+
-      "État actuel du projet, catégorie par catégorie (JSON) : "+JSON.stringify(categoriesSummary)+"\n\n"+
-      "Propose la suite la plus utile pour faire avancer ce projet, en tenant vraiment compte de ce qui est déjà fait :\n"+
+      "État actuel du projet, catégorie par catégorie (JSON) : "+JSON.stringify(categoriesSummary);
+    var userLine = userText ? '\nTexte de l\'utilisateur : "'+userText+'"' : '';
+    var promptText = ctx+userLine+"\n\n"+
+      "Propose la suite la plus utile pour faire avancer ce projet"+(userText ? ", en orientant vers ce que l'utilisateur a écrit," : "")+", en tenant vraiment compte de ce qui est déjà fait :\n"+
       "- Si une catégorie existante a encore des éléments non faits ou manque visiblement d'un élément important, tu peux ajouter 1 à 3 nouveaux éléments à CETTE catégorie.\n"+
       "- Si toutes les catégories existantes sont terminées ou presque, propose plutôt une NOUVELLE catégorie pertinente avec ses propres éléments.\n"+
       "- Ne propose jamais un élément qui recoupe une catégorie déjà entièrement terminée.\n\n"+
@@ -2877,9 +2893,11 @@
   }
 
   function performSuggestForCategory(p, cat){
+    var dfbInput = document.getElementById('dfb-input');
+    var userText = dfbInput ? dfbInput.value.trim() : '';
     generating = true;
     render();
-    generateCategorySuggestion(p, cat).then(function(result){
+    generateCategorySuggestion(p, cat, userText).then(function(result){
       generating = false;
       var arr = Array.isArray(result) ? result : [];
       arr.slice(0,3).forEach(function(title){ if(title) cat.items.push(makeItem(title)); });
@@ -2893,9 +2911,11 @@
   }
 
   function performSuggestForProject(p){
+    var dfbProjInput = document.getElementById('dfb-proj-input');
+    var userText = dfbProjInput ? dfbProjInput.value.trim() : '';
     generating = true;
     render();
-    generateProjectSuggestion(p).then(function(result){
+    generateProjectSuggestion(p, userText).then(function(result){
       generating = false;
       if(result && result.type === "add_items" && result.categoryId){
         var cat = findCategory(p, result.categoryId);
