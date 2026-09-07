@@ -1131,7 +1131,7 @@
     state = {projects: []};
     currentProjectId = null; currentCategoryId = null;
     taskListOpen = false; accountSheetOpen = false;
-    chatState = {}; tlSelectedProjects = [];
+    chatState = {}; tlSelectedProjects = []; menuOpen = false;
     authMode = "login"; authError = ""; authInfo = "";
     renderAuth();
   }
@@ -1228,6 +1228,7 @@
   var editingItemId = null; // tâche en édition inline (appui court sur le titre)
   var projectNoteEditId = null;
   var projectNoteOpenId = null;
+  var menuOpen = false;
   var taskListOpen = false;
   var tlSelectedProjects = []; // [] = tous les projets
   var TL_COLORS = ['#BF5B44','#3F8A5C','#5B7DBF','#C48A2E','#8B5BBF','#5BBFB5','#BF8A5B'];
@@ -2937,7 +2938,51 @@
 
   /* ---------- global events ---------- */
 
+  function bindFABEvents(){
+    var fabBtn = document.getElementById('fab-menu-btn');
+    var fabOverlay = document.getElementById('fab-overlay');
+    var fabItemList = document.getElementById('fab-item-list');
+    var fabItemChat = document.getElementById('fab-item-chat');
+
+    if(fabBtn) fabBtn.addEventListener('click', function(){
+      menuOpen = !menuOpen;
+      render();
+    });
+
+    if(fabOverlay) fabOverlay.addEventListener('click', function(){
+      menuOpen = false;
+      render();
+    });
+
+    if(fabItemList && !taskListOpen) fabItemList.addEventListener('click', function(){
+      var filterProjectId = currentProjectId;
+      currentProjectId = null;
+      currentCategoryId = null;
+      showAllItems = false;
+      taskListOpen = true;
+      if(filterProjectId) tlSelectedProjects = [filterProjectId];
+      menuOpen = false;
+      render();
+    });
+
+    if(fabItemChat) fabItemChat.addEventListener('click', function(){
+      if(currentProjectId){
+        chatProjectOpen = true;
+      } else {
+        chatHomeOpen = true;
+      }
+      menuOpen = false;
+      render();
+      setTimeout(function(){
+        var id = currentProjectId ? 'chat-msgs-'+currentProjectId : 'chat-msgs-home';
+        var el = document.getElementById(id);
+        if(el) el.scrollTop = el.scrollHeight;
+      }, 50);
+    });
+  }
+
   function bindGlobalEvents(){
+    bindFABEvents();
     var composeTextInput = document.getElementById("compose-text-input");
     if(composeTextInput){
       composeTextInput.addEventListener("input", function(e){ composeText = e.target.value; });
@@ -3170,11 +3215,6 @@
     if(voirSuiteBtn) voirSuiteBtn.addEventListener("click", function(){ showAllItems = true; render(); });
 
     // Chat modal
-    var chatIconBtn = document.getElementById("chat-icon-btn");
-    if(chatIconBtn) chatIconBtn.addEventListener("click", function(){
-      chatProjectOpen = true; render();
-      setTimeout(function(){ var el = document.getElementById('chat-msgs-'+currentProjectId); if(el) el.scrollTop = el.scrollHeight; }, 50);
-    });
     var chatCloseBtn = document.getElementById("chat-close-btn");
     if(chatCloseBtn) chatCloseBtn.addEventListener("click", function(){ chatProjectOpen = false; render(); });
     var chatModal = document.getElementById("chat-modal");
@@ -3307,12 +3347,6 @@
         performSaveChatAsNote(el.dataset.saveNoteProj, msg.text);
       });
     });
-    // Chat home — icône
-    var chatHomeIconBtn = document.getElementById("chat-home-icon-btn");
-    if(chatHomeIconBtn) chatHomeIconBtn.addEventListener("click", function(){
-      chatHomeOpen = true; render();
-      setTimeout(function(){ var el = document.getElementById('chat-msgs-home'); if(el) el.scrollTop = el.scrollHeight; }, 50);
-    });
     // Chat home — close
     var chatHomeCloseBtn = document.getElementById("chat-home-close-btn");
     if(chatHomeCloseBtn) chatHomeCloseBtn.addEventListener("click", function(){ chatHomeOpen = false; render(); });
@@ -3345,43 +3379,6 @@
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(function(){ if(!currentProjectId) layoutHomeTreemap(); }, 150);
   });
-
-  /* ---------- swipe detection (home ↔ task list) ---------- */
-  // capture:true = reçoit l'événement avant les enfants (tiles, scrolls, etc.)
-  // touchmove lock = distingue swipe H vs V avant le touchend
-  var swipeStartX = null, swipeStartY = null, swipeLocked = null;
-  window.addEventListener('touchstart', function(e){
-    swipeStartX = e.touches[0].clientX;
-    swipeStartY = e.touches[0].clientY;
-    swipeLocked = null;
-  }, {passive: true, capture: true});
-  window.addEventListener('touchmove', function(e){
-    if(swipeStartX === null || swipeLocked) return;
-    var mdx = Math.abs(e.touches[0].clientX - swipeStartX);
-    var mdy = Math.abs(e.touches[0].clientY - swipeStartY);
-    if(mdx > 8 || mdy > 8) swipeLocked = mdx >= mdy ? 'h' : 'v';
-  }, {passive: true, capture: true});
-  window.addEventListener('touchend', function(e){
-    if(swipeStartX === null) return;
-    var dx = e.changedTouches[0].clientX - swipeStartX;
-    var locked = swipeLocked;
-    swipeStartX = null; swipeStartY = null; swipeLocked = null;
-    if(locked !== 'h') return; // swipe vertical ou ambigu → ignorer
-    if(!currentProjectId && !taskListOpen && dx < -80 && state.projects.length > 0){
-      taskListOpen = true;
-      render();
-      requestAnimationFrame(function(){
-        var tl = document.getElementById('tasklist-screen');
-        if(tl) tl.classList.add('open');
-      });
-    } else if(!currentProjectId && taskListOpen && dx > 80){
-      var tl = document.getElementById('tasklist-screen');
-      if(tl){
-        tl.classList.remove('open');
-        setTimeout(function(){ taskListOpen = false; render(); }, 280);
-      }
-    }
-  }, {passive: true, capture: true});
 
   /* ---------- séquence de démarrage ---------- */
 
