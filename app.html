@@ -1586,6 +1586,31 @@
   function bookmarkIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><path d="M3.5 2.5h9v11l-4.5-2.5L3.5 13.5V2.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>'; }
   function moveIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><path d="M2 4h7v8H2V4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M9 6l3 2-3 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function plusIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'; }
+  function listIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h12M4 14h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'; }
+  function menuFabIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 7h12M4 13h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'; }
+  function calendarIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M7 3v4M13 3v4M3 9h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'; }
+
+  function renderFAB(){
+    var open = menuOpen;
+    var listDis = taskListOpen;
+    var items =
+      '<div class="fab-item disabled" id="fab-item-cal">'+
+        '<button class="fab-item-btn" disabled>'+calendarIcon()+'</button>'+
+        '<span class="fab-item-label">Bientôt</span>'+
+      '</div>'+
+      '<div class="fab-item" id="fab-item-chat">'+
+        '<button class="fab-item-btn">'+chatIcon()+'</button>'+
+        '<span class="fab-item-label">Chat IA</span>'+
+      '</div>'+
+      '<div class="fab-item'+(listDis?' disabled':'')+'" id="fab-item-list">'+
+        '<button class="fab-item-btn"'+(listDis?' disabled':'')+'>'+listIcon()+'</button>'+
+        '<span class="fab-item-label">Liste</span>'+
+      '</div>';
+    return ''+
+      '<div class="fab-overlay'+(open?' open':'')+'" id="fab-overlay"></div>'+
+      '<div class="fab-menu-items'+(open?' open':'')+'" id="fab-menu-items">'+items+'</div>'+
+      '<button class="fab-menu-btn'+(open?' open':'')+'" id="fab-menu-btn" title="Menu">'+menuFabIcon()+'</button>';
+  }
 
   /* ---------- rendering ---------- */
 
@@ -1820,8 +1845,7 @@
     renderTaskList()+
     '<button class="account-btn" id="account-btn" title="Mon compte">'+accountInitial()+'</button>'+
     renderAccountSheet()+
-    (hasProjects ? '<button class="chat-icon-btn" id="chat-home-icon-btn" title="Demander à l\'IA" style="bottom:76px;">'+chatIcon()+'</button>' : '')+
-    (hasProjects ? '<div class="home-swipe-hint">← Swipe pour voir toutes les tâches</div>' : '')+
+    (hasProjects ? renderFAB() : '')+
     '<div class="toast" id="toast"></div>';
   }
 
@@ -2219,7 +2243,6 @@
         : (p.categories[0]||{items:[]}).items.map(function(it){ return renderItemUnit(it, false); }).join("");
     }
 
-    var chatBtnStyle = detailBarHtml ? 'style="bottom:82px;"' : '';
     var pc = projectColorVars(p.id);
     var scrollStyle = 'style="--current-proj-card:'+pc.card+';--current-proj-card-faint:'+pc.cardFaint+';--current-proj-badge:'+pc.badge+';--current-proj-solid:'+pc.solid+';--current-proj-priority:'+pc.priority+';--current-proj-btn:'+pc.btn+';--current-proj-next:'+pc.next+';"';
     return ''+
@@ -2235,7 +2258,7 @@
     detailBarHtml+
     renderChatModal(p)+
     renderNoteModal()+
-    '<button class="chat-icon-btn" id="chat-icon-btn" '+chatBtnStyle+' title="Demander à l\'IA">'+chatIcon()+'</button>'+
+    renderFAB()+
     '<div class="toast" id="toast"></div>';
   }
 
@@ -2280,7 +2303,7 @@
     renderItemBar(cat.id)+
     renderChatModal(p)+
     renderNoteModal()+
-    '<button class="chat-icon-btn" id="chat-icon-btn" style="bottom:82px;" title="Demander à l\'IA">'+chatIcon()+'</button>'+
+    renderFAB()+
     '<div class="toast" id="toast"></div>';
   }
 
