@@ -1588,6 +1588,30 @@
 
   /* ---------- rendering ---------- */
 
+  /* ---------- navigation navigateur (bouton/geste retour mobile) ----------
+     Chaque écran plus profond (projet, catégorie, liste) pousse une entrée d'historique.
+     Les boutons retour à l'écran délèguent à history.back() : un seul endroit (popstate)
+     décide comment reculer d'un niveau, que ce soit via ce bouton ou via le geste du téléphone. */
+  function pushNavEntry(){
+    try{ history.pushState({dropitNav:true}, '', location.href); }catch(e){}
+  }
+
+  function goBackOneLevel(){
+    if(taskListOpen){
+      var tl = document.getElementById('tasklist-screen');
+      if(tl){
+        tl.classList.remove('open');
+        setTimeout(function(){ taskListOpen = false; render(); }, 280);
+      } else {
+        taskListOpen = false; render();
+      }
+      return;
+    }
+    if(currentCategoryId){ currentCategoryId = null; render(); return; }
+    if(currentProjectId){ currentProjectId = null; render(); return; }
+    // déjà à l'accueil : rien à faire côté app, le navigateur reprend la main normalement
+  }
+
   function render(){
     var app = document.getElementById("app");
     var project = currentProjectId ? findProject(currentProjectId) : null;
@@ -1920,6 +1944,7 @@
     zone.querySelectorAll("[data-project-id]").forEach(function(el){
       el.addEventListener("click", function(){
         currentProjectId = el.dataset.projectId;
+        pushNavEntry();
         render();
       });
       el.addEventListener("keydown", function(e){
@@ -2851,6 +2876,7 @@
       state.projects.push(p);
       composeText = "";
       currentProjectId = p.id;
+      pushNavEntry();
       persist(); render();
     }).catch(function(){
       generating = false;
@@ -2863,6 +2889,7 @@
       state.projects.push(p);
       composeText = "";
       currentProjectId = p.id;
+      pushNavEntry();
       persist(); render();
       showToast("IA indisponible — projet créé avec des étapes de départ");
     });
@@ -2955,6 +2982,7 @@
       taskListOpen = true;
       tlScopedToProject = !!filterProjectId;
       tlSelectedProjects = filterProjectId ? [filterProjectId] : [];
+      pushNavEntry();
       render();
     });
 
@@ -2986,7 +3014,7 @@
     if(composeSendBtn && !generating) composeSendBtn.addEventListener("click", function(){ performCreateFromIntention(); });
 
     var backBtn = document.getElementById("detail-back-btn");
-    if(backBtn) backBtn.addEventListener("click", function(){ currentProjectId = null; render(); });
+    if(backBtn) backBtn.addEventListener("click", function(){ history.back(); });
 
     var deleteBtn = document.getElementById("detail-delete-btn");
     if(deleteBtn) deleteBtn.addEventListener("click", function(){
@@ -2999,10 +3027,10 @@
     });
 
     document.querySelectorAll("[data-open-category]").forEach(function(el){
-      el.addEventListener("click", function(){ currentCategoryId = el.dataset.openCategory; render(); });
+      el.addEventListener("click", function(){ currentCategoryId = el.dataset.openCategory; pushNavEntry(); render(); });
     });
     var categoryBackBtn = document.getElementById("category-back-btn");
-    if(categoryBackBtn) categoryBackBtn.addEventListener("click", function(){ currentCategoryId = null; render(); });
+    if(categoryBackBtn) categoryBackBtn.addEventListener("click", function(){ history.back(); });
     var categoryDeleteBtn = document.getElementById("category-delete-btn");
     if(categoryDeleteBtn) categoryDeleteBtn.addEventListener("click", function(){
       var p = findProject(currentProjectId);
@@ -3052,15 +3080,7 @@
 
     // Task list — fermer (bouton retour)
     var tlBackBtn = document.getElementById("tl-back-btn");
-    if(tlBackBtn) tlBackBtn.addEventListener("click", function(){
-      var tl = document.getElementById('tasklist-screen');
-      if(tl){
-        tl.classList.remove('open');
-        setTimeout(function(){ taskListOpen = false; render(); }, 280);
-      } else {
-        taskListOpen = false; render();
-      }
-    });
+    if(tlBackBtn) tlBackBtn.addEventListener("click", function(){ history.back(); });
 
     // Task list — filtre projet (emoji multi-select)
     document.querySelectorAll("[data-tl-proj-filter]").forEach(function(el){
@@ -3369,6 +3389,8 @@
   });
 
   /* ---------- séquence de démarrage ---------- */
+
+  window.addEventListener('popstate', goBackOneLevel);
 
   // Enchaînement : config Supabase → jetons OAuth éventuels dans l'URL →
   // session existante → données. Tant que ce n'est pas résolu on affiche
