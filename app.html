@@ -556,6 +556,15 @@
     display:flex;align-items:center;justify-content:center;
     background:conic-gradient(var(--ia-accent) var(--pct,0%), var(--line) 0);
   }
+  /* Jalons intermédiaires — verdict binaire (dans les temps / en retard),
+     traitement volontairement différent de l'anneau proportionnel des échéances. */
+  .cal-checkpoint-badge{
+    width:14px;height:14px;flex-shrink:0;border-radius:50%;font-size:8.5px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .cal-checkpoint-badge.cp-ontrack{background:var(--ia-accent-soft);box-shadow:inset 0 0 0 1.5px var(--ia-accent);}
+  .cal-checkpoint-badge.cp-behind{background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent);}
+  .cal-checkpoint-badge.cp-upcoming{background:var(--line);box-shadow:inset 0 0 0 1.5px var(--ink-faint);}
   .cal-day-list-label{
     flex-shrink:0;padding:12px 16px 6px;font-family:var(--font-mono);font-size:10px;
     letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-faint);border-top:1px solid var(--line);
@@ -2343,6 +2352,34 @@
     });
   }
 
+  // Jalons intermédiaires (projets moyen/long terme uniquement — à échéance courte,
+  // le badge d'échéance seul suffit) : un point à 1 mois puis un à mi-parcours, chacun
+  // avec un pourcentage de tâches attendu. Sert de "on est dans les temps ou pas".
+  function dateToStr(d){ return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
+  function projectCheckpoints(p){
+    if(!p.dueDate || !p.createdAt) return [];
+    if(p.dueBucket === "1w" || p.dueBucket === "2w") return [];
+    var created = new Date(p.createdAt).getTime();
+    var due = new Date(p.dueDate).getTime();
+    if(due <= created) return [];
+    var points = [];
+    var oneMonthMs = 30*86400000;
+    if(p.dueBucket !== "1m" && created + oneMonthMs < due){
+      points.push({dateStr: dateToStr(new Date(created + oneMonthMs)), expectedPct:25});
+    }
+    points.push({dateStr: dateToStr(new Date(created + (due-created)/2)), expectedPct:50});
+    return points;
+  }
+  function checkpointsDueOn(dateStr){
+    var result = [];
+    state.projects.forEach(function(p){
+      projectCheckpoints(p).forEach(function(cp){
+        if(cp.dateStr === dateStr) result.push({project:p, expectedPct:cp.expectedPct});
+      });
+    });
+    return result;
+  }
+
   function renderCalendarGrid(){
     var year = calViewYear, month = calViewMonth;
     var todayStr = todayDateStr();
@@ -2372,11 +2409,20 @@
       // Échéances qui tombent ce jour-là : anneau = avancement du projet (progressPct),
       // position = jour d'échéance. Rappel visuel direct dans la grille, sans ouvrir le projet.
       var dueProjects = c.dateStr ? projectsDueOn(c.dateStr) : [];
-      var dueHtml = dueProjects.length
-        ? '<span class="cal-day-dues">'+dueProjects.slice(0,3).map(function(p){
-            return '<span class="cal-due-badge" style="--pct:'+progressPct(p)+'%;" title="'+escapeHtml(p.title)+' — '+progressPct(p)+'% fait">'+p.emoji+'</span>';
-          }).join('')+'</span>'
-        : '';
+      var dueBadges = dueProjects.map(function(p){
+        return '<span class="cal-due-badge" style="--pct:'+progressPct(p)+'%;" title="'+escapeHtml(p.title)+' — échéance, '+progressPct(p)+'% fait">'+p.emoji+'</span>';
+      });
+      // Jalons intermédiaires : verdict "dans les temps / en retard" une fois la date
+      // atteinte (comparaison avec le % de tâches réellement fait), neutre avant.
+      var checkpointBadges = c.dateStr ? checkpointsDueOn(c.dateStr).map(function(cp){
+        var reached = c.dateStr <= todayStr;
+        var actual = progressPct(cp.project);
+        var status = !reached ? "upcoming" : (actual >= cp.expectedPct ? "ontrack" : "behind");
+        var statusLabel = status==="ontrack" ? "dans les temps" : status==="behind" ? "en retard" : "à venir";
+        return '<span class="cal-checkpoint-badge cp-'+status+'" title="'+escapeHtml(cp.project.title)+' — jalon '+cp.expectedPct+'% ('+statusLabel+', '+actual+'% fait)">'+cp.project.emoji+'</span>';
+      }) : [];
+      var allBadges = dueBadges.concat(checkpointBadges).slice(0,3);
+      var dueHtml = allBadges.length ? '<span class="cal-day-dues">'+allBadges.join('')+'</span>' : '';
       return '<button class="'+cls+'"'+attr+(c.otherMonth?' disabled':'')+'>'+
         '<span class="cal-day-num">'+c.day+'</span>'+dueHtml+
       '</button>';
