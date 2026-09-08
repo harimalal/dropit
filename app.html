@@ -2138,7 +2138,7 @@
     return tasks;
   }
 
-  function renderTlRow(t){
+  function renderTlRow(t, hideProjectEmoji){
     var multiCat = t.project.categories.length > 1;
     var catLabel = multiCat ? ' · ' + escapeHtml(t.category.title) : '';
     var badgeHtml = t.priority === 'p1'
@@ -2147,6 +2147,10 @@
       : t.priority === 'p3' ? '<span class="tl-badge p3">P3</span>'
       : '';
     var pcRow = projectColorVars(t.project.id);
+    // L'émoji projet ne sert à rien (non cliquable, toujours le même) quand la liste
+    // est déjà scopée à ce seul projet — on ne l'affiche que dans les vues mixtes.
+    var emojiHtml = hideProjectEmoji ? '' :
+      '<span class="tl-proj-emoji" style="--row-proj-badge:'+pcRow.badge+';">'+t.project.emoji+'</span>';
     return '<div class="tl-row'+(t.priority==='reste'?' muted':'')+'" data-tl-nav-proj="'+t.project.id+'">'+
       '<button class="tl-check" data-tl-toggle="'+t.item.id+'" data-tl-proj="'+t.project.id+'"></button>'+
       '<div class="tl-info">'+
@@ -2154,7 +2158,7 @@
         '<div class="tl-meta">'+escapeHtml(t.project.title)+catLabel+'</div>'+
       '</div>'+
       badgeHtml+
-      '<span class="tl-proj-emoji" style="--row-proj-badge:'+pcRow.badge+';">'+t.project.emoji+'</span>'+
+      emojiHtml+
     '</div>';
   }
 
@@ -2305,7 +2309,7 @@
     }
 
     var rows = tasks.length
-      ? tasks.map(renderTlRow).join('')
+      ? tasks.map(function(t){ return renderTlRow(t, tlScopedToProject); }).join('')
       : '<div class="tl-empty">Rien ici avec ces filtres'+(tlScopedToProject?'.':'.<br>Toutes les tâches sont faites !')+'</div>';
 
     return '<div class="tasklist-screen" id="tasklist-screen">'+
