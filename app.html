@@ -483,6 +483,14 @@
   }
   .tl-proj-chip.active{border-color:var(--chip-solid, var(--accent));background:var(--chip-badge, var(--accent-soft));}
   .tl-filter-label{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);white-space:nowrap;flex-shrink:0;}
+  /* Filtres catégorie / priorité (liste scopée à un projet) */
+  .tl-text-chip{
+    flex-shrink:0;font-size:12px;font-weight:600;color:var(--ink-soft);white-space:nowrap;
+    border:1px solid var(--line);background:var(--canvas);border-radius:14px;padding:6px 12px;
+    transition:border-color .12s,background .12s,color .12s;
+  }
+  .tl-text-chip.active{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
+  .tl-filter-sep{flex-shrink:0;width:1px;align-self:stretch;background:var(--line);margin:0 2px;}
   /* Scroll liste */
   .tasklist-scroll{flex:1;overflow-y:auto;padding-bottom:30px;}
   /* Ligne tâche */
@@ -491,6 +499,7 @@
     border-bottom:1px solid var(--grid-line);background:var(--canvas-card);cursor:pointer;
   }
   .tl-row:active{background:var(--accent-soft);}
+  .tl-row.muted .tl-title{color:var(--ink-faint);}
   .tl-check{
     flex-shrink:0;width:26px;height:26px;border-radius:50%;border:1.8px solid var(--ink-faint);
     background:transparent;display:flex;align-items:center;justify-content:center;color:#fff;
@@ -506,6 +515,7 @@
   }
   .tl-badge.p1{background:var(--accent-soft);color:var(--accent);}
   .tl-badge.p2{background:var(--status-ralentit-soft);color:var(--status-ralentit);}
+  .tl-badge.p3{background:var(--line);color:var(--ink-faint);}
   .tl-proj-emoji{
     flex-shrink:0;font-size:22px;line-height:1;width:32px;height:32px;border-radius:var(--radius-sm);
     background:var(--row-proj-badge, var(--accent-soft));display:flex;align-items:center;justify-content:center;
@@ -1112,6 +1122,7 @@
     currentProjectId = null; currentCategoryId = null;
     taskListOpen = false; accountSheetOpen = false;
     chatState = {}; tlSelectedProjects = []; tlScopedToProject = false;
+    tlCategoryFilter = null; tlPriorityFilter = 'all';
     authMode = "login"; authError = ""; authInfo = "";
     renderAuth();
   }
@@ -1211,6 +1222,8 @@
   var taskListOpen = false;
   var tlSelectedProjects = []; // [] = tous les projets
   var tlScopedToProject = false; // true = liste ouverte depuis un projet : pas de filtre inter-projets
+  var tlCategoryFilter = null; // catégorie isolée dans la liste scopée à un projet (null = toutes)
+  var tlPriorityFilter = 'all'; // 'all' | 'p1' | 'p2' | 'p3' — filtre priorité dans la liste scopée
   var TL_COLORS = ['#BF5B44','#3F8A5C','#5B7DBF','#C48A2E','#8B5BBF','#5BBFB5','#BF8A5B'];
 
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
@@ -1961,9 +1974,16 @@
       var undone = 0;
       p.categories.forEach(function(cat){
         cat.items.forEach(function(it){
-          if(it.done || undone >= 3) return; // seulement top 3 non faites
-          var pri = undone === 0 ? 'p1' : undone === 1 ? 'p2' : 'p3';
+          if(it.done) return;
+          // Vue multi-projets (accueil) : reste un digest plafonné à 3 tâches/projet.
+          // Vue scopée à un projet (ouverte depuis ce projet) : tout s'affiche, filtrable.
+          if(!tlScopedToProject && undone >= 3) return;
+          var pri = undone === 0 ? 'p1' : undone === 1 ? 'p2' : undone === 2 ? 'p3' : 'reste';
           undone++;
+          if(tlScopedToProject){
+            if(tlCategoryFilter && cat.id !== tlCategoryFilter) return;
+            if(tlPriorityFilter !== 'all' && pri !== tlPriorityFilter) return;
+          }
           tasks.push({item:it, project:p, category:cat, priority:pri, pi:pi});
         });
       });
@@ -1977,9 +1997,10 @@
     var badgeHtml = t.priority === 'p1'
       ? '<span class="tl-badge p1">P1</span>'
       : t.priority === 'p2' ? '<span class="tl-badge p2">P2</span>'
+      : t.priority === 'p3' ? '<span class="tl-badge p3">P3</span>'
       : '';
     var pcRow = projectColorVars(t.project.id);
-    return '<div class="tl-row" data-tl-nav-proj="'+t.project.id+'">'+
+    return '<div class="tl-row'+(t.priority==='reste'?' muted':'')+'" data-tl-nav-proj="'+t.project.id+'">'+
       '<button class="tl-check" data-tl-toggle="'+t.item.id+'" data-tl-proj="'+t.project.id+'"></button>'+
       '<div class="tl-info">'+
         '<div class="tl-title">'+escapeHtml(t.item.title)+'</div>'+
@@ -2071,35 +2092,67 @@
 
   function renderTaskList(){
     var tasks = buildFlatTasks();
-    var totalUndone = state.projects.reduce(function(s,p){
-      return s + allItems(p).filter(function(it){return !it.done;}).length;
-    }, 0);
-    var countLabel = tasks.length + ' prioritaire' + (tasks.length !== 1 ? 's' : '') +
-      (totalUndone > tasks.length ? ' · ' + totalUndone + ' total' : '');
+    var scopedProject = tlScopedToProject ? tlTargetProject() : null;
+    var titleHtml = scopedProject
+      ? scopedProject.emoji+' '+escapeHtml(scopedProject.title.slice(0,22)+(scopedProject.title.length>22?'…':''))
+      : 'Priorités';
+    var countLabel;
+    if(tlScopedToProject){
+      countLabel = tasks.length + ' tâche' + (tasks.length !== 1 ? 's' : '');
+    } else {
+      var totalUndone = state.projects.reduce(function(s,p){
+        return s + allItems(p).filter(function(it){return !it.done;}).length;
+      }, 0);
+      countLabel = tasks.length + ' prioritaire' + (tasks.length !== 1 ? 's' : '') +
+        (totalUndone > tasks.length ? ' · ' + totalUndone + ' total' : '');
+    }
 
     // Liste ouverte depuis un projet précis : aucune raison de laisser filtrer/voir
-    // les autres projets ici, donc la rangée de filtre ne s'affiche pas du tout.
-    var filterLabel = (!tlScopedToProject && state.projects.length > 0)
-      ? '<span class="tl-filter-label">Projets&nbsp;:</span>' : '';
-    var filterChips = tlScopedToProject ? '' : state.projects.map(function(p){
-      var active = tlSelectedProjects.indexOf(p.id) >= 0;
-      var pcChip = projectColorVars(p.id);
-      return '<button class="tl-proj-chip'+(active?' active':'')+
-        '" data-tl-proj-filter="'+p.id+'" title="'+escapeHtml(p.title)+'" '+
-        'style="--chip-badge:'+pcChip.badge+';--chip-solid:'+pcChip.solid+';">'+p.emoji+'</button>';
-    }).join('');
+    // les autres projets ici — la rangée de filtre devient catégorie + priorité de CE projet.
+    var filterRowHtml;
+    if(tlScopedToProject){
+      var catChips = (scopedProject && scopedProject.categories.length > 1)
+        ? scopedProject.categories.map(function(cat){
+            var active = tlCategoryFilter === cat.id;
+            return '<button class="tl-text-chip'+(active?' active':'')+
+              '" data-tl-cat-filter="'+cat.id+'">'+escapeHtml(cat.title)+'</button>';
+          }).join('')
+        : '';
+      var catAllChip = catChips
+        ? '<button class="tl-text-chip'+(!tlCategoryFilter?' active':'')+'" data-tl-cat-filter="">Toutes</button>'
+        : '';
+      var priChips = ['all','p1','p2','p3'].map(function(pri){
+        var active = tlPriorityFilter === pri;
+        var label = pri === 'all' ? 'Tout' : pri.toUpperCase();
+        return '<button class="tl-text-chip'+(active?' active':'')+'" data-tl-pri-filter="'+pri+'">'+label+'</button>';
+      }).join('');
+      filterRowHtml = '<div class="tl-filter-row">'+catAllChip+catChips+
+        (catChips ? '<span class="tl-filter-sep"></span>' : '')+priChips+'</div>';
+    } else if(state.projects.length > 0){
+      var filterLabel = '<span class="tl-filter-label">Projets&nbsp;:</span>';
+      var filterChips = state.projects.map(function(p){
+        var active = tlSelectedProjects.indexOf(p.id) >= 0;
+        var pcChip = projectColorVars(p.id);
+        return '<button class="tl-proj-chip'+(active?' active':'')+
+          '" data-tl-proj-filter="'+p.id+'" title="'+escapeHtml(p.title)+'" '+
+          'style="--chip-badge:'+pcChip.badge+';--chip-solid:'+pcChip.solid+';">'+p.emoji+'</button>';
+      }).join('');
+      filterRowHtml = '<div class="tl-filter-row">'+filterLabel+filterChips+'</div>';
+    } else {
+      filterRowHtml = '';
+    }
 
     var rows = tasks.length
       ? tasks.map(renderTlRow).join('')
-      : '<div class="tl-empty">Rien en attente'+(tlSelectedProjects.length?' pour ce projet':'')+'.<br>Toutes les tâches sont faites !</div>';
+      : '<div class="tl-empty">Rien ici avec ces filtres'+(tlScopedToProject?'.':'.<br>Toutes les tâches sont faites !')+'</div>';
 
     return '<div class="tasklist-screen" id="tasklist-screen">'+
       '<div class="tasklist-top">'+
         '<button class="top-back-btn" id="tl-back-btn" title="Retour">'+backIcon()+'</button>'+
-        '<span class="tasklist-title">Priorités</span>'+
+        '<span class="tasklist-title">'+titleHtml+'</span>'+
         '<span class="tasklist-count">'+countLabel+'</span>'+
       '</div>'+
-      (tlScopedToProject ? '' : '<div class="tl-filter-row">'+filterLabel+filterChips+'</div>')+
+      filterRowHtml+
       '<div class="tasklist-scroll" id="tl-scroll">'+rows+'</div>'+
       renderTaskListBar()+
     '</div>';
@@ -2982,6 +3035,8 @@
       taskListOpen = true;
       tlScopedToProject = !!filterProjectId;
       tlSelectedProjects = filterProjectId ? [filterProjectId] : [];
+      tlCategoryFilter = null;
+      tlPriorityFilter = 'all';
       pushNavEntry();
       render();
     });
@@ -3090,6 +3145,32 @@
         var idx = tlSelectedProjects.indexOf(id);
         if(idx >= 0) tlSelectedProjects.splice(idx, 1);
         else tlSelectedProjects.push(id);
+        render();
+        requestAnimationFrame(function(){
+          var tl = document.getElementById('tasklist-screen');
+          if(tl){ tl.style.transition='none'; tl.style.transform='translateX(0)'; }
+        });
+      });
+    });
+
+    // Task list scopée à un projet — filtre catégorie (sélection unique)
+    document.querySelectorAll("[data-tl-cat-filter]").forEach(function(el){
+      el.addEventListener("click", function(e){
+        e.stopPropagation();
+        tlCategoryFilter = el.dataset.tlCatFilter || null;
+        render();
+        requestAnimationFrame(function(){
+          var tl = document.getElementById('tasklist-screen');
+          if(tl){ tl.style.transition='none'; tl.style.transform='translateX(0)'; }
+        });
+      });
+    });
+
+    // Task list scopée à un projet — filtre priorité (sélection unique)
+    document.querySelectorAll("[data-tl-pri-filter]").forEach(function(el){
+      el.addEventListener("click", function(e){
+        e.stopPropagation();
+        tlPriorityFilter = el.dataset.tlPriFilter;
         render();
         requestAnimationFrame(function(){
           var tl = document.getElementById('tasklist-screen');
