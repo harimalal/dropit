@@ -1,58 +1,163 @@
 # DÉCISIONS — Vision, Engagement & Identité
 Mission : `2026-09-08-vision-engagement-identite`
 
-## Choix validés au cadrage
+Ce document trace, pour chaque chantier : les options qui ont été sur la table, celle retenue, celles écartées et pourquoi, et — quand c'est arrivé — les cas où une décision a été révisée en cours de route (itération). Rien n'est résumé à la seule décision finale : l'historique du raisonnement est gardé intact.
 
-| Chantier | Décision retenue | Raisonnement clé |
+---
+
+## Chantier 1 — "Aujourd'hui" (ex-Calendrier)
+
+| Option | Description | Statut |
 |---|---|---|
-| 1. Aujourd'hui | Renommage seul de l'onglet "Calendrier", même écran, même composant | Réutilise l'existant, pas de nouvel écran à construire |
-| 2. Nettoyage IA | Retrait du nom du modèle affiché + retrait du compteur "total" (garde "prioritaires") | Le nom du modèle est un artefact de debug ; le total expose une surcharge (183 tâches) sans agir dessus |
-| 3. Liste du jour | Uniquement tâches datées à aujourd'hui + tâches en retard non cochées, jamais de fallback sur des tâches sans date | Corrige le bug observé (tâches admin sans date poussées sur "aujourd'hui") |
-| 3bis. Tâches en retard | Affichées, marquées "En retard" (pas masquées) | Évite la perte silencieuse d'une tâche non traitée |
-| 4. Drop Zone — emplacement | Icône ♻️ sur la barre de texte de capture, à côté du bouton d'envoi — pas sur l'écran d'accueil, pas de bouton flottant | Le home aurait fait passer Drop Zone pour un "onzième projet" ; un FAB entre en conflit avec la barre déjà en bas d'écran |
-| 4bis. Triage Drop Zone | Liste ouverte au tap, affectation en 1 tap via une rangée d'émojis de projets | Répond à l'exigence "retrouver et affecter en un clic" |
-| 5. Format du badge de vélocité | Flèche en haut à droite (tendance) + barre de progression existante teintée (santé) | Réutilise un élément déjà présent au lieu d'ajouter un second badge sur une grille déjà dense |
-| 5bis. Définition d'"activité" | Cocher, ajouter OU modifier une tâche (pas seulement cocher) | Ne pénalise pas une réorganisation qui n'est pas une case cochée |
-| 5ter. Pause | Automatique (14 jours sans activité) ET manuelle (déclenchable par l'utilisateur à tout moment) | Une pause légitime (attente d'un tiers) ne doit pas s'afficher comme un échec |
-| 5quater. Tâches en retard (calendrier) | Voir 3bis, ligne partagée avec le chantier 3 | — |
-| 8. Ordre de révélation mosaïque | Mosaïque de tuiles (pas un flou continu), révélation dans le désordre, indexée sur le nombre de tâches (pas le %) | Le désordre entretient la curiosité jusqu'à la fin ; indexer sur le % recréerait le problème déjà identifié au chantier 5 |
-| 8bis. Source de l'image | Générée ou piochée par IA selon le thème du projet — pas de photo personnelle en MVP | La photo perso ajoute un besoin de consentement/stockage de données sensibles hors scope MVP ; garder la surprise nécessite un contenu jamais montré à l'utilisateur avant révélation |
+| A | Renommage seul de l'onglet, même écran, même composant | **Retenue** |
+| B | Renommage + réordonner (liste des tâches remontée au-dessus du mini-calendrier) | Écartée pour ce sprint — gardée en tête si la vue mensuelle s'avère peu consultée à l'usage |
 
-## Débats structurants (résumé du raisonnement)
+Aucune itération : décision stable dès la première proposition.
 
-### Décision — Emplacement de Drop Zone
-- Position initiale : carte fixe dans l'écran Priorités.
-- Révisée par l'utilisateur : doit être trouvable depuis la capture elle-même.
-- Options comparées : tuile d'accueil / icône flottante / icône sur la barre de texte.
-- CONVERGENCE : icône sur la barre de texte — c'est le point exact où le besoin se manifeste (une tâche sans projet choisi), pas un emplacement de consultation générique. Écarté : accueil (confusion avec un projet), flottant (conflit avec la barre existante).
+## Chantier 2 — Nettoyage affichage IA
 
-### Décision — Calcul du statut de vélocité
-- Option A (retenue) : règles de seuils simples sur les jours depuis la dernière activité.
-- Option B (écartée pour le MVP) : score composite vitesse+régularité pondéré — plus fin mais nécessite une "cible" par projet qui n'existe pas dans le modèle actuel de données. À reconsidérer en v2 si le modèle simple s'avère trop grossier à l'usage.
-- Option C (rejetée) : estimation qualitative par le LLM — même défaut de confiance que le bug de comptage observé dans l'audit (chat qui annonce 9 puis se corrige à 10 projets) ; un statut de confiance doit être déterministe et auditable.
+- Retrait du nom du modèle (`claude-haiku-4-5`) affiché dans l'en-tête du chat : **retenu**, aucune alternative envisagée (correction pure d'un artefact de debug).
+- Retrait du compteur "X total" dans Priorités, conservation de "N prioritaires" : **retenu**, aucune alternative envisagée.
+- Point signalé mais non traité dans ce chantier : masquer le total ne résout pas la surcharge de tâches sous-jacente (183 tâches) — ce n'est pas un rejet d'option, juste une limite explicitement assumée de ce chantier (la vraie réponse à la surcharge est portée par les chantiers 4 et 5).
 
-### Décision — Le "signature move" et la référence produit
-- Question posée par l'utilisateur : qui est la référence absolue en UX produit avec un geste simple qui fédère les utilisateurs ?
-- Réponses apportées : *Hooked* (Nir Eyal, Hook Model), Octalysis (Yu-kai Chou), le cas d'école du pull-to-refresh (Loren Brichter).
-- CONVERGENCE : le diagnostic Hook Model appliqué à DROPIT montre que Trigger/Action/Investissement existent déjà mais que la Récompense variable est absente — c'est la case vide qui empêche le bouton "C'est fait" de devenir une vraie habitude. Le chantier 6 (signature move) en découle directement.
+## Chantier 3 — Logique de la liste "Aujourd'hui"
 
-### Décision — Le pivot "identité" (qui n'en est pas un)
-- Proposition initiale de l'utilisateur : faire de l'app un outil de transformation identitaire (mood board, portrait qui évolue).
-- Risque signalé : la recherche sur le mental contrasting (WOOP, Oettingen) montre que la pure visualisation positive sans lien à l'action réduit la motivation.
-- CONVERGENCE : ne pas pivoter le produit — infuser le principe (chaque action = un vote pour une identité, *Atomic Habits*) dans les patterns déjà spécifiés (bouton de complétion, badges), plutôt que construire un nouvel écran "vision". Scope MVP réduit à un champ "intitulé d'identité" par projet (chantier 7).
+| Option | Description | Statut |
+|---|---|---|
+| A | Liste vide par défaut, uniquement tâches datées à aujourd'hui | **Retenue** (base) |
+| B | Garder un fallback affichant des tâches prioritaires non datées si la liste du jour est vide | **Écartée** — c'est exactement le comportement à l'origine du bug observé (tâches admin sans date poussées sur "aujourd'hui") |
 
-### Décision — Mécanique de révélation visuelle (flou vs mosaïque)
-- Proposition 1 (utilisateur) : icône colorée → noir et blanc → recolorisation avec la progression.
-- Proposition 2 (utilisateur, retenue) : image floutée qui se précise avec la progression — reformulée ensuite en mosaïque de tuiles qui se révèlent dans le désordre.
-- CONVERGENCE : la mosaïque l'emporte sur le flou continu car elle porte une métaphore de construction/puzzle plus cohérente avec le narratif identitaire, et elle est plus simple à indexer discrètement sur le nombre de tâches (une tuile = une tâche).
-- Point bloquant identifié : Claude ne génère pas d'image nativement (modèle de texte) — nécessite un service tiers (DALL-E/GPT-image, Imagen, Stable Diffusion, Flux) côté backend. Confirmé à l'utilisateur, noté comme dépendance du chantier 8.
+### Sous-décision — tâches en retard
+| Option | Description | Statut |
+|---|---|---|
+| A | Afficher les tâches datées dans le passé et non cochées, marquées "En retard" | **Retenue** |
+| B | Ne rien afficher, strictement les tâches du jour | Écartée — risque de perte silencieuse d'une tâche non traitée, sans aucun moyen de la retrouver depuis cet écran |
+
+## Chantier 4 — Capture rapide + Drop Zone
+
+### Itération 1 — emplacement de Drop Zone (décision révisée)
+- **Proposition initiale (retenue à ce moment-là)** : carte fixe stylisée grise, icône ♻️, dans l'écran Priorités.
+- **Révision demandée par l'utilisateur** : refusée ("non") — doit être trouvable directement depuis l'écran où la tâche est capturée, pas seulement depuis un écran de triage séparé.
+- Options comparées à la révision :
+
+| Option | Description | Statut |
+|---|---|---|
+| A | Tuile fixe dans la grille d'accueil | Écartée — se ferait passer pour un "onzième projet" au milieu des vrais projets |
+| B | Icône flottante (FAB) sur tous les écrans | Écartée — entre en conflit visuel avec la barre de composition déjà présente en bas d'écran sur tous les écrans |
+| C | Icône sur la barre de texte de capture, à côté du bouton d'envoi | **Retenue (décision finale)** — c'est exactement le point où le besoin se manifeste (une tâche sans projet choisi) |
+
+### Décision — mécanisme de triage
+| Option | Description | Statut |
+|---|---|---|
+| A | Glisser-déposer / bouton "déplacer vers..." depuis un écran dédié | Écartée pour le MVP — plus lourd à construire qu'une liste simple |
+| B | Drop Zone en tête de la vue Priorités, tri effectué depuis là | Proposée comme recommandation initiale (avant l'itération 1 ci-dessus qui a changé l'emplacement de l'icône d'accès, pas la logique de triage elle-même) |
+| C | L'IA propose un projet probable pour chaque tâche du Parking | Écartée — chantier IA à part entière, hors scope de ce sprint |
+| **Finale** | Icône (chantier ci-dessus) → mini-liste des tâches non triées → tap sur une tâche → rangée d'émojis de projets existants → tap = affectation en 1 clic | **Retenue** |
+
+## Chantier 5 — Statuts de vélocité
+
+### Décision — mode de calcul
+| Option | Description | Statut |
+|---|---|---|
+| A | Règles de seuils simples sur les jours depuis la dernière activité (3/7/13/14 jours) | **Retenue pour le MVP** |
+| B | Score composite pondéré (vitesse + régularité de complétion) | Écartée pour le MVP — nécessite une "cible" de rythme par projet qui n'existe dans aucun champ du modèle actuel ; à reconsidérer en v2 si le modèle simple s'avère trop grossier à l'usage |
+| C | Estimation qualitative par le LLM à partir de l'historique | **Rejetée définitivement** — un statut de confiance doit être déterministe et auditable ; c'est le même défaut que le bug de comptage observé dans l'audit (le chat annonce 9 projets puis se corrige en direct à 10) |
+
+### Décision — affichage du badge
+| Option | Description | Statut |
+|---|---|---|
+| A | Flèche en haut à droite (tendance) + barre de progression existante teintée (santé) | **Retenue** |
+| B | Flèche en haut à droite + second badge distinct en bas de la tuile | Écartée — fidèle à la demande initiale mais ajoute un élément visuel de plus sur une grille déjà dense (titres déjà tronqués observés dans l'audit) |
+
+### Décision — définition d'"activité" (remet le compteur de pause à zéro)
+| Option | Description | Statut |
+|---|---|---|
+| A | Cocher une tâche uniquement | Écartée — pénalise une réorganisation ou un ajout qui n'est pas une case cochée |
+| B | Cocher, ajouter ou modifier une tâche | **Retenue** |
+
+### Décision — pause
+| Option | Description | Statut |
+|---|---|---|
+| A | Uniquement automatique (14 jours sans activité) | Écartée seule |
+| B | Automatique **et** manuelle (déclenchable par l'utilisateur à tout moment) | **Retenue** — une pause légitime (attente d'un tiers) ne doit pas s'afficher comme un échec |
+
+## Chantier 6 — Signature move (récompense variable)
+
+Origine : question posée à l'IA sur la référence absolue en UX produit avec un geste simple qui fédère les utilisateurs.
+
+| Référence évaluée | Verdict |
+|---|---|
+| *Hooked* (Nir Eyal) — Hook Model | **Retenue comme grille de diagnostic** : DROPIT a Trigger/Action/Investissement mais pas de Récompense variable |
+| Octalysis (Yu-kai Chou) | **Retenue en complément** — identifie l'absence du Core Drive 7 (Imprévisibilité/curiosité) |
+| Pull-to-refresh (Loren Brichter) | Retenue comme cas d'école illustratif, pas comme mécanique à copier telle quelle |
+
+Décision d'exécution : le bouton "C'est fait" est le candidat naturel du signature move (geste déjà unique et répété), auquel il manque uniquement la couche "récompense variable" — pas de nouveau geste à inventer, écarté d'office comme option (aurait dupliqué un pattern déjà en place).
+
+## Chantier 7 — Identité
+
+### Itération — portée du chantier (décision révisée)
+- **Proposition initiale de l'utilisateur** : faire de DROPIT un outil de transformation identitaire à part entière (mood board, portrait qui évolue, page d'accueil comme vision board).
+- **Garde-fou soulevé** : recherche sur le mental contrasting / WOOP (Gabriele Oettingen) — la pure visualisation positive sans lien à l'action réduit la motivation.
+- **Clarification apportée par l'utilisateur** : ce n'est pas un pivot, seulement l'esprit à infuser dans les patterns déjà spécifiés.
+- Options finales :
+
+| Option | Description | Statut |
+|---|---|---|
+| A | Pivot complet : nouvel écran "portrait/mood board", onboarding revu autour de l'identité | **Écartée** — changement de positionnement trop lourd pour ce sprint, gardée comme cap v2 |
+| B | Ajout minimal : champ "intitulé d'identité" optionnel par projet, utilisé pour personnaliser le texte de confirmation du chantier 6 | **Retenue pour ce sprint** |
+
+## Chantier 8 — Révélation Mosaïque
+
+### Itération — mécanique visuelle (décision révisée deux fois)
+1. **Proposition A** : icône colorée à la création → devient noir et blanc → se recolore progressivement avec les tâches complétées.
+2. **Proposition B ("encore mieux" selon l'utilisateur)** : image floutée à la place de l'emoji → devient de moins en moins floue avec la progression.
+3. **Reformulation finale retenue** : mosaïque de tuiles pixelisées (pas un flou continu), révélées dans le désordre — préférée par l'utilisateur car elle porte une métaphore de puzzle/construction plus cohérente avec le narratif identitaire, et elle est plus simple à indexer sur un compteur discret (une tuile = une tâche) qu'un flou continu indexé sur un %.
+
+| Option | Statut |
+|---|---|
+| Grayscale → couleur (proposition A) | Écartée seule, mais retenue en complément possible (superposable au flou/mosaïque sans coût technique supplémentaire — deux filtres sur la même image) |
+| Flou → net (proposition B) | Écartée au profit de la mosaïque, idée conservée comme mécanique alternative envisageable |
+| Mosaïque de tuiles, ordre aléatoire mais fixe | **Retenue** |
+
+### Décision — indexation de la révélation
+| Option | Description | Statut |
+|---|---|---|
+| A | Nombre de tuiles révélées proportionnel au % de complétion | Écartée — recrée le problème déjà résolu au chantier 5 (le % n'a pas de sens stable si des tâches sont ajoutées en cours de route) |
+| B | Une tuile révélée par tâche cochée, ordre aléatoire mais fixe (dérivé de l'ID du projet) | **Retenue** |
+
+### Décision — source de l'image
+| Option | Description | Statut |
+|---|---|---|
+| A | Générée par IA à partir du thème/identité du projet | **Retenue pour le MVP** |
+| B | Piochée par l'IA dans une banque gratuite (type Unsplash) | Écartée comme option unique — moins unique (deux projets similaires pourraient partager la même image), mais reste un filet de repli possible si la génération IA échoue |
+| C | Générée à partir d'une photo personnelle de l'utilisateur | **Écartée pour le MVP** — nécessite consentement explicite et stockage de données sensibles ; notée comme option activable plus tard, jamais par défaut |
+
+### Décision — capacité technique de génération d'image
+Point vérifié et non une option à trancher : Claude (modèle utilisé pour le chat de l'app) ne génère pas d'image nativement. Conséquence actée : ce chantier dépend d'un service tiers de génération d'image (DALL-E/GPT-image, Imagen, Stable Diffusion ou Flux), à choisir et chiffrer avant implémentation — **aucun service n'a encore été choisi**.
+
+### Question restée ouverte (non tranchée)
+Une fois une mosaïque révélée à 100%, l'image reste-t-elle l'icône permanente du projet, ou rejoint-elle une "galerie des identités accomplies" séparée ? Les deux options ont été évoquées, aucune n'a été choisie.
+
+## Chantier 9 — Collaboration (pour mémoire, non cadré en détail)
+
+| Élément demandé | Version complète (écartée pour ce sprint) | Version MVP retenue pour une future mission |
+|---|---|---|
+| Invitation | Système de permissions fin par rôle | Lien/code simple, pas de permissions fines au départ |
+| Chat | Messagerie temps réel | Fil de commentaires par tâche/projet |
+| Partage de documents | Espace documentaire dédié | Pièce jointe simple sur une tâche/note, réutilisant le pattern "Notes" déjà existant |
+
+Statut global : chantier noté pour mémoire, non planifié dans les phases 1 à 3 (voir CADRAGE.md §8) — l'ampleur cumulée des trois éléments dépasse largement tout le reste du cadrage.
+
+---
+
+## Repères de méthode (décisions transverses, valables sur tous les chantiers)
+
+- Ne jamais faire calculer un comptage, un statut ou une agrégation par le LLM — toujours un calcul déterministe côté application (origine : bug de comptage observé dans l'audit).
+- Ne jamais afficher le nom technique du modèle IA à l'utilisateur.
+- Toute mécanique de perte/streak doit inclure sa soupape (type "streak freeze" de Duolingo) dès sa conception, jamais ajoutée après coup.
+- Le mood board / la représentation identitaire ne doit jamais exister comme élément purement contemplatif déconnecté d'une action du jour (risque documenté par la recherche WOOP).
 
 ## Décisions d'exécution (non structurantes)
 
 - 2026-09-08 — Repo cible identifié et attaché à la session : `harimalal/dropit` (le repo initialement fourni, `harimalal/yoitubesum`, est un projet sans rapport — résumeur de vidéos YouTube).
 - 2026-09-08 — Convention de mission existante (`MISSIONS/<date>-<slug>/{CADRAGE,decisions,etat}.md`) découverte et réutilisée telle quelle pour cette mission plutôt que d'inventer un nouveau format de log.
-
-## Questions restées ouvertes (non tranchées)
-
-- Chantier 8 : une fois une mosaïque révélée à 100%, l'image reste-t-elle l'icône permanente du projet ou rejoint-elle une "galerie des identités accomplies" séparée ?
-- Chantier 9 (collaboration) : non détaillé au-delà du MVP réduit proposé (invitation par lien, commentaires, pièce jointe) — à recadrer en mission dédiée le moment venu.

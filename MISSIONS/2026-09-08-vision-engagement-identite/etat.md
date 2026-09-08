@@ -21,3 +21,4 @@ maj: 2026-09-08
 # 2026-09-08 — Repo cible identifié (harimalal/dropit) et attaché à la session ; le repo fourni initialement (yoitubesum) n'a aucun rapport avec DROPIT
 # 2026-09-08 — Convention de mission existante repérée dans le repo (MISSIONS/<date>-<slug>/CADRAGE+decisions+etat) et réutilisée pour cette mission
 # 2026-09-08 — CADRAGE.md, decisions.md, etat.md rédigés ; captures d'écran source archivées dans screenshots/
+# 2026-09-08 — decisions.md étoffé : chaque chantier détaille désormais options écartées + raisons, et les itérations où une décision a été révisée en cours de route (emplacement Drop Zone, mécanique de révélation visuelle, portée du chantier identité)
