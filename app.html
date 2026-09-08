@@ -542,12 +542,20 @@
   .cal-weekday{text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);padding:4px 0;}
   .cal-grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:0 12px 10px;}
   .cal-day{
-    border:none;background:none;border-radius:10px;min-height:0;
-    display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink);
+    border:none;background:none;border-radius:10px;min-height:0;padding:2px 0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    font-size:13px;color:var(--ink);
   }
   .cal-day.other-month{color:var(--ink-faint);opacity:.4;}
-  .cal-day.today{font-weight:800;color:var(--accent);text-decoration:underline;text-underline-offset:3px;}
+  .cal-day.today .cal-day-num{font-weight:800;color:var(--accent);text-decoration:underline;text-underline-offset:3px;}
   .cal-day.selected{background:var(--accent-soft);color:var(--accent);font-weight:700;}
+  .cal-day-num{line-height:1;}
+  .cal-day-dues{display:flex;gap:2px;line-height:1;}
+  .cal-due-badge{
+    width:14px;height:14px;flex-shrink:0;border-radius:50%;font-size:8.5px;
+    display:flex;align-items:center;justify-content:center;
+    background:conic-gradient(var(--ia-accent) var(--pct,0%), var(--line) 0);
+  }
   .cal-day-list-label{
     flex-shrink:0;padding:12px 16px 6px;font-family:var(--font-mono);font-size:10px;
     letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-faint);border-top:1px solid var(--line);
@@ -2327,6 +2335,14 @@
   var CAL_WEEKDAYS = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
   var CAL_MONTHS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
 
+  function projectsDueOn(dateStr){
+    return state.projects.filter(function(p){
+      if(!p.dueDate) return false;
+      var d = new Date(p.dueDate);
+      return (d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate())) === dateStr;
+    });
+  }
+
   function renderCalendarGrid(){
     var year = calViewYear, month = calViewMonth;
     var todayStr = todayDateStr();
@@ -2353,7 +2369,17 @@
       if(c.dateStr === todayStr) cls += " today";
       if(c.dateStr && c.dateStr === calSelectedDate) cls += " selected";
       var attr = c.dateStr ? ' data-cal-day="'+c.dateStr+'"' : '';
-      return '<button class="'+cls+'"'+attr+(c.otherMonth?' disabled':'')+'>'+c.day+'</button>';
+      // Échéances qui tombent ce jour-là : anneau = avancement du projet (progressPct),
+      // position = jour d'échéance. Rappel visuel direct dans la grille, sans ouvrir le projet.
+      var dueProjects = c.dateStr ? projectsDueOn(c.dateStr) : [];
+      var dueHtml = dueProjects.length
+        ? '<span class="cal-day-dues">'+dueProjects.slice(0,3).map(function(p){
+            return '<span class="cal-due-badge" style="--pct:'+progressPct(p)+'%;" title="'+escapeHtml(p.title)+' — '+progressPct(p)+'% fait">'+p.emoji+'</span>';
+          }).join('')+'</span>'
+        : '';
+      return '<button class="'+cls+'"'+attr+(c.otherMonth?' disabled':'')+'>'+
+        '<span class="cal-day-num">'+c.day+'</span>'+dueHtml+
+      '</button>';
     }).join('');
 
     var rowCount = cells.length / 7;
