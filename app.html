@@ -740,6 +740,29 @@
   .account-email{font-size:14.5px;font-weight:700;color:var(--ink);word-break:break-all;}
   .account-meta{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);margin-top:3px;}
   .account-actions{margin-top:18px;display:flex;flex-direction:column;gap:8px;}
+
+  /* MENU PROJET (renommer / objectif / échéance / supprimer) */
+  .project-menu-box{
+    width:100%;max-width:620px;background:var(--canvas-card);
+    border-radius:20px 20px 0 0;padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+    box-shadow:0 -8px 32px rgba(43,36,32,0.18);
+  }
+  .pmenu-row{
+    width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:14px;font-size:14.5px;color:var(--ink);background:none;border:none;text-align:left;border-radius:12px;
+  }
+  .pmenu-row:active{background:var(--accent-soft);}
+  .pmenu-row.danger{color:#9C4632;}
+  .pmenu-value{font-size:12.5px;color:var(--ink-faint);}
+  .pmenu-back{
+    width:100%;box-sizing:border-box;display:flex;align-items:center;gap:8px;
+    padding:14px;font-size:13px;color:var(--ink-faint);background:none;border:none;text-align:left;
+  }
+  .due-date-chip{
+    display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:11px;
+    color:var(--ink-faint);margin-top:4px;
+  }
+  .due-date-chip.overdue{color:#9C4632;}
 </style>
 </head>
 <body>
@@ -772,6 +795,8 @@
   var authInfo = "";
   var authReady = false;         // config chargée + session résolue
   var accountSheetOpen = false;
+  var projectMenuOpen = false;
+  var projectMenuMode = "main"; // "main" | "due"
 
   /* --- Onboarding première connexion --- */
   var ONBOARDING_KEY = "dropit_onboarding_v1_seen";
@@ -1120,7 +1145,7 @@
     saveSession(null);
     state = {projects: []};
     currentProjectId = null; currentCategoryId = null;
-    taskListOpen = false; accountSheetOpen = false;
+    taskListOpen = false; accountSheetOpen = false; projectMenuOpen = false;
     chatState = {}; tlSelectedProjects = []; tlScopedToProject = false;
     tlCategoryFilter = null; tlPriorityFilter = 'all';
     authMode = "login"; authError = ""; authInfo = "";
@@ -1259,10 +1284,37 @@
     });
   }
 
+  /* ---------- échéance projet ---------- */
+  var DUE_BUCKETS = [
+    {key:"1w", days:7,   label:"1 semaine"},
+    {key:"2w", days:14,  label:"2 semaines"},
+    {key:"1m", days:30,  label:"1 mois"},
+    {key:"3m", days:90,  label:"3 mois"},
+    {key:"6m", days:180, label:"6 mois"},
+    {key:"1y", days:365, label:"1 an"}
+  ];
+  function dueBucketInfo(key){
+    return DUE_BUCKETS.filter(function(b){ return b.key === key; })[0] || null;
+  }
+  function computeDueDate(bucketKey){
+    var b = dueBucketInfo(bucketKey);
+    return b ? new Date(Date.now() + b.days*86400000).toISOString() : null;
+  }
+  function dueDateLabel(p){
+    if(!p.dueDate) return null;
+    var diffDays = Math.ceil((new Date(p.dueDate).getTime() - Date.now()) / 86400000);
+    if(diffDays < 0) return "Échéance dépassée";
+    if(diffDays === 0) return "Échéance aujourd'hui";
+    if(diffDays === 1) return "Échéance demain";
+    if(diffDays <= 13) return "Échéance dans "+diffDays+" jours";
+    if(diffDays <= 60) return "Échéance dans "+Math.round(diffDays/7)+" semaines";
+    return "Échéance dans "+Math.round(diffDays/30)+" mois";
+  }
+
   function makeProject(overrides){
     var base = {
       id: uid(), title:"", emoji:"✨", summary:"", categories:[],
-      projectNotes: [],
+      projectNotes: [], dueBucket: null, dueDate: null,
       createdAt: nowIso(), updatedAt: nowIso()
     };
     overrides = overrides || {};
@@ -1338,6 +1390,8 @@
       emoji: raw.emoji || "✨",
       summary: raw.summary || "",
       dna: raw.dna || "",
+      dueBucket: raw.dueBucket || null,
+      dueDate: raw.dueDate || null,
       categories: categories,
       projectNotes: projectNotes,
       createdAt: raw.createdAt || nowIso(),
@@ -1583,6 +1637,7 @@
   function listIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h12M4 14h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'; }
   function calendarIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M7 3v4M13 3v4M3 9h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'; }
   function homeIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M3 9.5 10 3l7 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 8.5V17h10V8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+  function dotsMenuIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="4.5" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="15.5" r="1.6"/></svg>'; }
 
   function renderBottomTabBar(){
     var onHome = !currentProjectId && !taskListOpen;
@@ -1621,7 +1676,7 @@
       return;
     }
     if(currentCategoryId){ currentCategoryId = null; render(); return; }
-    if(currentProjectId){ currentProjectId = null; render(); return; }
+    if(currentProjectId){ currentProjectId = null; projectMenuOpen = false; render(); return; }
     // déjà à l'accueil : rien à faire côté app, le navigateur reprend la main normalement
   }
 
@@ -1823,6 +1878,31 @@
           '<button class="btn btn-danger" id="account-signout-btn">Se déconnecter</button>'+
         '</div>'+
       '</div>'+
+    '</div>';
+  }
+
+  function renderProjectMenu(p){
+    if(!projectMenuOpen) return "";
+    var body;
+    if(projectMenuMode === "due"){
+      var rows = DUE_BUCKETS.map(function(b){
+        var active = p.dueBucket === b.key;
+        return '<button class="pmenu-row" data-due-bucket="'+b.key+'"><span>Sous '+b.label+'</span>'+
+          (active ? checkIcon() : '')+'</button>';
+      }).join('') +
+      '<button class="pmenu-row" data-due-bucket="">'+
+        '<span>Aucune échéance</span>'+(!p.dueBucket ? checkIcon() : '')+'</button>';
+      body = rows + '<button class="pmenu-back" id="pmenu-back-btn">'+backIcon()+'&nbsp; Retour</button>';
+    } else {
+      var dueValue = dueBucketInfo(p.dueBucket) ? 'Sous '+dueBucketInfo(p.dueBucket).label : 'Non définie';
+      body = ''+
+        '<button class="pmenu-row" id="pmenu-rename-btn"><span>Renommer</span></button>'+
+        '<button class="pmenu-row" id="pmenu-summary-btn"><span>Préciser l\'objectif</span></button>'+
+        '<button class="pmenu-row" id="pmenu-due-btn"><span>Échéance</span><span class="pmenu-value">'+dueValue+'</span></button>'+
+        '<button class="pmenu-row danger" id="pmenu-delete-btn"><span>Supprimer le projet</span></button>';
+    }
+    return '<div class="account-sheet" id="project-menu-sheet">'+
+      '<div class="project-menu-box">'+body+'</div>'+
     '</div>';
   }
 
@@ -2221,8 +2301,11 @@
     var topBarHtml = ''+
     '<div class="top-bar">'+
       '<button class="top-back-btn" id="detail-back-btn" title="Retour">'+backIcon()+'</button>'+
-      '<button class="top-delete-btn" id="detail-delete-btn" title="Supprimer">'+trashIcon()+'</button>'+
+      '<button class="top-delete-btn" id="project-menu-btn" title="Options du projet">'+dotsMenuIcon()+'</button>'+
     '</div>';
+
+    var dueLabel = dueDateLabel(p);
+    var dueOverdue = p.dueDate && new Date(p.dueDate).getTime() < Date.now();
 
     var headerHtml = ''+
     '<div class="detail-header">'+
@@ -2232,6 +2315,7 @@
       (p.dna ? '<div class="project-dna">'+escapeHtml(p.dna)+'</div>' : '')+
       '<div class="detail-status-row"><span class="status-dot '+status+'"></span>'+
         '<span class="detail-status-text">'+STATUS_LABELS[status]+'</span></div>'+
+      (dueLabel ? '<div class="due-date-chip'+(dueOverdue?' overdue':'')+'">'+calendarIcon()+' '+dueLabel+'</div>' : '')+
     '</div>'+
     '<div class="progress-track"><div class="progress-fill" style="width:'+pct+'%;"></div></div>';
 
@@ -2311,6 +2395,7 @@
     detailBarHtml+
     renderChatModal(p)+
     renderNoteModal()+
+    renderProjectMenu(p)+
     renderBottomTabBar()+
     '<div class="toast" id="toast"></div>';
   }
@@ -2570,12 +2655,14 @@
       "Intention de l'utilisateur : \"" + intention + "\"\n\n"+
       "Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, exactement sous cette forme :\n"+
       '{"title":"titre court (3-5 mots)","emoji":"un seul emoji représentatif","summary":"une phrase naturelle qui résume ce qu\'il y a à faire",'+
-      '"categories":[{"title":"nom de la catégorie","items":["élément 1","élément 2","..."]}]}'+
+      '"dueBucket":"1w|2w|1m|3m|6m|1y","categories":[{"title":"nom de la catégorie","items":["élément 1","élément 2","..."]}]}'+
       "\n\nRegroupe les actions par aspect logique et distinct du projet (par exemple pour un déménagement : achats & aménagement, administratif, organisation, budget — "+
       "mais adapte entièrement les catégories au type de projet réel, un voyage ou un anniversaire n'auront pas du tout les mêmes). "+
       "Nomme chaque catégorie avec un verbe à l'infinitif + un sujet concis, 2 à 3 mots maximum (ex : \"Préparer le budget\", \"Organiser le transport\", \"Réserver le logement\"). "+
       "Si le projet est simple et n'a qu'un seul aspect, une seule catégorie suffit. Génère entre 1 et 5 catégories pertinentes, chacune avec 3 à 7 éléments concrets et courts (5 à 10 mots).\n"+
-      "Ordonne les catégories et leurs éléments dans l'ordre logique où ils doivent être traités : le tout premier élément de la première catégorie doit être la prochaine action la plus utile à faire maintenant.";
+      "Ordonne les catégories et leurs éléments dans l'ordre logique où ils doivent être traités : le tout premier élément de la première catégorie doit être la prochaine action la plus utile à faire maintenant.\n\n"+
+      "Pour \"dueBucket\", exactement une des 6 valeurs 1w/2w/1m/3m/6m/1y : si l'intention mentionne un délai précis (date, événement, \"avant l'été\", \"pour dans 2 mois\"...), déduis-en la valeur la plus proche. "+
+      "Sinon, estime la durée réaliste selon la charge de travail implicite du projet (nombre et taille des étapes) : une poignée de tâches simples et rapides → court terme (1w/2w) ; un projet avec plusieurs catégories et des démarches qui prennent du temps (administratif, gros achat, organisation d'événement) → moyen terme (1m/3m) ; un projet ambitieux à plusieurs phases → long terme (6m/1y).";
 
     return Promise.resolve().then(function(){
       return apiFetch("/api/ai", {
@@ -2920,11 +3007,16 @@
       if(categories.length === 0){
         categories = [makeCategory("À faire", ["Préciser les premières décisions","Identifier qui est impliqué"])];
       }
+      // Échéance estimée par l'IA à partir de l'intention ; repli sur "1 mois" si la
+      // valeur est absente ou hors de la liste attendue (réponse mal formée).
+      var dueBucket = dueBucketInfo(result.dueBucket) ? result.dueBucket : "1m";
       var p = makeProject({
         title: (result.title || intention).slice(0,60),
         emoji: result.emoji || "✨",
         summary: result.summary || "",
-        categories: categories
+        categories: categories,
+        dueBucket: dueBucket,
+        dueDate: computeDueDate(dueBucket)
       });
       state.projects.push(p);
       composeText = "";
@@ -2937,7 +3029,9 @@
         title: intention.slice(0,60),
         emoji: "✨",
         summary: "Projet créé — complète les étapes ci-dessous.",
-        categories: [makeCategory("À faire", ["Préciser les premières décisions","Identifier qui est impliqué","Définir une première échéance"])]
+        categories: [makeCategory("À faire", ["Préciser les premières décisions","Identifier qui est impliqué","Définir une première échéance"])],
+        dueBucket: "1m",
+        dueDate: computeDueDate("1m")
       });
       state.projects.push(p);
       composeText = "";
@@ -3025,6 +3119,7 @@
       taskListOpen = false;
       tlSelectedProjects = [];
       tlScopedToProject = false;
+      projectMenuOpen = false;
       render();
     });
 
@@ -3071,12 +3166,74 @@
     var backBtn = document.getElementById("detail-back-btn");
     if(backBtn) backBtn.addEventListener("click", function(){ history.back(); });
 
-    var deleteBtn = document.getElementById("detail-delete-btn");
-    if(deleteBtn) deleteBtn.addEventListener("click", function(){
+    // Menu projet — renommer / objectif / échéance / supprimer
+    var pmenuBtn = document.getElementById("project-menu-btn");
+    if(pmenuBtn) pmenuBtn.addEventListener("click", function(){
+      projectMenuMode = "main";
+      projectMenuOpen = true;
+      render();
+    });
+    var pmenuSheet = document.getElementById("project-menu-sheet");
+    if(pmenuSheet) pmenuSheet.addEventListener("click", function(e){
+      if(e.target === pmenuSheet){ projectMenuOpen = false; render(); }
+    });
+    var pmenuRenameBtn = document.getElementById("pmenu-rename-btn");
+    if(pmenuRenameBtn) pmenuRenameBtn.addEventListener("click", function(){
+      var p = findProject(currentProjectId);
+      if(!p) return;
+      var next = prompt("Renommer le projet :", p.title);
+      if(next !== null && next.trim()){
+        p.title = next.trim().slice(0,60);
+        p.updatedAt = nowIso();
+        persist();
+      }
+      projectMenuOpen = false;
+      render();
+    });
+    var pmenuSummaryBtn = document.getElementById("pmenu-summary-btn");
+    if(pmenuSummaryBtn) pmenuSummaryBtn.addEventListener("click", function(){
+      var p = findProject(currentProjectId);
+      if(!p) return;
+      var next = prompt("Objectif du projet :", p.summary || "");
+      if(next !== null){
+        p.summary = next.trim();
+        p.updatedAt = nowIso();
+        persist();
+      }
+      projectMenuOpen = false;
+      render();
+    });
+    var pmenuDueBtn = document.getElementById("pmenu-due-btn");
+    if(pmenuDueBtn) pmenuDueBtn.addEventListener("click", function(){
+      projectMenuMode = "due";
+      render();
+    });
+    var pmenuBackBtn = document.getElementById("pmenu-back-btn");
+    if(pmenuBackBtn) pmenuBackBtn.addEventListener("click", function(){
+      projectMenuMode = "main";
+      render();
+    });
+    document.querySelectorAll("[data-due-bucket]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var p = findProject(currentProjectId);
+        if(!p) return;
+        var bucket = el.dataset.dueBucket || null;
+        p.dueBucket = bucket;
+        p.dueDate = bucket ? computeDueDate(bucket) : null;
+        p.updatedAt = nowIso();
+        persist();
+        projectMenuOpen = false;
+        projectMenuMode = "main";
+        render();
+      });
+    });
+    var pmenuDeleteBtn = document.getElementById("pmenu-delete-btn");
+    if(pmenuDeleteBtn) pmenuDeleteBtn.addEventListener("click", function(){
       var p = findProject(currentProjectId);
       if(p && confirm('Supprimer "'+p.title+'" ?')){
         state.projects = state.projects.filter(function(x){ return x.id !== p.id; });
         currentProjectId = null;
+        projectMenuOpen = false;
         persist(); render();
       }
     });
