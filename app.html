@@ -521,6 +521,38 @@
     background:var(--row-proj-badge, var(--accent-soft));display:flex;align-items:center;justify-content:center;
   }
   .tl-empty{padding:48px 24px;text-align:center;color:var(--ink-soft);font-size:14px;line-height:1.6;}
+
+  /* CALENDRIER */
+  .calendar-screen{position:fixed;inset:0;z-index:41;background:var(--canvas);display:flex;flex-direction:column;}
+  .cal-top-bar{
+    flex-shrink:0;padding:calc(12px + env(safe-area-inset-top)) 16px 4px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .cal-top-title{flex:1;font-size:15px;font-weight:800;letter-spacing:-.01em;color:var(--ink);}
+  .cal-nav-row{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:6px 16px 8px;}
+  .cal-nav-btn{
+    width:32px;height:32px;flex-shrink:0;border-radius:50%;border:1px solid var(--line);
+    background:var(--canvas-card);color:var(--ink);display:flex;align-items:center;justify-content:center;
+  }
+  .cal-nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .cal-nav-btn .icon{width:13px;height:13px;}
+  .cal-month-label{font-size:14px;font-weight:700;color:var(--ink);text-transform:capitalize;}
+  .cal-weekdays{flex-shrink:0;display:grid;grid-template-columns:repeat(7,1fr);padding:0 12px;}
+  .cal-weekday{text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);padding:4px 0;}
+  .cal-grid{flex-shrink:0;display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:0 12px 10px;}
+  .cal-day{
+    aspect-ratio:1;border:none;background:none;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink);
+  }
+  .cal-day.other-month{color:var(--ink-faint);opacity:.4;}
+  .cal-day.today{font-weight:800;color:var(--accent);text-decoration:underline;text-underline-offset:3px;}
+  .cal-day.selected{background:var(--accent-soft);color:var(--accent);font-weight:700;}
+  .cal-day-list-label{
+    flex-shrink:0;padding:12px 16px 6px;font-family:var(--font-mono);font-size:10px;
+    letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-faint);border-top:1px solid var(--line);
+  }
+  .cal-list{flex:1;overflow-y:auto;padding-bottom:calc(16px + var(--tabbar-h));}
+  .cal-empty{padding:40px 24px;text-align:center;color:var(--ink-soft);font-size:14px;line-height:1.6;}
   /* Barre de saisie dans la task list */
   .tl-compose-bar{
     flex-shrink:0;background:var(--canvas-card);border-top:1px solid var(--line);
@@ -797,6 +829,13 @@
   var accountSheetOpen = false;
   var projectMenuOpen = false;
   var projectMenuMode = "main"; // "main" | "due"
+
+  /* --- Calendrier --- */
+  var calendarOpen = false;
+  var calNow = new Date();
+  var calViewYear = calNow.getFullYear();
+  var calViewMonth = calNow.getMonth(); // 0-11
+  var calSelectedDate = todayDateStr();
 
   /* --- Onboarding première connexion --- */
   var ONBOARDING_KEY = "dropit_onboarding_v1_seen";
@@ -1253,6 +1292,11 @@
 
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
   function nowIso(){ return new Date().toISOString(); }
+  function pad2(n){ return n < 10 ? "0"+n : ""+n; }
+  function todayDateStr(){
+    var d = new Date();
+    return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());
+  }
 
   /* ---------- couleur de projet (design system v5) ----------
      Assignation déterministe : même id de projet = même couleur à chaque rendu,
@@ -1309,6 +1353,10 @@
     if(diffDays <= 13) return "Échéance dans "+diffDays+" jours";
     if(diffDays <= 60) return "Échéance dans "+Math.round(diffDays/7)+" semaines";
     return "Échéance dans "+Math.round(diffDays/30)+" mois";
+  }
+  function dueBucketOrder(key){
+    for(var i=0;i<DUE_BUCKETS.length;i++){ if(DUE_BUCKETS[i].key === key) return i; }
+    return DUE_BUCKETS.length; // pas d'échéance définie = en dernier
   }
 
   function makeProject(overrides){
@@ -1625,6 +1673,7 @@
   /* ---------- icons ---------- */
 
   function backIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M12 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+  function nextMonthIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M8 4l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function trashIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function checkIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 10.5l3.5 3.5L16 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function sendIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M3 10l14-7-5 14-2.5-5.5L3 10z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/></svg>'; }
@@ -1640,8 +1689,9 @@
   function dotsMenuIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="4.5" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="15.5" r="1.6"/></svg>'; }
 
   function renderBottomTabBar(){
-    var onHome = !currentProjectId && !taskListOpen;
+    var onHome = !currentProjectId && !taskListOpen && !calendarOpen;
     var onList = !!taskListOpen;
+    var onCal = !!calendarOpen;
     return '<div class="bottom-tabbar" id="bottom-tabbar">'+
       '<button class="tabbar-item'+(onHome?' active':'')+'" id="tabbar-home" title="Accueil">'+
         homeIcon()+'<span class="tabbar-item-label">Accueil</span></button>'+
@@ -1649,7 +1699,7 @@
         listIcon()+'<span class="tabbar-item-label">Liste</span></button>'+
       '<button class="tabbar-item" id="tabbar-chat" title="Chat IA">'+
         chatIcon()+'<span class="tabbar-item-label">Chat IA</span></button>'+
-      '<button class="tabbar-item" id="tabbar-cal" disabled title="Bientôt">'+
+      '<button class="tabbar-item'+(onCal?' active':'')+'" id="tabbar-cal" title="Calendrier">'+
         calendarIcon()+'<span class="tabbar-item-label">Calendrier</span></button>'+
     '</div>';
   }
@@ -1665,6 +1715,7 @@
   }
 
   function goBackOneLevel(){
+    if(calendarOpen){ calendarOpen = false; render(); return; }
     if(taskListOpen){
       var tl = document.getElementById('tasklist-screen');
       if(tl){
@@ -1682,6 +1733,12 @@
 
   function render(){
     var app = document.getElementById("app");
+    if(calendarOpen){
+      app.innerHTML = renderCalendarScreen();
+      bindGlobalEvents();
+      if(generating) renderLoadingOverlay();
+      return;
+    }
     var project = currentProjectId ? findProject(currentProjectId) : null;
     if(project && currentCategoryId){
       var category = findCategory(project, currentCategoryId);
@@ -2091,6 +2148,21 @@
     '</div>';
   }
 
+  /* ---------- calendrier : file de tâches vivante (pas de date par tâche) ---------- */
+  var CAL_DAY_MAX = 5;
+  function buildCalendarTasks(){
+    var candidates = [];
+    state.projects.forEach(function(p){
+      priorityItems(p).forEach(function(x){
+        candidates.push({item:x.item, category:x.category, project:p, priority:'cal'});
+      });
+    });
+    candidates.sort(function(a,b){
+      return dueBucketOrder(a.project.dueBucket) - dueBucketOrder(b.project.dueBucket);
+    });
+    return candidates.slice(0, CAL_DAY_MAX);
+  }
+
   function tlTargetProject(){
     if(tlSelectedProjects.length === 1) return findProject(tlSelectedProjects[0]);
     var actives = state.projects.filter(function(p){ return !isAccompli(p); });
@@ -2235,6 +2307,67 @@
       filterRowHtml+
       '<div class="tasklist-scroll" id="tl-scroll">'+rows+'</div>'+
       renderTaskListBar()+
+    '</div>';
+  }
+
+  var CAL_WEEKDAYS = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+  var CAL_MONTHS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+
+  function renderCalendarGrid(){
+    var year = calViewYear, month = calViewMonth;
+    var todayStr = todayDateStr();
+    var firstOfMonth = new Date(year, month, 1);
+    // Grille lundi-dimanche : décale l'index JS (0=dimanche) pour partir du lundi.
+    var startOffset = (firstOfMonth.getDay() + 6) % 7;
+    var daysInMonth = new Date(year, month+1, 0).getDate();
+    var daysInPrevMonth = new Date(year, month, 0).getDate();
+
+    var cells = [];
+    for(var i=0;i<startOffset;i++){
+      cells.push({day: daysInPrevMonth - startOffset + 1 + i, otherMonth:true, dateStr:null});
+    }
+    for(var d=1; d<=daysInMonth; d++){
+      cells.push({day:d, otherMonth:false, dateStr: year+"-"+pad2(month+1)+"-"+pad2(d)});
+    }
+    while(cells.length % 7 !== 0){
+      cells.push({day: cells.length - startOffset - daysInMonth + 1, otherMonth:true, dateStr:null});
+    }
+
+    var cellsHtml = cells.map(function(c){
+      var cls = "cal-day";
+      if(c.otherMonth) cls += " other-month";
+      if(c.dateStr === todayStr) cls += " today";
+      if(c.dateStr && c.dateStr === calSelectedDate) cls += " selected";
+      var attr = c.dateStr ? ' data-cal-day="'+c.dateStr+'"' : '';
+      return '<button class="'+cls+'"'+attr+(c.otherMonth?' disabled':'')+'>'+c.day+'</button>';
+    }).join('');
+
+    return '<div class="cal-nav-row">'+
+        '<button class="cal-nav-btn" id="cal-prev-month" title="Mois précédent">'+backIcon()+'</button>'+
+        '<span class="cal-month-label">'+CAL_MONTHS[month]+' '+year+'</span>'+
+        '<button class="cal-nav-btn" id="cal-next-month" title="Mois suivant">'+nextMonthIcon()+'</button>'+
+      '</div>'+
+      '<div class="cal-weekdays">'+CAL_WEEKDAYS.map(function(w){ return '<span class="cal-weekday">'+w+'</span>'; }).join('')+'</div>'+
+      '<div class="cal-grid">'+cellsHtml+'</div>';
+  }
+
+  function renderCalendarScreen(){
+    var tasks = buildCalendarTasks();
+    var isToday = calSelectedDate === todayDateStr();
+    var selLabel = isToday ? "Aujourd'hui" : calSelectedDate;
+    var rows = tasks.length
+      ? tasks.map(renderTlRow).join('')
+      : '<div class="cal-empty">Rien en attente.<br>Tous les projets sont à jour !</div>';
+
+    return '<div class="calendar-screen" id="calendar-screen">'+
+      '<div class="cal-top-bar">'+
+        '<button class="top-back-btn" id="cal-back-btn" title="Retour">'+backIcon()+'</button>'+
+        '<span class="cal-top-title">Calendrier</span>'+
+      '</div>'+
+      renderCalendarGrid()+
+      '<div class="cal-day-list-label">'+selLabel+' · '+tasks.length+' tâche'+(tasks.length!==1?'s':'')+'</div>'+
+      '<div class="cal-list" id="cal-list">'+rows+'</div>'+
+      renderBottomTabBar()+
     '</div>';
   }
 
@@ -3112,6 +3245,7 @@
     var homeBtn = document.getElementById('tabbar-home');
     var listBtn = document.getElementById('tabbar-list');
     var chatBtn = document.getElementById('tabbar-chat');
+    var calBtn = document.getElementById('tabbar-cal');
 
     if(homeBtn) homeBtn.addEventListener('click', function(){
       currentProjectId = null;
@@ -3120,6 +3254,7 @@
       tlSelectedProjects = [];
       tlScopedToProject = false;
       projectMenuOpen = false;
+      calendarOpen = false;
       render();
     });
 
@@ -3127,6 +3262,7 @@
       var filterProjectId = currentProjectId;
       currentProjectId = null;
       currentCategoryId = null;
+      calendarOpen = false;
       taskListOpen = true;
       tlScopedToProject = !!filterProjectId;
       tlSelectedProjects = filterProjectId ? [filterProjectId] : [];
@@ -3148,6 +3284,19 @@
         var el = document.getElementById(id);
         if(el) el.scrollTop = el.scrollHeight;
       }, 50);
+    });
+
+    if(calBtn && !calendarOpen) calBtn.addEventListener('click', function(){
+      currentProjectId = null;
+      currentCategoryId = null;
+      taskListOpen = false;
+      calendarOpen = true;
+      calSelectedDate = todayDateStr();
+      calNow = new Date();
+      calViewYear = calNow.getFullYear();
+      calViewMonth = calNow.getMonth();
+      pushNavEntry();
+      render();
     });
   }
 
@@ -3294,6 +3443,28 @@
     var tlBackBtn = document.getElementById("tl-back-btn");
     if(tlBackBtn) tlBackBtn.addEventListener("click", function(){ history.back(); });
 
+    // Calendrier
+    var calBackBtn = document.getElementById("cal-back-btn");
+    if(calBackBtn) calBackBtn.addEventListener("click", function(){ history.back(); });
+    var calPrevBtn = document.getElementById("cal-prev-month");
+    if(calPrevBtn) calPrevBtn.addEventListener("click", function(){
+      calViewMonth--;
+      if(calViewMonth < 0){ calViewMonth = 11; calViewYear--; }
+      render();
+    });
+    var calNextBtn = document.getElementById("cal-next-month");
+    if(calNextBtn) calNextBtn.addEventListener("click", function(){
+      calViewMonth++;
+      if(calViewMonth > 11){ calViewMonth = 0; calViewYear++; }
+      render();
+    });
+    document.querySelectorAll("[data-cal-day]").forEach(function(el){
+      el.addEventListener("click", function(){
+        calSelectedDate = el.dataset.calDay;
+        render();
+      });
+    });
+
     // Task list — filtre projet (emoji multi-select)
     document.querySelectorAll("[data-tl-proj-filter]").forEach(function(el){
       el.addEventListener("click", function(e){
@@ -3357,6 +3528,11 @@
             currentProjectId = el.dataset.tlNavProj;
             render();
           }, 200);
+        } else {
+          // Ligne réutilisée hors de l'écran Liste (ex: calendrier) : pas d'animation de slide.
+          currentProjectId = el.dataset.tlNavProj;
+          pushNavEntry();
+          render();
         }
       });
     });
