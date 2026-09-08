@@ -14,6 +14,7 @@
     --ink-faint:#A79E93;
     --line:#EFEBE6;
     --grid-line:rgba(43,36,32,0.035);
+    --tabbar-h:58px; /* hauteur de la barre de navigation fixe (accueil/liste/chat/calendrier) */
 
     /* Chrome — boutons génériques, top bars, écrans auth (inchangé) */
     --accent:#BF5B44;
@@ -174,7 +175,7 @@
 
   /* PROJECT DETAIL */
   .detail-scroll{position:fixed;inset:0;background:var(--canvas);overflow-y:auto;}
-  .detail-inner{max-width:600px;margin:0 auto;padding:50px 20px 140px;}
+  .detail-inner{max-width:600px;margin:0 auto;padding:50px 20px calc(90px + var(--tabbar-h));}
   .detail-header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;margin-bottom:12px;}
   .detail-emoji{font-size:32px;line-height:1;}
   .detail-title{font-size:19px;font-weight:800;letter-spacing:-0.01em;}
@@ -245,6 +246,8 @@
   .step-row.done .step-title{color:var(--ink-faint);}
   .step-row.priority{background:var(--current-proj-priority, var(--accent-soft));border-color:transparent;}
   .step-row.priority .step-title{font-weight:600;}
+  .step-row.muted .step-title{color:var(--ink-faint);}
+  .step-row.muted .step-check{border-color:var(--line);}
   .step-title-input{
     flex:1;border:1px solid var(--current-proj-solid, var(--accent));border-radius:7px;padding:6px 8px;font-size:14px;
     color:var(--ink);background:var(--canvas-card);min-width:0;font-family:inherit;
@@ -277,7 +280,7 @@
 
   /* COMPOSE BAR — barre IA (accueil), accent vert dédié + sparkle dans le champ (design system v5) */
   .compose-bar{
-    position:fixed;left:0;right:0;bottom:0;z-index:42;
+    position:fixed;left:0;right:0;bottom:var(--tabbar-h);z-index:42;
     background:var(--canvas-card);border-top:1px solid var(--line);
     padding:10px 12px calc(10px + env(safe-area-inset-bottom));
     display:flex;align-items:center;gap:8px;box-shadow:0 -4px 16px rgba(43,36,32,0.08);
@@ -315,7 +318,7 @@
   .loading-text{font-size:13.5px;color:var(--ink-soft);}
 
   .toast{
-    position:fixed;left:50%;bottom:78px;transform:translateX(-50%);
+    position:fixed;left:50%;bottom:calc(78px + var(--tabbar-h));transform:translateX(-50%);
     background:var(--ink);color:#fff;font-size:13px;padding:10px 18px;border-radius:20px;
     box-shadow:0 10px 24px rgba(0,0,0,.25);z-index:55;opacity:0;pointer-events:none;
   }
@@ -323,7 +326,7 @@
   .toast.show{opacity:1;}
 
   .reset-link{
-    position:fixed;left:16px;bottom:74px;z-index:40;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);
+    position:fixed;left:16px;bottom:calc(74px + var(--tabbar-h));z-index:40;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);
     background:var(--canvas-card);border:1px solid var(--line);border-radius:14px;padding:7px 13px;
     box-shadow:0 6px 16px rgba(43,36,32,0.1);
   }
@@ -401,48 +404,26 @@
     font-size:11px;color:var(--ink-faint);padding:2px 5px;max-width:110px;flex-shrink:0;
   }
 
-  /* VOIR LA SUITE */
-  .voir-suite-link{
-    display:inline-block;margin:4px 0 10px;font-family:var(--font-mono);font-size:11px;
-    color:var(--ink-faint);background:none;border:none;padding:0;
-  }
-  .voir-suite-link:hover{color:var(--accent);}
 
+  /* BARRE DE NAVIGATION FIXE — accueil / liste / chat IA / calendrier.
+     Remplace l'ancien bouton flottant (FAB) qui se superposait par-dessus les cartes
+     projet lors du scroll : ici la zone de tap est dédiée et jamais partagée avec le contenu. */
+  .bottom-tabbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:46;height:var(--tabbar-h);
+    background:var(--canvas-card);border-top:1px solid var(--line);
+    display:flex;align-items:stretch;padding-bottom:env(safe-area-inset-bottom);
+    box-shadow:0 -2px 12px rgba(43,36,32,0.06);
+  }
+  .tabbar-item{
+    flex:1;border:none;background:none;cursor:pointer;color:var(--ink-faint);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  }
+  .tabbar-item .icon{width:20px;height:20px;}
+  .tabbar-item-label{font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.01em;}
+  .tabbar-item.active{color:var(--accent);}
+  .tabbar-item:disabled{opacity:0.35;pointer-events:none;cursor:default;}
 
   /* CHAT MODAL */
-  .fab-menu-btn{
-    position:fixed;right:16px;bottom:76px;width:52px;height:52px;border-radius:50%;
-    background:var(--accent);color:#fff;border:none;z-index:46;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-    box-shadow:0 4px 20px rgba(43,36,32,0.28);transition:transform .22s;
-  }
-  .fab-menu-btn.open{transform:rotate(45deg);}
-  .fab-menu-btn .icon{width:22px;height:22px;}
-  .fab-overlay{display:none;position:fixed;inset:0;z-index:44;}
-  .fab-overlay.open{display:block;}
-  .fab-menu-items{
-    position:fixed;right:12px;bottom:140px;z-index:46;
-    display:flex;flex-direction:column;gap:10px;align-items:flex-end;
-    opacity:0;transform:translateY(12px);pointer-events:none;
-    transition:opacity .18s,transform .18s;
-  }
-  .fab-menu-items.open{opacity:1;transform:translateY(0);pointer-events:all;}
-  .fab-item{display:flex;flex-direction:column;align-items:center;gap:3px;}
-  .fab-item-btn{
-    width:44px;height:44px;border-radius:50%;cursor:pointer;
-    background:var(--canvas-card);border:1px solid var(--line);color:var(--ink);
-    display:flex;align-items:center;justify-content:center;
-    box-shadow:0 2px 10px rgba(43,36,32,0.14);
-  }
-  .fab-item-btn:hover{border-color:var(--accent);color:var(--accent);}
-  .fab-item-btn .icon{width:18px;height:18px;}
-  .fab-item-label{
-    font-family:var(--font-mono);font-size:9.5px;color:var(--ink);white-space:nowrap;
-    background:var(--canvas-card);border-radius:10px;padding:2px 7px;
-    box-shadow:0 1px 4px rgba(43,36,32,0.10);
-  }
-  .fab-item.disabled .fab-item-btn{opacity:0.35;pointer-events:none;cursor:default;}
-  .fab-item.disabled .fab-item-label{opacity:0.45;}
   .chat-modal{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
   .chat-modal-box{width:100%;max-width:620px;height:72vh;background:var(--canvas-card);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 32px rgba(43,36,32,0.18);}
   .chat-modal-header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
@@ -543,7 +524,7 @@
 
   /* BARRE FIXE DÉTAIL (catégorie/tâches & projet) — barre IA, accent vert dédié (design system v5) */
   .detail-fixed-bar{
-    position:fixed;left:0;right:0;bottom:0;z-index:42;
+    position:fixed;left:0;right:0;bottom:var(--tabbar-h);z-index:42;
     background:var(--canvas-card);border-top:1px solid var(--line);
     padding:10px 12px calc(10px + env(safe-area-inset-bottom));
     display:flex;align-items:center;gap:8px;box-shadow:0 -4px 16px rgba(43,36,32,0.08);
@@ -760,7 +741,6 @@
 
   var DEVICE_ID_KEY = "dropit-device-id";
   var STATUS_LABELS = {actif:"Actif", ralentit:"Ralentit", pause:"En pause", accompli:"Accompli"};
-  var showAllItems = false;
 
   function getOrCreateDeviceId(){
     var id = localStorage.getItem(DEVICE_ID_KEY);
@@ -1131,7 +1111,7 @@
     state = {projects: []};
     currentProjectId = null; currentCategoryId = null;
     taskListOpen = false; accountSheetOpen = false;
-    chatState = {}; tlSelectedProjects = []; menuOpen = false;
+    chatState = {}; tlSelectedProjects = []; tlScopedToProject = false;
     authMode = "login"; authError = ""; authInfo = "";
     renderAuth();
   }
@@ -1228,9 +1208,9 @@
   var editingItemId = null; // tâche en édition inline (appui court sur le titre)
   var projectNoteEditId = null;
   var projectNoteOpenId = null;
-  var menuOpen = false;
   var taskListOpen = false;
   var tlSelectedProjects = []; // [] = tous les projets
+  var tlScopedToProject = false; // true = liste ouverte depuis un projet : pas de filtre inter-projets
   var TL_COLORS = ['#BF5B44','#3F8A5C','#5B7DBF','#C48A2E','#8B5BBF','#5BBFB5','#BF8A5B'];
 
   function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
@@ -1588,29 +1568,22 @@
   function moveIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><path d="M2 4h7v8H2V4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M9 6l3 2-3 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function plusIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'; }
   function listIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M4 10h12M4 14h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'; }
-  function menuFabIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 7h12M4 13h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'; }
   function calendarIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M7 3v4M13 3v4M3 9h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'; }
+  function homeIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M3 9.5 10 3l7 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 8.5V17h10V8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
 
-  function renderFAB(){
-    var open = menuOpen;
-    var listDis = taskListOpen;
-    var items =
-      '<div class="fab-item disabled" id="fab-item-cal">'+
-        '<button class="fab-item-btn" disabled>'+calendarIcon()+'</button>'+
-        '<span class="fab-item-label">Bientôt</span>'+
-      '</div>'+
-      '<div class="fab-item" id="fab-item-chat">'+
-        '<button class="fab-item-btn">'+chatIcon()+'</button>'+
-        '<span class="fab-item-label">Chat IA</span>'+
-      '</div>'+
-      '<div class="fab-item'+(listDis?' disabled':'')+'" id="fab-item-list">'+
-        '<button class="fab-item-btn"'+(listDis?' disabled':'')+'>'+listIcon()+'</button>'+
-        '<span class="fab-item-label">Liste</span>'+
-      '</div>';
-    return ''+
-      '<div class="fab-overlay'+(open?' open':'')+'" id="fab-overlay"></div>'+
-      '<div class="fab-menu-items'+(open?' open':'')+'" id="fab-menu-items">'+items+'</div>'+
-      '<button class="fab-menu-btn'+(open?' open':'')+'" id="fab-menu-btn" title="Menu">'+menuFabIcon()+'</button>';
+  function renderBottomTabBar(){
+    var onHome = !currentProjectId && !taskListOpen;
+    var onList = !!taskListOpen;
+    return '<div class="bottom-tabbar" id="bottom-tabbar">'+
+      '<button class="tabbar-item'+(onHome?' active':'')+'" id="tabbar-home" title="Accueil">'+
+        homeIcon()+'<span class="tabbar-item-label">Accueil</span></button>'+
+      '<button class="tabbar-item'+(onList?' active':'')+'" id="tabbar-list" title="Liste">'+
+        listIcon()+'<span class="tabbar-item-label">Liste</span></button>'+
+      '<button class="tabbar-item" id="tabbar-chat" title="Chat IA">'+
+        chatIcon()+'<span class="tabbar-item-label">Chat IA</span></button>'+
+      '<button class="tabbar-item" id="tabbar-cal" disabled title="Bientôt">'+
+        calendarIcon()+'<span class="tabbar-item-label">Calendrier</span></button>'+
+    '</div>';
   }
 
   /* ---------- rendering ---------- */
@@ -1846,7 +1819,7 @@
     renderTaskList()+
     '<button class="account-btn" id="account-btn" title="Mon compte">'+accountInitial()+'</button>'+
     renderAccountSheet()+
-    (hasProjects ? renderFAB() : '')+
+    (hasProjects ? renderBottomTabBar() : '')+
     '<div class="toast" id="toast"></div>';
   }
 
@@ -1905,7 +1878,8 @@
     // La zone est flex:1 dans .home-container (flex column) : sa hauteur exclut déjà
     // automatiquement la salutation, pas besoin de la soustraire manuellement.
     var composeBar = document.getElementById("compose-bar");
-    var composeBarClearance = (composeBar ? composeBar.offsetHeight : 60) + 12;
+    var tabBar = document.getElementById("bottom-tabbar");
+    var composeBarClearance = (composeBar ? composeBar.offsetHeight : 60) + (tabBar ? tabBar.offsetHeight : 58) + 12;
     var W = zone.clientWidth, viewportH = zone.clientHeight - composeBarClearance;
     if(W < 40 || viewportH < 40) return;
 
@@ -1946,7 +1920,6 @@
     zone.querySelectorAll("[data-project-id]").forEach(function(el){
       el.addEventListener("click", function(){
         currentProjectId = el.dataset.projectId;
-        showAllItems = false;
         render();
       });
       el.addEventListener("keydown", function(e){
@@ -2079,9 +2052,11 @@
     var countLabel = tasks.length + ' prioritaire' + (tasks.length !== 1 ? 's' : '') +
       (totalUndone > tasks.length ? ' · ' + totalUndone + ' total' : '');
 
-    var filterLabel = state.projects.length > 0
+    // Liste ouverte depuis un projet précis : aucune raison de laisser filtrer/voir
+    // les autres projets ici, donc la rangée de filtre ne s'affiche pas du tout.
+    var filterLabel = (!tlScopedToProject && state.projects.length > 0)
       ? '<span class="tl-filter-label">Projets&nbsp;:</span>' : '';
-    var filterChips = state.projects.map(function(p){
+    var filterChips = tlScopedToProject ? '' : state.projects.map(function(p){
       var active = tlSelectedProjects.indexOf(p.id) >= 0;
       var pcChip = projectColorVars(p.id);
       return '<button class="tl-proj-chip'+(active?' active':'')+
@@ -2099,7 +2074,7 @@
         '<span class="tasklist-title">Priorités</span>'+
         '<span class="tasklist-count">'+countLabel+'</span>'+
       '</div>'+
-      '<div class="tl-filter-row">'+filterLabel+filterChips+'</div>'+
+      (tlScopedToProject ? '' : '<div class="tl-filter-row">'+filterLabel+filterChips+'</div>')+
       '<div class="tasklist-scroll" id="tl-scroll">'+rows+'</div>'+
       renderTaskListBar()+
     '</div>';
@@ -2148,7 +2123,7 @@
   function renderProjectBar(p){
     return '<div class="detail-fixed-bar" id="detail-fixed-bar">'+
       '<div class="dfb-input-wrap"><span class="sparkle-prefix">✨</span>'+
-        '<input class="dfb-input" id="dfb-proj-input" type="text" placeholder="Nouvelle catégorie…">'+
+        '<input class="dfb-input" id="dfb-proj-input" type="text" placeholder="Nouvelle catégorie… (verbe + sujet, ex : Préparer le budget)">'+
       '</div>'+
       '<button class="dfb-btn secondary" id="dfb-proj-suggest-btn" data-proj-id="'+p.id+'" title="Suggérer la suite">'+sparkleIcon()+'</button>'+
       '<button class="dfb-btn primary" id="dfb-proj-add-btn" data-proj-id="'+p.id+'" title="Ajouter">'+plusIcon()+'</button>'+
@@ -2217,16 +2192,15 @@
       var cat = p.categories[0] || makeCategory("À faire", []);
       var remaining = cat.items.filter(function(it){ return !it.done; });
       var completed = cat.items.filter(function(it){ return it.done; });
-      var suiteHtml = '';
-      if(remaining.length > 1){
-        if(showAllItems){
-          suiteHtml = '<div class="section-label">Ensuite</div>'+
-            remaining.slice(1).map(function(it){ return renderItemUnit(it, priorityIds.indexOf(it.id)>=0); }).join("");
-        } else {
-          var n = remaining.length - 1;
-          suiteHtml = '<button class="voir-suite-link" id="voir-suite-btn">Voir la suite ('+n+' tâche'+(n>1?'s':'')+')</button>';
-        }
-      }
+      // Tout le reste du projet reste visible (plus de clic "Voir la suite" à faire) :
+      // seules les tâches hors du top 3 prioritaire sont grisées (classe "muted").
+      var suiteHtml = remaining.length > 1
+        ? '<div class="section-label">Ensuite</div>'+
+          remaining.slice(1).map(function(it){
+            var isPrio = priorityIds.indexOf(it.id)>=0;
+            return renderItemUnit(it, isPrio, !isPrio);
+          }).join("")
+        : '';
       bodyHtml = ''+
         suiteHtml+
         (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(function(it){ return renderItemUnit(it, false); }).join("") : '')+
@@ -2259,7 +2233,7 @@
     detailBarHtml+
     renderChatModal(p)+
     renderNoteModal()+
-    renderFAB()+
+    renderBottomTabBar()+
     '<div class="toast" id="toast"></div>';
   }
 
@@ -2304,7 +2278,7 @@
     renderItemBar(cat.id)+
     renderChatModal(p)+
     renderNoteModal()+
-    renderFAB()+
+    renderBottomTabBar()+
     '<div class="toast" id="toast"></div>';
   }
 
@@ -2455,7 +2429,7 @@
     '</div>';
   }
 
-  function renderItemRow(it, isPriority){
+  function renderItemRow(it, isPriority, isMuted){
     var noteOpen = noteOpenId === it.id;
     var noteCount = (it.notes && it.notes.length) || 0;
     var rowStyle = noteOpen ? 'border-radius:10px 10px 0 0;border-bottom-color:transparent;' : '';
@@ -2465,7 +2439,7 @@
       ? '<textarea class="step-title-input" data-item-title-input="'+it.id+'" rows="1">'+escapeHtml(it.title)+'</textarea>'
       : '<span class="step-title">'+escapeHtml(it.title)+'</span>';
     return ''+
-    '<div class="step-row '+(it.done?"done":"")+(isPriority?" priority":"")+'" style="'+rowStyle+'">'+
+    '<div class="step-row '+(it.done?"done":"")+(isPriority?" priority":"")+(isMuted?" muted":"")+'" style="'+rowStyle+'">'+
       '<button class="step-check '+(it.done?"checked":"")+'" data-toggle-item="'+it.id+'">'+(it.done?checkIcon():'')+'</button>'+
       titleHtml+
       '<button class="note-icon-btn'+(noteCount>0?' has-notes':'')+'" data-note-open="'+it.id+'" title="Notes">'+noteIcon()+badgeHtml+'</button>'+
@@ -2474,8 +2448,8 @@
     renderItemNotePanel(it);
   }
 
-  function renderItemUnit(it, isPriority){
-    return '<div class="step-item" data-item-id="'+it.id+'">'+renderItemRow(it, isPriority)+'</div>';
+  function renderItemUnit(it, isPriority, isMuted){
+    return '<div class="step-item" data-item-id="'+it.id+'">'+renderItemRow(it, isPriority, isMuted)+'</div>';
   }
 
   function renderLoadingOverlay(){
@@ -2521,6 +2495,7 @@
       '"categories":[{"title":"nom de la catégorie","items":["élément 1","élément 2","..."]}]}'+
       "\n\nRegroupe les actions par aspect logique et distinct du projet (par exemple pour un déménagement : achats & aménagement, administratif, organisation, budget — "+
       "mais adapte entièrement les catégories au type de projet réel, un voyage ou un anniversaire n'auront pas du tout les mêmes). "+
+      "Nomme chaque catégorie avec un verbe à l'infinitif + un sujet concis, 2 à 3 mots maximum (ex : \"Préparer le budget\", \"Organiser le transport\", \"Réserver le logement\"). "+
       "Si le projet est simple et n'a qu'un seul aspect, une seule catégorie suffit. Génère entre 1 et 5 catégories pertinentes, chacune avec 3 à 7 éléments concrets et courts (5 à 10 mots).\n"+
       "Ordonne les catégories et leurs éléments dans l'ordre logique où ils doivent être traités : le tout premier élément de la première catégorie doit être la prochaine action la plus utile à faire maintenant.";
 
@@ -2595,7 +2570,8 @@
       "Propose la suite la plus utile pour faire avancer ce projet"+(userText ? ", en orientant vers ce que l'utilisateur a écrit," : "")+", en tenant vraiment compte de ce qui est déjà fait :\n"+
       "- Si une catégorie existante a encore des éléments non faits ou manque visiblement d'un élément important, tu peux ajouter 1 à 3 nouveaux éléments à CETTE catégorie.\n"+
       "- Si toutes les catégories existantes sont terminées ou presque, propose plutôt une NOUVELLE catégorie pertinente avec ses propres éléments.\n"+
-      "- Ne propose jamais un élément qui recoupe une catégorie déjà entièrement terminée.\n\n"+
+      "- Ne propose jamais un élément qui recoupe une catégorie déjà entièrement terminée.\n"+
+      "- Si tu crées une nouvelle catégorie, nomme-la avec un verbe à l'infinitif + un sujet concis, 2 à 3 mots maximum (ex : \"Préparer le budget\").\n\n"+
       "Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, sous l'une de ces deux formes exactes :\n"+
       '{"type":"add_items","categoryId":"<id d\'une catégorie ci-dessus>","items":["élément 1","élément 2"]}\n'+
       '{"type":"new_category","category":{"title":"...","items":["élément 1","élément 2"]}}';
@@ -2958,40 +2934,36 @@
 
   /* ---------- global events ---------- */
 
-  function bindFABEvents(){
-    var fabBtn = document.getElementById('fab-menu-btn');
-    var fabOverlay = document.getElementById('fab-overlay');
-    var fabItemList = document.getElementById('fab-item-list');
-    var fabItemChat = document.getElementById('fab-item-chat');
+  function bindTabBarEvents(){
+    var homeBtn = document.getElementById('tabbar-home');
+    var listBtn = document.getElementById('tabbar-list');
+    var chatBtn = document.getElementById('tabbar-chat');
 
-    if(fabBtn) fabBtn.addEventListener('click', function(){
-      menuOpen = !menuOpen;
+    if(homeBtn) homeBtn.addEventListener('click', function(){
+      currentProjectId = null;
+      currentCategoryId = null;
+      taskListOpen = false;
+      tlSelectedProjects = [];
+      tlScopedToProject = false;
       render();
     });
 
-    if(fabOverlay) fabOverlay.addEventListener('click', function(){
-      menuOpen = false;
-      render();
-    });
-
-    if(fabItemList && !taskListOpen) fabItemList.addEventListener('click', function(){
+    if(listBtn && !taskListOpen) listBtn.addEventListener('click', function(){
       var filterProjectId = currentProjectId;
       currentProjectId = null;
       currentCategoryId = null;
-      showAllItems = false;
       taskListOpen = true;
-      if(filterProjectId) tlSelectedProjects = [filterProjectId];
-      menuOpen = false;
+      tlScopedToProject = !!filterProjectId;
+      tlSelectedProjects = filterProjectId ? [filterProjectId] : [];
       render();
     });
 
-    if(fabItemChat) fabItemChat.addEventListener('click', function(){
+    if(chatBtn) chatBtn.addEventListener('click', function(){
       if(currentProjectId){
         chatProjectOpen = true;
       } else {
         chatHomeOpen = true;
       }
-      menuOpen = false;
       render();
       setTimeout(function(){
         var id = currentProjectId ? 'chat-msgs-'+currentProjectId : 'chat-msgs-home';
@@ -3002,7 +2974,7 @@
   }
 
   function bindGlobalEvents(){
-    bindFABEvents();
+    bindTabBarEvents();
     var composeTextInput = document.getElementById("compose-text-input");
     if(composeTextInput){
       composeTextInput.addEventListener("input", function(e){ composeText = e.target.value; });
@@ -3014,7 +2986,7 @@
     if(composeSendBtn && !generating) composeSendBtn.addEventListener("click", function(){ performCreateFromIntention(); });
 
     var backBtn = document.getElementById("detail-back-btn");
-    if(backBtn) backBtn.addEventListener("click", function(){ currentProjectId = null; showAllItems = false; render(); });
+    if(backBtn) backBtn.addEventListener("click", function(){ currentProjectId = null; render(); });
 
     var deleteBtn = document.getElementById("detail-delete-btn");
     if(deleteBtn) deleteBtn.addEventListener("click", function(){
@@ -3125,7 +3097,6 @@
           setTimeout(function(){
             taskListOpen = false;
             currentProjectId = el.dataset.tlNavProj;
-            showAllItems = false;
             render();
           }, 200);
         }
@@ -3230,9 +3201,6 @@
       var p = findProject(currentProjectId);
       if(p) performSuggestForProject(p);
     });
-
-    var voirSuiteBtn = document.getElementById("voir-suite-btn");
-    if(voirSuiteBtn) voirSuiteBtn.addEventListener("click", function(){ showAllItems = true; render(); });
 
     // Chat modal
     var chatCloseBtn = document.getElementById("chat-close-btn");
