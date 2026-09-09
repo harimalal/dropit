@@ -481,13 +481,10 @@
   .drop-sheet-proj-chip.dropzone{background:var(--line);}
   .drop-sheet-proj-chip.active{border-color:var(--accent);}
   .drop-triage-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:30px 0;}
-  .drop-triage-row{padding:12px 0;border-bottom:1px solid var(--grid-line);}
-  .drop-triage-title{font-size:14px;color:var(--ink);margin-bottom:8px;}
-  .drop-triage-proj-row{display:flex;flex-wrap:wrap;gap:6px;}
-  .drop-triage-proj-chip{
-    width:32px;height:32px;border-radius:9px;border:none;background:var(--canvas);
-    font-size:16px;display:flex;align-items:center;justify-content:center;
+  .drop-triage-row{
+    display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--grid-line);
   }
+  .drop-triage-title{font-size:14px;color:var(--ink);line-height:1.35;}
   .chat-messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
   .chat-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:20px 0;}
   .chat-msg-user{align-self:flex-end;max-width:86%;}
@@ -2801,12 +2798,9 @@
     var count = dropZoneCount();
     return count
       ? state.dropZone.map(function(d){
-          var chips = state.projects.map(function(p){
-            return '<button class="drop-triage-proj-chip" data-drop-assign-id="'+d.id+'" data-drop-assign-proj="'+p.id+'" title="'+escapeHtml(p.title)+'">'+p.emoji+'</button>';
-          }).join('');
           return '<div class="drop-triage-row" data-drop-row="'+d.id+'">'+
+            '<button class="tl-check" data-drop-check="'+d.id+'" title="Fait"></button>'+
             '<div class="drop-triage-title">'+escapeHtml(d.title)+'</div>'+
-            '<div class="drop-triage-proj-row">'+chips+'</div>'+
           '</div>';
         }).join('')
       : '<div class="drop-triage-empty">Rien à trier — la Drop Zone est vide.</div>';
@@ -2866,18 +2860,31 @@
     showToast(toastMsg);
   }
 
-  function performDropAssign(dropId, projId){
-    var found = null, foundIdx = -1;
-    state.dropZone.forEach(function(d, i){ if(d.id === dropId){ found = d; foundIdx = i; } });
-    var p = findProject(projId);
-    if(!found || !p) return;
-    if(!p.categories.length) p.categories.push(makeCategory('À faire', []));
-    p.categories[0].items.push(makeItem(found.title));
-    p.updatedAt = nowIso();
+  function performDropCheck(dropId){
+    var foundIdx = -1;
+    state.dropZone.forEach(function(d, i){ if(d.id === dropId) foundIdx = i; });
+    if(foundIdx < 0) return;
     state.dropZone.splice(foundIdx, 1);
     persist();
-    render();
-    showToast('Assigné à '+p.emoji+' '+p.title);
+    // Mise à jour légère (pas de render() complet) : la ligne cochée disparaît
+    // directement, sans redessiner toute la fenêtre — même logique que pour la
+    // sélection de projet, pour ne jamais faire "sauter" la fenêtre en cours d'usage.
+    var row = document.querySelector('[data-drop-row="'+dropId+'"]');
+    if(row) row.remove();
+    if(!state.dropZone.length){
+      var body = document.getElementById('drop-sheet-body');
+      if(body) body.innerHTML = '<div class="drop-triage-empty">Rien à trier — la Drop Zone est vide.</div>';
+    }
+    var fab = document.getElementById('drop-fab');
+    if(fab){
+      var badge = fab.querySelector('.drop-fab-badge');
+      if(state.dropZone.length > 0){
+        if(badge) badge.textContent = state.dropZone.length;
+        else fab.insertAdjacentHTML('beforeend', '<span class="drop-fab-badge">'+state.dropZone.length+'</span>');
+      } else if(badge){
+        badge.remove();
+      }
+    }
   }
 
   function renderNoteModal(){
@@ -3615,9 +3622,9 @@
     if(dropInput) dropInput.addEventListener("keydown", function(e){
       if(e.key === "Enter"){ e.preventDefault(); performDropCapture(); }
     });
-    document.querySelectorAll("[data-drop-assign-proj]").forEach(function(el){
+    document.querySelectorAll("[data-drop-check]").forEach(function(el){
       el.addEventListener("click", function(){
-        performDropAssign(el.dataset.dropAssignId, el.dataset.dropAssignProj);
+        performDropCheck(el.dataset.dropCheck);
       });
     });
     var composeTextInput = document.getElementById("compose-text-input");
