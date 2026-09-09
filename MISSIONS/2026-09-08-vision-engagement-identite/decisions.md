@@ -104,6 +104,11 @@ Aucune itération : décision stable dès la première proposition.
 - **Bug corrigé** : sélectionner un projet de destination avant d'envoyer déclenchait un `render()` complet (reconstruction de tout le DOM de l'app), ce qui faisait visuellement "sauter" la fenêtre et perdait le texte en cours de frappe. Corrigé en ne mettant à jour que la classe `.active` du chip concerné directement en DOM, sans passer par `render()` — la fenêtre ne bouge plus pendant qu'on choisit une destination.
 - La fenêtre ne se ferme plus après l'envoi d'une idée (avant : fermeture systématique) — reste ouverte pour enchaîner plusieurs captures, cohérent avec le nouveau gabarit "fenêtre de chat".
 
+### Itération 4 — retrait de l'affectation par icônes (simplification du tri)
+- **Changement demandé** : les notes de la Drop Zone ne s'affichent plus avec une rangée d'émojis de projets à assigner — elles deviennent des tâches ordinaires (case à cocher + titre), et cocher une note la retire immédiatement et complètement de la liste.
+- Conséquence assumée : la Drop Zone n'est plus strictement un "sas obligatoire avant affectation à un projet" — elle devient aussi un endroit où noter et cocher directement des choses qui n'ont pas vocation à rejoindre un projet (ex: "Acheter du lait"). L'affectation à un projet depuis la Drop Zone n'existe plus comme fonctionnalité — si elle redevient nécessaire, ce sera un nouveau chantier, pas une simple réactivation.
+- Pas de champ "done" persistant sur les entrées de `state.dropZone` : cocher supprime l'entrée directement (`splice`), pas de trace conservée après coup.
+
 ## Chantier 5 — Statuts de vélocité
 
 ### Décision — mode de calcul
