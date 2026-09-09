@@ -205,6 +205,25 @@ Statut global : chantier noté pour mémoire, non planifié dans les phases 1 à
 
 ---
 
+## Chantier bonus — Accordéon catégories (une seule fenêtre par projet)
+
+Proposition de l'utilisateur, hors des 9 chantiers du cadrage initial : pour un projet multi-catégories, remplacer la navigation vers un écran séparé par catégorie par un dépliage inline dans l'écran du projet.
+
+| Option | Description | Statut |
+|---|---|---|
+| A | Garder l'écran séparé par catégorie (`renderCategoryDetail`), navigation classique | Écartée — c'est justement ce qu'on retire |
+| B | Accordéon inline : la carte de catégorie se déplie sur place, une seule fenêtre pour tout le projet | **Retenue** |
+
+Décisions d'implémentation :
+- Grille 2 colonnes → liste pleine largeur (`.category-accordion`), condition posée par l'utilisateur ("la carte du projet prend toute la largeur").
+- Une seule catégorie ouverte à la fois — état scalaire (`expandedCategoryId`), pas un ensemble — ouvrir une catégorie referme implicitement celle qui était ouverte. Pas demandé explicitement mais découle naturellement du choix d'un état scalaire plutôt qu'un tableau ; à revoir si le besoin de comparer plusieurs catégories ouvertes en même temps se manifeste.
+- Animation d'entrée légère (fondu + glissement, ~220ms) au dépliage — "léger effet fluide" demandé.
+- `renderCategoryDetail`, `currentCategoryId` et la route de navigation associée (popstate, écran séparé) supprimés entièrement plutôt que laissés en code mort, puisque plus aucun chemin ne les atteint.
+- Point technique non demandé mais nécessaire : la position de défilement de l'écran projet doit être explicitement restaurée après chaque clic, sinon le `render()` complet (déjà le mécanisme de rendu de toute l'app) ramène l'écran en haut à chaque ouverture/fermeture de catégorie — corrigé avant de pousser, pas après un signalement.
+- La barre de saisie fixe en bas d'écran cible automatiquement la catégorie dépliée ; repliée, elle sert à créer une nouvelle catégorie — reprend le comportement déjà existant (`renderItemBar`/`renderProjectBar`), juste déclenché par l'état d'accordéon plutôt que par la navigation.
+
+---
+
 ## Repères de méthode (décisions transverses, valables sur tous les chantiers)
 
 - Ne jamais faire calculer un comptage, un statut ou une agrégation par le LLM — toujours un calcul déterministe côté application (origine : bug de comptage observé dans l'audit).
