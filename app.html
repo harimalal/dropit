@@ -197,7 +197,16 @@
     background:var(--current-proj-next, var(--accent-soft));border:none;border-radius:var(--radius-lg);padding:16px;
     display:flex;flex-direction:column;gap:8px;margin-bottom:14px;box-shadow:var(--shadow-card);
   }
+  .next-action-top-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
   .next-action-label{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--current-proj-solid, var(--accent));font-weight:700;}
+  /* Flèche discrète pour parcourir les prochaines tâches (jusqu'à 3) sans les valider —
+     tournée à -90° puisque chevronIcon() pointe vers le bas par défaut ailleurs dans l'app. */
+  .next-action-peek-btn{
+    flex-shrink:0;border:none;background:none;color:var(--current-proj-solid, var(--accent));
+    display:flex;align-items:center;padding:2px;opacity:.7;
+  }
+  .next-action-peek-btn:hover{opacity:1;}
+  .next-action-peek-btn .icon{width:15px;height:15px;transform:rotate(-90deg);}
   .next-action-title{font-size:17px;font-weight:700;color:var(--ink);line-height:1.35;}
   .next-action-row{display:flex;gap:10px;}
   .next-action-row .btn-primary{
@@ -237,7 +246,7 @@
   .category-card-chevron .icon{width:14px;height:14px;}
   .category-card.expanded .category-card-chevron{transform:rotate(180deg);}
   .category-card.done{opacity:.6;}
-  .category-expanded{padding:0 14px 14px;animation:categoryExpand .22s ease-out;}
+  .category-expanded{padding:0 14px 14px;animation:categoryExpand .45s ease-out;}
   @keyframes categoryExpand{
     0%{opacity:0;transform:translateY(-6px);}
     100%{opacity:1;transform:translateY(0);}
@@ -276,19 +285,6 @@
     line-height:1.35;resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-word;
   }
   .step-title-input:focus{outline:none;}
-  /* PRIORITÉS (page projet) */
-  .priority-block{margin-bottom:12px;}
-  .priority-block-label{
-    font-family:var(--font-mono);font-size:10px;letter-spacing:0.05em;text-transform:uppercase;
-    color:var(--current-proj-solid, var(--accent));font-weight:700;margin-bottom:8px;
-  }
-  .priority-block-item{
-    display:flex;align-items:center;justify-content:space-between;gap:8px;
-    background:var(--current-proj-priority, var(--accent-soft));border:none;border-radius:10px;
-    padding:9px 12px;margin-bottom:6px;font-size:13.5px;color:var(--ink);
-  }
-  .priority-block-title{min-width:0;}
-  .priority-block-cat{font-size:11px;color:var(--current-proj-solid, var(--accent));flex-shrink:0;}
   .step-remove{border:none;background:none;color:var(--ink-faint);font-size:16px;line-height:1;padding:2px 4px;flex-shrink:0;}
   .step-remove:hover{color:#9C4632;}
 
@@ -523,8 +519,11 @@
   .chat-bubble-user{padding:10px 14px;border-radius:16px 16px 4px 16px;font-size:13.5px;line-height:1.5;background:var(--accent);color:#fff;}
   .chat-bubble-ai{padding:11px 14px;border-radius:16px 16px 16px 4px;font-size:13.5px;line-height:1.6;background:var(--canvas);border:1px solid var(--line);color:var(--ink);}
   .chat-ai-footer{display:flex;align-items:center;gap:4px;margin-top:4px;}
-  .chat-copy-btn{border:none;background:none;padding:2px 6px;color:var(--ink-faint);border-radius:5px;font-size:11px;font-family:var(--font-mono);}
-  .chat-copy-btn:hover{background:var(--accent-soft);color:var(--accent);}
+  .chat-copy-btn{border:none;background:none;padding:2px 6px;border-radius:5px;font-size:11px;font-family:var(--font-mono);}
+  .chat-copy-btn.copy-variant{color:var(--proj-azur-solid);}
+  .chat-copy-btn.copy-variant:hover{background:var(--proj-azur-badge);}
+  .chat-copy-btn.note-variant{color:var(--proj-ambre-solid);}
+  .chat-copy-btn.note-variant:hover{background:var(--proj-ambre-badge);}
   .chat-loading{padding:8px 16px;font-size:13px;color:var(--ink-faint);display:flex;align-items:center;gap:8px;}
   .chat-input-row{border-top:1px solid var(--line);display:flex;background:var(--canvas-card);}
   .chat-text-input{flex:1;border:none;background:transparent;padding:13px 16px;font-size:14px;color:var(--ink);outline:none;}
@@ -1578,15 +1577,8 @@
     if(days < 7) return "ralentit";
     return "pause";
   }
-  function nextActionItem(p){
-    for(var ci=0; ci<p.categories.length; ci++){
-      var cat = p.categories[ci];
-      for(var ii=0; ii<cat.items.length; ii++){
-        if(!cat.items[ii].done) return {item:cat.items[ii], category:cat};
-      }
-    }
-    return null;
-  }
+  var nextActionPreviewIndex = 0; // position dans priorityItems(p) affichée par "Prochaine action"
+  var nextActionPreviewProjectId = null;
   function priorityItems(p){
     var result = [];
     for(var ci=0; ci<p.categories.length && result.length<3; ci++){
@@ -2128,7 +2120,7 @@
         if(m.role==='user') return '<div class="chat-msg-user"><div class="chat-bubble-user">'+escapeHtml(m.text)+'</div></div>';
         return '<div class="chat-msg-ai">'+
           '<div class="chat-bubble-ai">'+parseAiText(m.text)+'</div>'+
-          '<div class="chat-ai-footer"><button class="chat-copy-btn" data-copy-idx="'+idx+'" data-copy-proj="home">'+copyIcon()+' copier</button></div>'+
+          '<div class="chat-ai-footer"><button class="chat-copy-btn copy-variant" data-copy-idx="'+idx+'" data-copy-proj="home">'+copyIcon()+' copier</button></div>'+
         '</div>';
       }).join('');
     }
@@ -2632,12 +2624,18 @@
   function renderDetail(p){
     var pct = progressPct(p);
     var status = activityStatus(p);
-    var next = nextActionItem(p);
     var accompli = isAccompli(p);
     var items2 = allItems(p);
     var multiCategory = p.categories.length > 1;
     var priorityList = accompli ? [] : priorityItems(p);
     var priorityIds = priorityList.map(function(x){ return x.item.id; });
+
+    // Carrousel "Prochaine action" : parcourt le haut de la file de priorités (jusqu'à 3)
+    // au lieu de n'afficher que la toute première. Index remis à zéro dès qu'on change
+    // de projet, pour ne jamais rester bloqué sur une position obsolète.
+    if(nextActionPreviewProjectId !== p.id){ nextActionPreviewProjectId = p.id; nextActionPreviewIndex = 0; }
+    if(nextActionPreviewIndex >= priorityList.length) nextActionPreviewIndex = 0;
+    var next = priorityList.length ? priorityList[nextActionPreviewIndex] : null;
 
     var topBarHtml = ''+
     '<div class="top-bar">'+
@@ -2668,26 +2666,19 @@
         '<div class="stats">'+items2.length+' étape'+(items2.length!==1?"s":"")+' accomplie'+(items2.length!==1?"s":"")+'</div>'+
       '</div>';
     } else if(next){
+      var hasMore = priorityList.length > 1;
       mainActionHtml = ''+
       '<div class="next-action-card">'+
-        '<div class="next-action-label">Prochaine action'+(multiCategory?' · '+escapeHtml(next.category.title):'')+'</div>'+
+        '<div class="next-action-top-row">'+
+          '<div class="next-action-label">Prochaine action'+(multiCategory?' · '+escapeHtml(next.category.title):'')+'</div>'+
+          (hasMore ? '<button class="next-action-peek-btn" id="next-action-peek-btn" title="Voir la suivante">'+chevronIcon()+'</button>' : '')+
+        '</div>'+
         '<div class="next-action-title">'+escapeHtml(next.item.title)+'</div>'+
         '<div class="next-action-row">'+
           '<button class="btn btn-primary" data-toggle-item="'+next.item.id+'">'+checkIcon()+' &nbsp;C\'est fait</button>'+
         '</div>'+
       '</div>';
     }
-
-    var priorityBlockHtml = priorityList.length ? ''+
-      '<div class="priority-block">'+
-        '<div class="priority-block-label">Priorités</div>'+
-        priorityList.map(function(x){
-          return '<div class="priority-block-item">'+
-            '<span class="priority-block-title">'+escapeHtml(x.item.title)+'</span>'+
-            (multiCategory ? '<span class="priority-block-cat">'+escapeHtml(x.category.title)+'</span>' : '')+
-          '</div>';
-        }).join('')+
-      '</div>' : '';
 
     var bodyHtml = "";
     var detailBarHtml = "";
@@ -2736,7 +2727,6 @@
       '<div class="detail-inner">'+
         headerHtml+
         mainActionHtml+
-        priorityBlockHtml+
         bodyHtml+
       '</div>'+
     '</div>'+
@@ -3037,8 +3027,8 @@
         return '<div class="chat-msg-ai">'+
           '<div class="chat-bubble-ai">'+parseAiText(m.text)+'</div>'+
           '<div class="chat-ai-footer">'+
-            '<button class="chat-copy-btn" data-copy-idx="'+idx+'" data-copy-proj="'+escapeHtml(p.id)+'" title="Copier">'+copyIcon()+' copier</button>'+
-            '<button class="chat-copy-btn" data-save-note-idx="'+idx+'" data-save-note-proj="'+escapeHtml(p.id)+'" title="Enregistrer comme note">'+bookmarkIcon()+' note</button>'+
+            '<button class="chat-copy-btn copy-variant" data-copy-idx="'+idx+'" data-copy-proj="'+escapeHtml(p.id)+'" title="Copier">'+copyIcon()+' copier</button>'+
+            '<button class="chat-copy-btn note-variant" data-save-note-idx="'+idx+'" data-save-note-proj="'+escapeHtml(p.id)+'" title="Enregistrer comme note">'+bookmarkIcon()+' note</button>'+
           '</div>'+
         '</div>';
       }).join('');
@@ -3364,7 +3354,7 @@
     var p = findProject(projectId);
     if(!p || !text.trim()) return;
     if(!p.projectNotes) p.projectNotes = [];
-    var catId = expandedCategoryId || null;
+    var catId = null;
     var firstLine = '';
     var lines = text.split('\n');
     for(var i=0; i<lines.length; i++){
@@ -3915,9 +3905,20 @@
         var p = findProject(currentProjectId);
         if(!p) return;
         var found = findItemAnywhere(p, el.dataset.toggleItem);
-        if(found){ found.item.done = !found.item.done; p.updatedAt = nowIso(); persist(); render(); }
+        if(found){ found.item.done = !found.item.done; p.updatedAt = nowIso(); nextActionPreviewIndex = 0; persist(); render(); }
       });
     });
+    var nextActionPeekBtn = document.getElementById("next-action-peek-btn");
+    if(nextActionPeekBtn){
+      nextActionPeekBtn.addEventListener("click", function(){
+        var p = findProject(currentProjectId);
+        if(!p) return;
+        var list = priorityItems(p);
+        if(!list.length) return;
+        nextActionPreviewIndex = (nextActionPreviewIndex + 1) % list.length;
+        render();
+      });
+    }
     document.querySelectorAll("[data-remove-item]").forEach(function(el){
       el.addEventListener("click", function(){
         var p = findProject(currentProjectId);
