@@ -848,7 +848,7 @@
   var projectMenuOpen = false;
   var projectMenuMode = "main"; // "main" | "due"
 
-  /* --- Calendrier --- */
+  /* --- Aujourd'hui (ex-Calendrier) --- */
   var calendarOpen = false;
   var calNow = new Date();
   var calViewYear = calNow.getFullYear();
@@ -1717,8 +1717,8 @@
         listIcon()+'<span class="tabbar-item-label">Liste</span></button>'+
       '<button class="tabbar-item" id="tabbar-chat" title="Chat IA">'+
         chatIcon()+'<span class="tabbar-item-label">Chat IA</span></button>'+
-      '<button class="tabbar-item'+(onCal?' active':'')+'" id="tabbar-cal" title="Calendrier">'+
-        calendarIcon()+'<span class="tabbar-item-label">Calendrier</span></button>'+
+      '<button class="tabbar-item'+(onCal?' active':'')+'" id="tabbar-cal" title="Aujourd\'hui">'+
+        calendarIcon()+'<span class="tabbar-item-label">Aujourd\'hui</span></button>'+
     '</div>';
   }
 
@@ -2045,7 +2045,7 @@
         '<div class="chat-modal-header">'+
           '<div>'+
             '<div class="chat-modal-title">'+chatIcon()+' Vue d\'ensemble</div>'+
-            '<div class="chat-modal-sub">claude-haiku-4-5 · '+state.projects.length+' projet'+(state.projects.length>1?'s':'')+'</div>'+
+            '<div class="chat-modal-sub">'+state.projects.length+' projet'+(state.projects.length>1?'s':'')+'</div>'+
           '</div>'+
           '<button class="chat-close-btn" id="chat-home-close-btn">×</button>'+
         '</div>'+
@@ -2283,11 +2283,7 @@
     if(tlScopedToProject){
       countLabel = tasks.length + ' tâche' + (tasks.length !== 1 ? 's' : '');
     } else {
-      var totalUndone = state.projects.reduce(function(s,p){
-        return s + allItems(p).filter(function(it){return !it.done;}).length;
-      }, 0);
-      countLabel = tasks.length + ' prioritaire' + (tasks.length !== 1 ? 's' : '') +
-        (totalUndone > tasks.length ? ' · ' + totalUndone + ' total' : '');
+      countLabel = tasks.length + ' prioritaire' + (tasks.length !== 1 ? 's' : '');
     }
 
     // Liste ouverte depuis un projet précis : aucune raison de laisser filtrer/voir
@@ -2451,7 +2447,7 @@
     return '<div class="calendar-screen" id="calendar-screen">'+
       '<div class="cal-top-bar">'+
         '<button class="top-back-btn" id="cal-back-btn" title="Retour">'+backIcon()+'</button>'+
-        '<span class="cal-top-title">Calendrier</span>'+
+        '<span class="cal-top-title">Aujourd\'hui</span>'+
       '</div>'+
       renderCalendarGrid()+
       '<div class="cal-day-list-label">'+selLabel+' · '+tasks.length+' tâche'+(tasks.length!==1?'s':'')+'</div>'+
@@ -2787,7 +2783,6 @@
         '<div class="chat-modal-header">'+
           '<div>'+
             '<div class="chat-modal-title">'+chatIcon()+' '+escapeHtml(p.title)+'</div>'+
-            '<div class="chat-modal-sub">claude-haiku-4-5</div>'+
           '</div>'+
           '<button class="chat-close-btn" id="chat-close-btn">×</button>'+
         '</div>'+
