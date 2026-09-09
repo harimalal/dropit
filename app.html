@@ -435,7 +435,15 @@
   /* Bouton flottant Drop it — accès unique à la capture rapide et à la Drop Zone,
      visible sur tous les écrans, au-dessus de la barre de navigation. */
   .drop-fab{
-    position:fixed;right:16px;bottom:calc(var(--tabbar-h) + 14px);z-index:40;
+    position:fixed;right:16px;
+    /* 59px = hauteur des barres de saisie fixes (.compose-bar/.tl-compose-bar/.detail-fixed-bar),
+       toutes ancrées sur --tabbar-h — sans cette marge le bouton flottant se superpose
+       à leur contenu au lieu de flotter au-dessus. */
+    bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 59px + 14px);
+    /* 61 : au-dessus de .tasklist-screen (60, l'écran Liste plein écran) pour rester
+       visible sur les 4 écrans de nav, mais sous les vraies fenêtres modales
+       (chat 50, notes 55, menu projet/compte 70) où il n'a rien à faire. */
+    z-index:61;
     display:flex;align-items:center;gap:5px;padding:11px 18px;border:none;border-radius:999px;
     background:#fff;box-shadow:0 4px 16px rgba(43,36,32,0.22);
     font-size:13px;font-weight:700;letter-spacing:0.02em;color:var(--ink);
@@ -447,7 +455,7 @@
     box-shadow:0 0 0 2px #fff;
   }
 
-  .drop-sheet{position:fixed;inset:0;z-index:51;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
+  .drop-sheet{position:fixed;inset:0;z-index:62;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
   .drop-sheet-box{width:100%;max-width:620px;max-height:78vh;background:var(--canvas-card);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 32px rgba(43,36,32,0.18);}
   .drop-sheet-header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
   .drop-sheet-title{font-size:19px;font-weight:800;color:var(--ink);}
