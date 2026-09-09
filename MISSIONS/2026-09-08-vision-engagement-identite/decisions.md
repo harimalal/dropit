@@ -304,6 +304,25 @@ Vérifié en navigateur réel (Playwright) : statut/échéance absents de l'écr
 
 ---
 
+## Chantier bonus 4 — Position du carrousel et taille des coches
+
+Deux micro-retouches ponctuelles sur la même carte "Prochaine action" et les listes de tâches.
+
+### Position du bouton carrousel
+| Option | Description | Statut |
+|---|---|---|
+| A | Garder le rond flottant à cheval sur le bord haut, centré horizontalement (chantier bonus 3) | Écartée — l'utilisateur le veut au milieu à droite |
+| B | Rond flottant à cheval sur le bord droit de l'encart, centré verticalement | **Retenue** |
+
+Le padding droit de `.next-action-card` a été augmenté (16px → 30px) pour que le titre/badge centrés ne passent pas sous le bouton ; le padding haut et la marge supérieure, qui n'étaient là que pour dégager de la place au-dessus du bouton quand il était en haut, ont été ramenés à leur valeur normale.
+
+### Taille des coches de tâches
+Demande directe, sans option alternative : rond de coche (`.step-check`, utilisé par `renderItemUnit` pour toutes les tâches de catégorie) réduit de 22px à 18px, icône de coche interne réduite en proportion (12px → 10px).
+
+Vérifié en navigateur réel (Playwright) : centre vertical du bouton carrousel aligné sur le centre vertical de l'encart, bouton à cheval sur le bord droit ; coches mesurées à 18×18px.
+
+---
+
 ## Repères de méthode (décisions transverses, valables sur tous les chantiers)
 
 - Ne jamais faire calculer un comptage, un statut ou une agrégation par le LLM — toujours un calcul déterministe côté application (origine : bug de comptage observé dans l'audit).
