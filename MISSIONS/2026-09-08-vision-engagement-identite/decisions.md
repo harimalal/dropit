@@ -96,6 +96,14 @@ Aucune itération : décision stable dès la première proposition.
 - **Badge** : compteur numéroté sur le bouton flottant lui-même (comme un badge de notification d'icône d'appli), toujours visible sans avoir à ouvrir la fenêtre — répond au risque déjà identifié qu'un inbox non visible finit par être oublié.
 - **Modèle de données retenu** : `state.dropZone`, tableau séparé de `state.projects` (pas un "projet système" caché dedans) — évite tout risque de fuite dans le treemap d'accueil, les filtres de projet ou les résumés IA, qui itèrent déjà sur `state.projects` à une dizaine d'endroits du code.
 
+### Itération 3 — retouches finales de la fenêtre (post-implémentation)
+- Bouton recentré horizontalement (était aligné à droite) — "au milieu de la ligne".
+- Titre unifié en "Tu es dans la Drop Zone" pour toute la fenêtre — écarte la distinction "Drop it" (capture) / "Drop Zone" (tri) de l'itération précédente, jugée incohérente.
+- **Fusion capture + tri en une seule fenêtre permanente** : la liste des notes en attente s'affiche directement dans le corps de la fenêtre, plus de lien "N notes à trier" à cliquer pour la révéler — écarté comme un clic superflu une fois qu'on a la place de tout montrer.
+- Gabarit aligné sur `.chat-modal-box` (72vh fixe, liste scrollable en corps, saisie fixée en bas) plutôt qu'une hauteur variable selon le contenu (`max-height`) — "aussi grand que la fenêtre chat".
+- **Bug corrigé** : sélectionner un projet de destination avant d'envoyer déclenchait un `render()` complet (reconstruction de tout le DOM de l'app), ce qui faisait visuellement "sauter" la fenêtre et perdait le texte en cours de frappe. Corrigé en ne mettant à jour que la classe `.active` du chip concerné directement en DOM, sans passer par `render()` — la fenêtre ne bouge plus pendant qu'on choisit une destination.
+- La fenêtre ne se ferme plus après l'envoi d'une idée (avant : fermeture systématique) — reste ouverte pour enchaîner plusieurs captures, cohérent avec le nouveau gabarit "fenêtre de chat".
+
 ## Chantier 5 — Statuts de vélocité
 
 ### Décision — mode de calcul
