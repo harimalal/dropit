@@ -215,17 +215,39 @@
     font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;
     color:var(--ink-faint);margin:20px 0 10px;
   }
-  .category-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
-  .category-card{
-    background:var(--current-proj-card-faint, var(--canvas-card));border:none;border-radius:var(--radius-lg);padding:14px;
-    display:flex;flex-direction:column;gap:8px;text-align:left;box-shadow:var(--shadow-card);
+  /* Accordéon des catégories — une seule fenêtre pour parcourir un projet : la carte
+     de catégorie prend toute la largeur, un clic déplie ses tâches juste en dessous. */
+  .category-accordion{display:flex;flex-direction:column;gap:10px;}
+  .category-accordion-item{
+    background:var(--current-proj-card-faint, var(--canvas-card));border-radius:var(--radius-lg);
+    overflow:hidden;box-shadow:var(--shadow-card);
   }
-  .category-card-title{font-size:14px;font-weight:700;color:var(--ink);
-    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;}
-  .category-progress-track{height:4px;border-radius:3px;background:rgba(43,36,32,.08);overflow:hidden;}
+  .category-card{
+    width:100%;background:none;border:none;padding:14px;
+    display:flex;align-items:center;gap:10px;text-align:left;
+  }
+  .category-card-title{
+    flex:1;min-width:0;font-size:14px;font-weight:700;color:var(--ink);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .category-progress-track{width:56px;flex-shrink:0;height:4px;border-radius:3px;background:rgba(43,36,32,.08);overflow:hidden;}
   .category-progress-fill{height:100%;border-radius:3px;background:var(--current-proj-solid, var(--accent));}
-  .category-card-meta{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);}
+  .category-card-meta{flex-shrink:0;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);}
+  .category-card-chevron{flex-shrink:0;display:flex;color:var(--ink-faint);transition:transform .2s ease;}
+  .category-card-chevron .icon{width:14px;height:14px;}
+  .category-card.expanded .category-card-chevron{transform:rotate(180deg);}
   .category-card.done{opacity:.6;}
+  .category-expanded{padding:0 14px 14px;animation:categoryExpand .22s ease-out;}
+  @keyframes categoryExpand{
+    0%{opacity:0;transform:translateY(-6px);}
+    100%{opacity:1;transform:translateY(0);}
+  }
+  .category-delete-inline{
+    display:flex;align-items:center;gap:6px;margin-top:10px;padding:8px 0;border:none;background:none;
+    font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);
+  }
+  .category-delete-inline:hover{color:#9C4632;}
+  .category-delete-inline .icon{width:13px;height:13px;}
   .add-category-link{
     display:inline-block;margin-top:10px;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);
     background:none;border:none;padding:4px 0;
@@ -1265,7 +1287,7 @@
     }
     saveSession(null);
     state = {projects: [], dropZone: []};
-    currentProjectId = null; currentCategoryId = null;
+    currentProjectId = null; expandedCategoryId = null;
     taskListOpen = false; accountSheetOpen = false; projectMenuOpen = false;
     chatState = {}; tlSelectedProjects = []; tlScopedToProject = false;
     tlCategoryFilter = null; tlPriorityFilter = 'all';
@@ -1356,7 +1378,7 @@
   var state = {projects: [], dropZone: []}; // dropZone : idées/tâches capturées sans projet choisi, à trier
   var dropSheetOpen = false;
   var currentProjectId = null; // null = home
-  var currentCategoryId = null; // set when viewing a single category's checklist
+  var expandedCategoryId = null; // catégorie dépliée en accordéon dans l'écran projet (multi-catégories)
   var generating = false;
   var composeText = "";
   var chatState = {};
@@ -1762,6 +1784,7 @@
 
   function backIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M12 4l-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function nextMonthIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M8 4l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+  function chevronIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function trashIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function checkIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 10.5l3.5 3.5L16 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function sendIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M3 10l14-7-5 14-2.5-5.5L3 10z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/></svg>'; }
@@ -1814,7 +1837,6 @@
       }
       return;
     }
-    if(currentCategoryId){ currentCategoryId = null; render(); return; }
     if(currentProjectId){ currentProjectId = null; projectMenuOpen = false; render(); return; }
     // déjà à l'accueil : rien à faire côté app, le navigateur reprend la main normalement
   }
@@ -1829,11 +1851,7 @@
       // une vraie ouverture (pas à chaque coche de tâche ou changement de filtre).
       var tlWasOpen = !!document.getElementById('tasklist-screen');
       var project = currentProjectId ? findProject(currentProjectId) : null;
-      if(project && currentCategoryId){
-        var category = findCategory(project, currentCategoryId);
-        if(category){ app.innerHTML = renderCategoryDetail(project, category); }
-        else { currentCategoryId = null; app.innerHTML = renderDetail(project); }
-      } else if(project){
+      if(project){
         app.innerHTML = renderDetail(project);
       } else {
         app.innerHTML = renderHome();
@@ -2694,12 +2712,19 @@
     } else if(!accompli && multiCategory){
       bodyHtml = ''+
         '<div class="section-label">Catégories</div>'+
-        '<div class="category-grid">'+ p.categories.map(renderCategoryCard).join("") +'</div>'+
+        '<div class="category-accordion">'+
+          p.categories.map(function(cat){ return renderCategoryAccordionItem(p, cat, priorityIds); }).join("")+
+        '</div>'+
         renderProjectNotes(p, null);
-      detailBarHtml = renderProjectBar(p);
+      // La catégorie dépliée devient la cible de la barre de saisie (ajouter une tâche
+      // dedans) ; repliée, la barre sert à créer une nouvelle catégorie.
+      var openCat = expandedCategoryId ? findCategory(p, expandedCategoryId) : null;
+      detailBarHtml = openCat ? renderItemBar(openCat.id) : renderProjectBar(p);
     } else if(accompli && p.categories.length){
       bodyHtml = multiCategory
-        ? '<div class="section-label">Catégories</div><div class="category-grid">'+p.categories.map(renderCategoryCard).join("")+'</div>'
+        ? '<div class="section-label">Catégories</div><div class="category-accordion">'+
+            p.categories.map(function(cat){ return renderCategoryAccordionItem(p, cat, []); }).join("")+
+          '</div>'
         : (p.categories[0]||{items:[]}).items.map(function(it){ return renderItemUnit(it, false); }).join("");
     }
 
@@ -2723,49 +2748,37 @@
     '<div class="toast" id="toast"></div>';
   }
 
-  function renderCategoryCard(cat){
+  /* Catégorie en accordéon : une seule fenêtre pour parcourir un projet, plus de
+     navigation vers un écran séparé. Le clic sur la carte déplie/replie les tâches
+     juste en dessous, avec une légère animation d'entrée (voir .category-expanded). */
+  function renderCategoryAccordionItem(p, cat, priorityIds){
     var total = cat.items.length;
     var done = cat.items.filter(function(it){return it.done;}).length;
     var pct = total ? Math.round((done/total)*100) : 0;
     var catDone = total>0 && done===total;
-    return ''+
-    '<button class="category-card '+(catDone?"done":"")+'" data-open-category="'+cat.id+'">'+
+    var isOpen = expandedCategoryId === cat.id;
+
+    var cardHtml = ''+
+    '<button class="category-card '+(catDone?"done":"")+(isOpen?" expanded":"")+'" data-open-category="'+cat.id+'">'+
       '<div class="category-card-title">'+escapeHtml(cat.title)+'</div>'+
       '<div class="category-progress-track"><div class="category-progress-fill" style="width:'+pct+'%;"></div></div>'+
       '<div class="category-card-meta">'+done+'/'+total+'</div>'+
+      '<span class="category-card-chevron">'+chevronIcon()+'</span>'+
     '</button>';
-  }
 
-  function renderCategoryDetail(p, cat){
-    var remaining = cat.items.filter(function(it){ return !it.done; });
-    var completed = cat.items.filter(function(it){ return it.done; });
-    var priorityIds = priorityItems(p).map(function(x){ return x.item.id; });
-    var topBarHtml = ''+
-    '<div class="top-bar">'+
-      '<button class="top-back-btn" id="category-back-btn" title="Retour au projet">'+backIcon()+'</button>'+
-      '<button class="top-delete-btn" id="category-delete-btn" title="Supprimer cette catégorie">'+trashIcon()+'</button>'+
-    '</div>';
-    var headerHtml = ''+
-    '<div class="detail-header">'+
-      '<div class="detail-title">'+escapeHtml(cat.title)+'</div>'+
-    '</div>';
-    var listHtml =
-      remaining.map(function(it){ return renderItemUnit(it, priorityIds.indexOf(it.id)>=0); }).join("")+
-      (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(function(it){ return renderItemUnit(it, false); }).join("") : '')+
-      renderProjectNotes(p, cat.id);
+    var expandedHtml = '';
+    if(isOpen){
+      var remaining = cat.items.filter(function(it){ return !it.done; });
+      var completed = cat.items.filter(function(it){ return it.done; });
+      expandedHtml = '<div class="category-expanded">'+
+        remaining.map(function(it){ return renderItemUnit(it, priorityIds.indexOf(it.id)>=0); }).join("")+
+        (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(function(it){ return renderItemUnit(it, false); }).join("") : '')+
+        renderProjectNotes(p, cat.id)+
+        '<button class="category-delete-inline" data-delete-category="'+cat.id+'">'+trashIcon()+' Supprimer cette catégorie</button>'+
+      '</div>';
+    }
 
-    var pcCat = projectColorVars(p.id);
-    var scrollStyleCat = 'style="--current-proj-card:'+pcCat.card+';--current-proj-badge:'+pcCat.badge+';--current-proj-solid:'+pcCat.solid+';--current-proj-priority:'+pcCat.priority+';"';
-    return ''+
-    topBarHtml+
-    '<div class="detail-scroll" id="detail-scroll" '+scrollStyleCat+'>'+
-      '<div class="detail-inner">'+ headerHtml + listHtml +'</div>'+
-    '</div>'+
-    renderItemBar(cat.id)+
-    renderChatModal(p)+
-    renderNoteModal()+
-    renderBottomTabBar()+
-    '<div class="toast" id="toast"></div>';
+    return '<div class="category-accordion-item">'+cardHtml+expandedHtml+'</div>';
   }
 
   function noteIcon(){
@@ -3351,7 +3364,7 @@
     var p = findProject(projectId);
     if(!p || !text.trim()) return;
     if(!p.projectNotes) p.projectNotes = [];
-    var catId = currentCategoryId || null;
+    var catId = expandedCategoryId || null;
     var firstLine = '';
     var lines = text.split('\n');
     for(var i=0; i<lines.length; i++){
@@ -3573,7 +3586,7 @@
 
     if(homeBtn) homeBtn.addEventListener('click', function(){
       currentProjectId = null;
-      currentCategoryId = null;
+      expandedCategoryId = null;
       taskListOpen = false;
       tlSelectedProjects = [];
       tlScopedToProject = false;
@@ -3585,7 +3598,7 @@
     if(listBtn && !taskListOpen) listBtn.addEventListener('click', function(){
       var filterProjectId = currentProjectId;
       currentProjectId = null;
-      currentCategoryId = null;
+      expandedCategoryId = null;
       calendarOpen = false;
       taskListOpen = true;
       tlScopedToProject = !!filterProjectId;
@@ -3612,7 +3625,7 @@
 
     if(calBtn && !calendarOpen) calBtn.addEventListener('click', function(){
       currentProjectId = null;
-      currentCategoryId = null;
+      expandedCategoryId = null;
       taskListOpen = false;
       calendarOpen = true;
       calSelectedDate = todayDateStr();
@@ -3750,21 +3763,30 @@
       }
     });
 
+    // Accordéon catégories : un clic déplie/replie, en gardant la position de
+    // défilement (sinon le render() complet renvoie l'écran en haut à chaque clic).
     document.querySelectorAll("[data-open-category]").forEach(function(el){
-      el.addEventListener("click", function(){ currentCategoryId = el.dataset.openCategory; pushNavEntry(); render(); });
+      el.addEventListener("click", function(){
+        var catId = el.dataset.openCategory;
+        var scroller = document.getElementById('detail-scroll');
+        var scrollTop = scroller ? scroller.scrollTop : 0;
+        expandedCategoryId = (expandedCategoryId === catId) ? null : catId;
+        render();
+        var scroller2 = document.getElementById('detail-scroll');
+        if(scroller2) scroller2.scrollTop = scrollTop;
+      });
     });
-    var categoryBackBtn = document.getElementById("category-back-btn");
-    if(categoryBackBtn) categoryBackBtn.addEventListener("click", function(){ history.back(); });
-    var categoryDeleteBtn = document.getElementById("category-delete-btn");
-    if(categoryDeleteBtn) categoryDeleteBtn.addEventListener("click", function(){
-      var p = findProject(currentProjectId);
-      var cat = p ? findCategory(p, currentCategoryId) : null;
-      if(p && cat && confirm('Supprimer la catégorie "'+cat.title+'" ?')){
-        p.categories = p.categories.filter(function(c){ return c.id !== cat.id; });
-        p.updatedAt = nowIso();
-        currentCategoryId = null;
-        persist(); render();
-      }
+    document.querySelectorAll("[data-delete-category]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var p = findProject(currentProjectId);
+        var cat = p ? findCategory(p, el.dataset.deleteCategory) : null;
+        if(p && cat && confirm('Supprimer la catégorie "'+cat.title+'" ?')){
+          p.categories = p.categories.filter(function(c){ return c.id !== cat.id; });
+          p.updatedAt = nowIso();
+          expandedCategoryId = null;
+          persist(); render();
+        }
+      });
     });
     // Compte — ouvrir / fermer / déconnexion
     var accountBtn = document.getElementById("account-btn");
