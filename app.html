@@ -516,6 +516,7 @@
   .tl-badge.p1{background:var(--accent-soft);color:var(--accent);}
   .tl-badge.p2{background:var(--status-ralentit-soft);color:var(--status-ralentit);}
   .tl-badge.p3{background:var(--line);color:var(--ink-faint);}
+  .tl-badge.overdue{background:rgba(156,70,50,0.12);color:#9C4632;}
   .tl-proj-emoji{
     flex-shrink:0;font-size:22px;line-height:1;width:32px;height:32px;border-radius:var(--radius-sm);
     background:var(--row-proj-badge, var(--accent-soft));display:flex;align-items:center;justify-content:center;
@@ -2158,7 +2159,9 @@
   function renderTlRow(t, hideProjectEmoji){
     var multiCat = t.project.categories.length > 1;
     var catLabel = multiCat ? ' · ' + escapeHtml(t.category.title) : '';
-    var badgeHtml = t.priority === 'p1'
+    var badgeHtml = t.overdue
+      ? '<span class="tl-badge overdue">En retard</span>'
+      : t.priority === 'p1'
       ? '<span class="tl-badge p1">P1</span>'
       : t.priority === 'p2' ? '<span class="tl-badge p2">P2</span>'
       : t.priority === 'p3' ? '<span class="tl-badge p3">P3</span>'
@@ -2179,16 +2182,25 @@
     '</div>';
   }
 
-  /* ---------- calendrier : file de tâches vivante (pas de date par tâche) ---------- */
+  /* ---------- calendrier : uniquement les projets dont l'échéance tombe le jour affiché
+     (+ échéances dépassées non closes, remontées dans "Aujourd'hui" et marquées "En retard").
+     Granularité projet, pas tâche : aucun champ dueDate par tâche dans le modèle actuel.
+     Plus aucun fourre-tout : un projet sans échéance ne s'affiche jamais ici. ---------- */
   var CAL_DAY_MAX = 5;
   function buildCalendarTasks(){
+    var isToday = calSelectedDate === todayDateStr();
     var candidates = [];
     state.projects.forEach(function(p){
+      if(!p.dueDate || isAccompli(p)) return;
+      var dueStr = dateToStr(new Date(p.dueDate));
+      var overdue = isToday && dueStr < calSelectedDate;
+      if(dueStr !== calSelectedDate && !overdue) return;
       priorityItems(p).forEach(function(x){
-        candidates.push({item:x.item, category:x.category, project:p, priority:'cal'});
+        candidates.push({item:x.item, category:x.category, project:p, priority:'cal', overdue:overdue});
       });
     });
     candidates.sort(function(a,b){
+      if(a.overdue !== b.overdue) return a.overdue ? -1 : 1;
       return dueBucketOrder(a.project.dueBucket) - dueBucketOrder(b.project.dueBucket);
     });
     return candidates.slice(0, CAL_DAY_MAX);
@@ -2441,7 +2453,7 @@
     var isToday = calSelectedDate === todayDateStr();
     var selLabel = isToday ? "Aujourd'hui" : calSelectedDate;
     var rows = tasks.length
-      ? tasks.map(renderTlRow).join('')
+      ? tasks.map(function(t){ return renderTlRow(t, false); }).join('')
       : '<div class="cal-empty">Rien en attente.<br>Tous les projets sont à jour !</div>';
 
     return '<div class="calendar-screen" id="calendar-screen">'+
