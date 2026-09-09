@@ -33,6 +33,18 @@ Aucune itération : décision stable dès la première proposition.
 | A | Afficher les tâches datées dans le passé et non cochées, marquées "En retard" | **Retenue** |
 | B | Ne rien afficher, strictement les tâches du jour | Écartée — risque de perte silencieuse d'une tâche non traitée, sans aucun moyen de la retrouver depuis cet écran |
 
+### Itération — granularité de la date (décision révisée à l'implémentation)
+- **Constat fait en ouvrant le code** : le modèle de données n'a **aucun champ date par tâche** (`makeItem` = id/title/done/createdAt/notes uniquement). Seuls les projets ont une échéance (`p.dueDate`, dérivée d'un `dueBucket` relatif comme "1 semaine"/"1 mois"). Le cadrage initial supposait une date par tâche — non vérifié avant implémentation.
+- Options posées à l'utilisateur :
+
+| Option | Description | Statut |
+|---|---|---|
+| A | Version complète : ajouter un champ date par tâche + une icône par ligne pour la fixer manuellement | Écartée — nécessite une nouvelle interaction UI (sélecteur de date par tâche) et laisserait l'écran vide tant que l'utilisateur n'a daté aucune tâche |
+| B | Version allégée : réutiliser l'échéance de projet déjà existante (`p.dueDate`), granularité projet et non tâche | **Retenue** — "fais simple, à la maille du projet, pas de date sur chaque tâche" |
+
+- Comportement finalement implémenté (`buildCalendarTasks`) : un projet sans échéance ne s'affiche jamais dans "Aujourd'hui" (fin du fourre-tout) ; sur le jour "aujourd'hui" précisément, les projets en échéance dépassée et non clos remontent aussi, badge "En retard" ; sur un autre jour du calendrier, uniquement les échéances tombant exactement ce jour-là (pas d'"en retard" hors de la vue du jour même).
+- Bug latent corrigé au passage (hors périmètre du chantier, découvert en touchant la fonction) : `tasks.map(renderTlRow)` passait l'index du tableau comme second paramètre (`hideProjectEmoji`) à cause de la signature d'`Array.map` — masquait l'émoji projet sur toutes les lignes sauf la première de la liste du jour.
+
 ## Chantier 4 — Capture rapide + Drop Zone
 
 ### Itération 1 — emplacement de Drop Zone (décision révisée)
