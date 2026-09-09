@@ -431,6 +431,56 @@
   .chat-modal-sub{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);margin-top:1px;}
   .chat-close-btn{border:none;background:none;font-size:22px;color:var(--ink-faint);line-height:1;padding:0 2px;}
   .chat-close-btn:hover{color:var(--ink);}
+
+  /* Bouton flottant Drop it — accès unique à la capture rapide et à la Drop Zone,
+     visible sur tous les écrans, au-dessus de la barre de navigation. */
+  .drop-fab{
+    position:fixed;right:16px;bottom:calc(var(--tabbar-h) + 14px);z-index:40;
+    display:flex;align-items:center;gap:5px;padding:11px 18px;border:none;border-radius:999px;
+    background:#fff;box-shadow:0 4px 16px rgba(43,36,32,0.22);
+    font-size:13px;font-weight:700;letter-spacing:0.02em;color:var(--ink);
+  }
+  .drop-fab-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+  .drop-fab-badge{
+    position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;
+    background:var(--accent);color:#fff;font-size:10.5px;font-weight:700;line-height:18px;text-align:center;
+    box-shadow:0 0 0 2px #fff;
+  }
+
+  .drop-sheet{position:fixed;inset:0;z-index:51;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
+  .drop-sheet-box{width:100%;max-width:620px;max-height:78vh;background:var(--canvas-card);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 32px rgba(43,36,32,0.18);}
+  .drop-sheet-header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
+  .drop-sheet-title{font-size:19px;font-weight:800;color:var(--ink);}
+  .drop-sheet-triage-link{
+    width:100%;text-align:left;padding:12px 18px;border:none;border-bottom:1px solid var(--line);
+    background:var(--accent-soft);color:var(--accent);font-size:12.5px;font-weight:600;
+  }
+  .drop-sheet-body{flex:1;overflow-y:auto;padding:14px 18px;}
+  .drop-sheet-input-row{display:flex;align-items:center;gap:8px;}
+  .drop-sheet-input{
+    flex:1;border:1.4px solid var(--line);border-radius:12px;padding:11px 14px;font-size:14px;
+    color:var(--ink);background:var(--canvas);
+  }
+  .drop-sheet-send{
+    flex-shrink:0;width:38px;height:38px;border-radius:50%;border:none;background:var(--accent);
+    color:#fff;display:flex;align-items:center;justify-content:center;
+  }
+  .drop-sheet-proj-label{font-size:11px;color:var(--ink-faint);margin:14px 0 8px;}
+  .drop-sheet-proj-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .drop-sheet-proj-chip{
+    width:36px;height:36px;border-radius:10px;border:1.4px solid transparent;background:var(--canvas);
+    font-size:18px;display:flex;align-items:center;justify-content:center;
+  }
+  .drop-sheet-proj-chip.dropzone{background:var(--line);}
+  .drop-sheet-proj-chip.active{border-color:var(--accent);}
+  .drop-triage-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:30px 0;}
+  .drop-triage-row{padding:12px 0;border-bottom:1px solid var(--grid-line);}
+  .drop-triage-title{font-size:14px;color:var(--ink);margin-bottom:8px;}
+  .drop-triage-proj-row{display:flex;flex-wrap:wrap;gap:6px;}
+  .drop-triage-proj-chip{
+    width:32px;height:32px;border-radius:9px;border:none;background:var(--canvas);
+    font-size:16px;display:flex;align-items:center;justify-content:center;
+  }
   .chat-messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
   .chat-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:20px 0;}
   .chat-msg-user{align-self:flex-end;max-width:86%;}
@@ -1201,11 +1251,12 @@
       }).catch(function(){});
     }
     saveSession(null);
-    state = {projects: []};
+    state = {projects: [], dropZone: []};
     currentProjectId = null; currentCategoryId = null;
     taskListOpen = false; accountSheetOpen = false; projectMenuOpen = false;
     chatState = {}; tlSelectedProjects = []; tlScopedToProject = false;
     tlCategoryFilter = null; tlPriorityFilter = 'all';
+    dropSheetOpen = false; dropSheetMode = 'capture';
     authMode = "login"; authError = ""; authInfo = "";
     renderAuth();
   }
@@ -1289,7 +1340,9 @@
 
   /* ================= FIN AUTHENTIFICATION ================= */
 
-  var state = {projects: []};
+  var state = {projects: [], dropZone: []}; // dropZone : idées/tâches capturées sans projet choisi, à trier
+  var dropSheetOpen = false;
+  var dropSheetMode = 'capture'; // 'capture' | 'triage'
   var currentProjectId = null; // null = home
   var currentCategoryId = null; // set when viewing a single category's checklist
   var generating = false;
@@ -1423,6 +1476,9 @@
       catNotes: catNotes,
       createdAt: raw.createdAt || nowIso(), updatedAt: raw.updatedAt || nowIso()
     };
+  }
+  function normalizeDropItem(raw){
+    return {id: raw.id || uid(), title: raw.title || "", createdAt: raw.createdAt || nowIso()};
   }
   function normalizeProject(raw){
     var categories;
@@ -1564,7 +1620,7 @@
     var d2 = new Date(); d2.setDate(d2.getDate()-1);
     demenagement.updatedAt = d2.toISOString();
 
-    return {projects: [bali, julie, demenagement]};
+    return {projects: [bali, julie, demenagement], dropZone: []};
   }
 
   /* ---------- persistence ---------- */
@@ -1577,8 +1633,9 @@
       .then(function(res){ return res.json(); })
       .then(function(json){
         var parsed = json.data || {};
+        var dropZone = Array.isArray(parsed.dropZone) ? parsed.dropZone.map(normalizeDropItem) : [];
         if(parsed.projects && parsed.projects.length > 0){
-          state = {projects: parsed.projects.map(normalizeProject)};
+          state = {projects: parsed.projects.map(normalizeProject), dropZone: dropZone};
         } else {
           state = defaultData();
           persist();
@@ -1754,36 +1811,41 @@
     var app = document.getElementById("app");
     if(calendarOpen){
       app.innerHTML = renderCalendarScreen();
-      bindGlobalEvents();
-      if(generating) renderLoadingOverlay();
-      return;
-    }
-    // Le DOM va être entièrement remplacé : on retient si la liste était déjà
-    // affichée AVANT ce rendu pour ne rejouer l'animation de glissement que sur
-    // une vraie ouverture (pas à chaque coche de tâche ou changement de filtre).
-    var tlWasOpen = !!document.getElementById('tasklist-screen');
-    var project = currentProjectId ? findProject(currentProjectId) : null;
-    if(project && currentCategoryId){
-      var category = findCategory(project, currentCategoryId);
-      if(category){ app.innerHTML = renderCategoryDetail(project, category); }
-      else { currentCategoryId = null; app.innerHTML = renderDetail(project); }
-    } else if(project){
-      app.innerHTML = renderDetail(project);
     } else {
-      app.innerHTML = renderHome();
-      layoutHomeTreemap();
-      if(taskListOpen){
-        var tl = document.getElementById('tasklist-screen');
-        if(tl){
-          if(tlWasOpen){
-            tl.style.transition = 'none';
-            tl.classList.add('open');
-            requestAnimationFrame(function(){ tl.style.transition = ''; });
-          } else {
-            requestAnimationFrame(function(){ tl.classList.add('open'); });
+      // Le DOM va être entièrement remplacé : on retient si la liste était déjà
+      // affichée AVANT ce rendu pour ne rejouer l'animation de glissement que sur
+      // une vraie ouverture (pas à chaque coche de tâche ou changement de filtre).
+      var tlWasOpen = !!document.getElementById('tasklist-screen');
+      var project = currentProjectId ? findProject(currentProjectId) : null;
+      if(project && currentCategoryId){
+        var category = findCategory(project, currentCategoryId);
+        if(category){ app.innerHTML = renderCategoryDetail(project, category); }
+        else { currentCategoryId = null; app.innerHTML = renderDetail(project); }
+      } else if(project){
+        app.innerHTML = renderDetail(project);
+      } else {
+        app.innerHTML = renderHome();
+        layoutHomeTreemap();
+        if(taskListOpen){
+          var tl = document.getElementById('tasklist-screen');
+          if(tl){
+            if(tlWasOpen){
+              tl.style.transition = 'none';
+              tl.classList.add('open');
+              requestAnimationFrame(function(){ tl.style.transition = ''; });
+            } else {
+              requestAnimationFrame(function(){ tl.classList.add('open'); });
+            }
           }
         }
       }
+    }
+    // Bouton flottant Drop it + sa fenêtre : présents sur tous les écrans de l'app
+    // authentifiée, un seul point d'injection plutôt que de le répéter par écran.
+    app.insertAdjacentHTML('beforeend', renderDropFab() + renderDropSheet());
+    if(dropSheetOpen && dropSheetMode === 'capture'){
+      var dsInput = document.getElementById('drop-sheet-input');
+      if(dsInput) dsInput.focus();
     }
     bindGlobalEvents();
     if(generating) renderLoadingOverlay();
@@ -2716,6 +2778,112 @@
     '</div>';
   }
 
+  /* ---------- Drop it : bouton flottant + fenêtre de capture / tri de la Drop Zone ---------- */
+  var dropSheetProjectPick = null; // id du projet choisi en mode capture, null = Drop Zone
+
+  function dropZoneCount(){ return state.dropZone.length; }
+
+  function renderDropFab(){
+    var count = dropZoneCount();
+    return '<button class="drop-fab" id="drop-fab" title="Drop it">'+
+      'DROP<span class="drop-fab-dot"></span>IT'+
+      (count > 0 ? '<span class="drop-fab-badge">'+count+'</span>' : '')+
+    '</button>';
+  }
+
+  function renderDropSheet(){
+    if(!dropSheetOpen) return '';
+    var count = dropZoneCount();
+
+    if(dropSheetMode === 'triage'){
+      var rows = count
+        ? state.dropZone.map(function(d){
+            var chips = state.projects.map(function(p){
+              return '<button class="drop-triage-proj-chip" data-drop-assign-id="'+d.id+'" data-drop-assign-proj="'+p.id+'" title="'+escapeHtml(p.title)+'">'+p.emoji+'</button>';
+            }).join('');
+            return '<div class="drop-triage-row">'+
+              '<div class="drop-triage-title">'+escapeHtml(d.title)+'</div>'+
+              '<div class="drop-triage-proj-row">'+chips+'</div>'+
+            '</div>';
+          }).join('')
+        : '<div class="drop-triage-empty">Rien à trier — la Drop Zone est vide.</div>';
+
+      return '<div class="drop-sheet" id="drop-sheet">'+
+        '<div class="drop-sheet-box">'+
+          '<div class="drop-sheet-header">'+
+            '<div class="drop-sheet-title">♻️ Drop Zone</div>'+
+            '<button class="chat-close-btn" id="drop-sheet-close-btn">×</button>'+
+          '</div>'+
+          '<div class="drop-sheet-body">'+rows+'</div>'+
+        '</div>'+
+      '</div>';
+    }
+
+    var projChips = state.projects.map(function(p){
+      return '<button class="drop-sheet-proj-chip'+(dropSheetProjectPick===p.id?' active':'')+
+        '" data-drop-proj-pick="'+p.id+'" title="'+escapeHtml(p.title)+'">'+p.emoji+'</button>';
+    }).join('');
+
+    return '<div class="drop-sheet" id="drop-sheet">'+
+      '<div class="drop-sheet-box">'+
+        '<div class="drop-sheet-header">'+
+          '<div class="drop-sheet-title">Drop it</div>'+
+          '<button class="chat-close-btn" id="drop-sheet-close-btn">×</button>'+
+        '</div>'+
+        (count ? '<button class="drop-sheet-triage-link" id="drop-sheet-triage-link">♻️ '+count+' note'+(count>1?'s':'')+' à trier</button>' : '')+
+        '<div class="drop-sheet-body">'+
+          '<div class="drop-sheet-input-row">'+
+            '<input class="drop-sheet-input" id="drop-sheet-input" type="text" placeholder="Une idée, une tâche…" autocomplete="off">'+
+            '<button class="drop-sheet-send" id="drop-sheet-send-btn" title="Envoyer">'+checkIcon()+'</button>'+
+          '</div>'+
+          (state.projects.length ? ''+
+            '<div class="drop-sheet-proj-label">Assigner à un projet — sinon direction Drop Zone</div>'+
+            '<div class="drop-sheet-proj-row">'+
+              '<button class="drop-sheet-proj-chip dropzone'+(!dropSheetProjectPick?' active':'')+'" data-drop-proj-pick="" title="Drop Zone">♻️</button>'+
+              projChips+
+            '</div>'
+          : '')+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function performDropCapture(){
+    var input = document.getElementById('drop-sheet-input');
+    var text = input ? input.value.trim() : '';
+    if(!text) return;
+    var toastMsg;
+    var p = dropSheetProjectPick ? findProject(dropSheetProjectPick) : null;
+    if(p){
+      if(!p.categories.length) p.categories.push(makeCategory('À faire', []));
+      p.categories[0].items.push(makeItem(text));
+      p.updatedAt = nowIso();
+      toastMsg = 'Ajouté à '+p.emoji+' '+p.title;
+    } else {
+      state.dropZone.push({id:uid(), title:text, createdAt:nowIso()});
+      toastMsg = 'Envoyé dans la Drop Zone';
+    }
+    persist();
+    dropSheetProjectPick = null;
+    dropSheetOpen = false;
+    render();
+    showToast(toastMsg);
+  }
+
+  function performDropAssign(dropId, projId){
+    var found = null, foundIdx = -1;
+    state.dropZone.forEach(function(d, i){ if(d.id === dropId){ found = d; foundIdx = i; } });
+    var p = findProject(projId);
+    if(!found || !p) return;
+    if(!p.categories.length) p.categories.push(makeCategory('À faire', []));
+    p.categories[0].items.push(makeItem(found.title));
+    p.updatedAt = nowIso();
+    state.dropZone.splice(foundIdx, 1);
+    persist();
+    render();
+    showToast('Assigné à '+p.emoji+' '+p.title);
+  }
+
   function renderNoteModal(){
     if(!noteModal) return '';
     var isNew = !noteModal.noteId;
@@ -3417,6 +3585,46 @@
 
   function bindGlobalEvents(){
     bindTabBarEvents();
+
+    // Drop it — bouton flottant, capture rapide et tri de la Drop Zone
+    var dropFabBtn = document.getElementById("drop-fab");
+    if(dropFabBtn) dropFabBtn.addEventListener("click", function(){
+      dropSheetOpen = true;
+      dropSheetMode = 'capture';
+      dropSheetProjectPick = null;
+      render();
+    });
+    var dropSheetEl = document.getElementById("drop-sheet");
+    if(dropSheetEl) dropSheetEl.addEventListener("click", function(e){
+      if(e.target === dropSheetEl){ dropSheetOpen = false; render(); }
+    });
+    var dropSheetCloseBtn = document.getElementById("drop-sheet-close-btn");
+    if(dropSheetCloseBtn) dropSheetCloseBtn.addEventListener("click", function(){
+      dropSheetOpen = false;
+      render();
+    });
+    var dropTriageLink = document.getElementById("drop-sheet-triage-link");
+    if(dropTriageLink) dropTriageLink.addEventListener("click", function(){
+      dropSheetMode = 'triage';
+      render();
+    });
+    document.querySelectorAll("[data-drop-proj-pick]").forEach(function(el){
+      el.addEventListener("click", function(){
+        dropSheetProjectPick = el.dataset.dropProjPick || null;
+        render();
+      });
+    });
+    var dropSendBtn = document.getElementById("drop-sheet-send-btn");
+    if(dropSendBtn) dropSendBtn.addEventListener("click", function(){ performDropCapture(); });
+    var dropInput = document.getElementById("drop-sheet-input");
+    if(dropInput) dropInput.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); performDropCapture(); }
+    });
+    document.querySelectorAll("[data-drop-assign-proj]").forEach(function(el){
+      el.addEventListener("click", function(){
+        performDropAssign(el.dataset.dropAssignId, el.dataset.dropAssignProj);
+      });
+    });
     var composeTextInput = document.getElementById("compose-text-input");
     if(composeTextInput){
       composeTextInput.addEventListener("input", function(e){ composeText = e.target.value; });
