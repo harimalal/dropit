@@ -69,15 +69,32 @@ Aucune itération : décision stable dès la première proposition.
 |---|---|---|
 | A | Tuile fixe dans la grille d'accueil | Écartée — se ferait passer pour un "onzième projet" au milieu des vrais projets |
 | B | Icône flottante (FAB) sur tous les écrans | Écartée — entre en conflit visuel avec la barre de composition déjà présente en bas d'écran sur tous les écrans |
-| C | Icône sur la barre de texte de capture, à côté du bouton d'envoi | **Retenue (décision finale)** — c'est exactement le point où le besoin se manifeste (une tâche sans projet choisi) |
+| C | Icône sur la barre de texte de capture, à côté du bouton d'envoi | Retenue un temps, **remplacée à l'itération 2 ci-dessous** |
 
-### Décision — mécanisme de triage
+### Décision — mécanisme de triage (première version)
 | Option | Description | Statut |
 |---|---|---|
 | A | Glisser-déposer / bouton "déplacer vers..." depuis un écran dédié | Écartée pour le MVP — plus lourd à construire qu'une liste simple |
 | B | Drop Zone en tête de la vue Priorités, tri effectué depuis là | Proposée comme recommandation initiale (avant l'itération 1 ci-dessus qui a changé l'emplacement de l'icône d'accès, pas la logique de triage elle-même) |
 | C | L'IA propose un projet probable pour chaque tâche du Parking | Écartée — chantier IA à part entière, hors scope de ce sprint |
-| **Finale** | Icône (chantier ci-dessus) → mini-liste des tâches non triées → tap sur une tâche → rangée d'émojis de projets existants → tap = affectation en 1 clic | **Retenue** |
+| — | Icône (chantier ci-dessus) → mini-liste des tâches non triées → tap sur une tâche → rangée d'émojis de projets existants → tap = affectation en 1 clic | Mécanisme conservé, **repris tel quel dans l'itération 2** |
+
+### Itération 2 — bouton flottant "DROP●IT" (décision finale)
+- **Remise en cause par l'utilisateur** : l'icône à côté du bouton d'envoi restait trop discrète pour ce qui devait être le geste signature de l'app (cf. discussion Hook Model/pull-to-refresh). Proposition de départir vers une barre "Drop it" pleine largeur, éventuellement à la place de la barre de navigation.
+- **Option écartée en cours de route** : remplacer ou masquer la barre de navigation (Accueil/Liste/Chat IA/Aujourd'hui) derrière un geste — rejetée, la navigation principale doit rester accessible en un tap selon les standards d'ergonomie mobile (Apple HIG/Material Design), et cette barre a déjà fait l'objet d'une mission de refonte dédiée (`2026-09-05-design-refonte`).
+- **Question de fond soulevée** : comment différencier "nouveau projet" / "tâche pour un projet" / "Drop Zone" dans un champ de saisie unique ? Réponse retenue : c'est le contexte d'écran qui décide (comme c'était déjà le cas avant), jamais le texte lui-même ni une classification IA — la création de projet reste exclusive à la barre d'accueil, jamais un résultat possible depuis Drop It.
+- Options de forme comparées pour l'élément lui-même :
+
+| Option | Description | Statut |
+|---|---|---|
+| Barre "Drop it" pleine largeur à la place de la nav | Prend la place de la navigation principale | **Écartée** — coût de navigation trop élevé pour le gain sur un seul geste |
+| Bouton avec glissement (gauche = Projet, droite = Drop Zone) | Geste directionnel, champ de texte révélé après le glissement | Écartée pour cette version — un geste sur un bouton statique n'est pas devinable sans indice visuel (référence : swipe Gmail/Mail iOS qui révèle icône+couleur sous le doigt) ; ajoute aussi la question de quel projet précisément parmi plusieurs | Gardée en piste v2 si un indice visuel façon Mail est ajouté |
+| **Bouton flottant "DROP●IT"** (texte "DROP" + point + "IT", fond blanc, point coloré accent) | Toujours visible, au-dessus de la barre de nav, pattern FAB éprouvé (Gmail/Notion/Todoist) | **Retenue** |
+
+- **Comment on tape le texte** : tap sur le bouton flottant → fenêtre remontant du bas (même style que la fenêtre de chat existante), champ de texte auto-focalisé (clavier ouvert immédiatement), rangée d'émojis de projets pour assigner directement, sinon Drop Zone par défaut.
+- **Accès au tri de la Drop Zone** : pas un deuxième point d'accès — la même fenêtre bascule en mode tri via un lien visible "N notes à trier" en haut (titre "Drop Zone" mis en évidence, en grand, à la demande de l'utilisateur). Écarté : long-press ou geste caché pour accéder au tri, même problème de découvrabilité que le bouton à glissement.
+- **Badge** : compteur numéroté sur le bouton flottant lui-même (comme un badge de notification d'icône d'appli), toujours visible sans avoir à ouvrir la fenêtre — répond au risque déjà identifié qu'un inbox non visible finit par être oublié.
+- **Modèle de données retenu** : `state.dropZone`, tableau séparé de `state.projects` (pas un "projet système" caché dedans) — évite tout risque de fuite dans le treemap d'accueil, les filtres de projet ou les résumés IA, qui itèrent déjà sur `state.projects` à une dizaine d'endroits du code.
 
 ## Chantier 5 — Statuts de vélocité
 
