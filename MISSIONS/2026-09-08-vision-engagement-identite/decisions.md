@@ -352,6 +352,23 @@ Fonctionnalité inchangée (toujours possible d'assigner directement une capture
 
 ---
 
+## Chantier bonus 6 — Titre centré, fin de l'assignation directe depuis la Drop Zone
+
+### Centrage du titre
+Demande directe : le titre "👇 La Drop Zone 👇" est centré dans l'en-tête plutôt qu'aligné à gauche du bouton fermer. Le bouton fermer passe en position absolue (à droite, centré verticalement) pour que le titre puisse occuper toute la largeur de l'en-tête et être visuellement centré sur la fenêtre entière, pas seulement dans l'espace restant à gauche du bouton.
+
+### Suppression complète des badges d'assignation
+| Option | Description | Statut |
+|---|---|---|
+| A | Garder la rangée de chips (convertie en texte au chantier bonus 5) permettant d'assigner directement une capture à un projet depuis la Drop Zone | Écartée — demande explicite de suppression complète, pas seulement de l'icône |
+| B | Retirer entièrement la rangée d'assignation : toute capture depuis la fenêtre Drop Zone atterrit désormais systématiquement dans la Drop Zone | **Retenue** |
+
+Conséquence assumée : il n'est plus possible d'envoyer directement une idée vers un projet précis depuis la fenêtre de capture — la Drop Zone redevient un point d'entrée unique et sans choix, cohérent avec la trajectoire de simplification déjà suivie à plusieurs reprises sur cette fonctionnalité (itérations 3 et 4 du chantier 4, chantier bonus 2). Si le besoin de rediriger une capture vers un projet revient, il faudra une nouvelle décision explicite plutôt qu'une réactivation. `dropSheetProjectPick`, son binding `[data-drop-proj-pick]` et le CSS `.drop-sheet-proj-*` associé supprimés (plus aucun appelant).
+
+Vérifié en navigateur réel (Playwright) : titre centré (mesuré au pixel près), aucune trace de la rangée de chips dans le DOM, capture d'une idée toujours fonctionnelle et systématiquement ajoutée à `state.dropZone`.
+
+---
+
 ## Repères de méthode (décisions transverses, valables sur tous les chantiers)
 
 - Ne jamais faire calculer un comptage, un statut ou une agrégation par le LLM — toujours un calcul déterministe côté application (origine : bug de comptage observé dans l'audit).
