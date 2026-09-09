@@ -323,6 +323,35 @@ Vérifié en navigateur réel (Playwright) : centre vertical du bouton carrousel
 
 ---
 
+## Chantier bonus 5 — Drop Zone sans icônes, nouveau titre, fin des sauts d'écran
+
+### Retrait des icônes de la Drop Zone
+| Option | Description | Statut |
+|---|---|---|
+| A | Garder les émojis (♻️ pour "Drop Zone", emoji de chaque projet) sur les chips d'assignation, cohérent avec `.tl-proj-chip` utilisé ailleurs dans l'app (filtre de la liste) | Écartée — demande explicite de l'utilisateur, scope limité à la fenêtre Drop Zone (les chips emoji de la liste "Aujourd'hui"/"Liste" ne sont pas concernées, pas de demande dessus) |
+| B | Remplacer les chips emoji par des libellés texte (titre du projet, "Drop Zone"), et l'icône SVG du bouton d'envoi par le mot "Envoyer" (aligné sur le bouton d'envoi du chat) | **Retenue** |
+
+Fonctionnalité inchangée (toujours possible d'assigner directement une capture à un projet depuis la Drop Zone) — seul l'habillage visuel change, pour rester cohérent avec le principe "remove icons" demandé sans retirer une fonctionnalité déjà établie.
+
+### Titre de la fenêtre
+"Tu es dans la Drop Zone" → "👇 La Drop Zone 👇", emoji doigt pointant vers le bas de part et d'autre — demande directe, aucune option alternative posée.
+
+### Suppression générale des sauts d'écran
+- **Constat** : le mécanisme de préservation du scroll n'avait été ajouté qu'à deux endroits précis au fil des itérations précédentes (coche d'une tâche depuis "Liste"/"Aujourd'hui", ouverture/fermeture d'une catégorie en accordéon), chacun dupliquant le même motif (capturer `scrollTop` avant `render()`, le réappliquer après). Toute autre interaction déclenchant `render()` (cocher une tâche dans la vue projet, ajouter une tâche ou une catégorie, supprimer un élément, éditer une note...) perdait la position de défilement à chaque fois, puisque `render()` remplace tout le HTML de l'écran actif.
+- Demande de l'utilisateur ("arrête tous les mouvements écran quand on clique, on coche, on change d'écran, on ajoute quelque chose") lue comme une demande de généralisation, pas d'un correctif au cas par cas de plus.
+
+| Option | Description | Statut |
+|---|---|---|
+| A | Ajouter le même correctif capturer/restaurer à chaque nouveau gestionnaire d'événement au fur et à mesure des signalements | Écartée — c'est exactement le motif qui vient de se répéter deux fois, source d'oubli garantie sur tout nouveau bouton |
+| B | Centraliser la préservation dans `render()` lui-même : au début, mémoriser le `scrollTop` de chaque conteneur scrollable connu (`detail-scroll`, `tl-scroll`, `cal-list`) s'il existe déjà dans le DOM ; à la fin, le réappliquer | **Retenue** |
+
+- Portée volontairement limitée aux trois conteneurs scrollables persistants de l'app (écran projet, écran Liste, écran Aujourd'hui) — la grille d'accueil ne scrolle pas (`overflow:hidden`), et les listes de messages de chat ont leur propre logique de défilement vers le bas déjà en place (comportement voulu, pas un bug à corriger).
+- Un changement d'écran réel (ex : ouvrir un projet depuis l'accueil) n'est pas affecté : le conteneur cible n'existe pas encore dans le DOM au moment de la capture, donc rien n'est restauré et le nouvel écran démarre bien en haut, comme attendu.
+- Les deux correctifs ad hoc devenus redondants (case à cocher Liste/Aujourd'hui, accordéon catégories) ont été retirés au profit du mécanisme générique plutôt que laissés en doublon.
+- Vérifié en navigateur réel (Playwright) : position de défilement de l'écran projet inchangée après avoir coché une tâche dans une catégorie dépliée (172px avant/après, alors que le contenu de la page a changé de hauteur suite au déplacement de la tâche vers "Terminé").
+
+---
+
 ## Repères de méthode (décisions transverses, valables sur tous les chantiers)
 
 - Ne jamais faire calculer un comptage, un statut ou une agrégation par le LLM — toujours un calcul déterministe côté application (origine : bug de comptage observé dans l'audit).
