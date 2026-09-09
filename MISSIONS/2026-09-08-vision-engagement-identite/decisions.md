@@ -224,6 +224,47 @@ Décisions d'implémentation :
 
 ---
 
+## Chantier bonus 2 — Retouches vue projet et chat IA (post-accordéon)
+
+Cinq demandes ponctuelles de l'utilisateur sur l'écran projet et le chat IA, une fois l'accordéon catégories en place.
+
+### Retrait du bloc "Priorités"
+| Option | Description | Statut |
+|---|---|---|
+| A | Garder le bloc "Priorités" (3 tâches suivantes) en plus de la carte "Prochaine action" | Écartée — redondant, les deux blocs montraient une partie du même sous-ensemble de tâches prioritaires |
+| B | Supprimer le bloc, ne garder que "Prochaine action" | **Retenue** |
+
+`priorityBlockHtml` et le CSS associé (`.priority-block*`) supprimés entièrement plutôt que laissés en code mort.
+
+### "Prochaine action" — parcourir les tâches suivantes
+| Option | Description | Statut |
+|---|---|---|
+| A | Swipe horizontal sur la carte | Écartée — demandait un choix explicite (l'utilisateur a proposé les deux, "soit... soit"), le swipe est moins découvrable et entre en conflit potentiel avec le défilement vertical de l'écran |
+| B | Petite flèche discrète, clic pour passer à la tâche suivante | **Retenue** — "garder le même format", donc pas de changement de mise en page, juste un contrôle ajouté |
+
+Implémentation : état `nextActionPreviewIndex` (position dans `priorityItems(p)` affichée), remis à zéro à chaque changement de projet (`nextActionPreviewProjectId`) et à chaque case cochée (sinon un index resté élevé pourrait pointer au-delà d'une liste raccourcie). La flèche n'apparaît que si plus d'une tâche prioritaire existe (`priorityList.length > 1`), réutilise `chevronIcon()` pivoté pour ne pas ajouter une nouvelle icône. `nextActionItem(p)` (ne renvoyait que la première tâche) supprimée, remplacée par l'indexation sur `priorityList`.
+
+### Accordéon catégories — vitesse d'ouverture
+Demande : "rend le déploiement accordéon plus lent". Aucune option alternative posée — ajustement direct de la durée d'animation `.category-expanded` de `.22s` à `.45s`, jugement qualitatif sans mesure précise demandée par l'utilisateur ("plus lente" sans chiffre).
+
+### Notes IA — toujours au niveau du projet
+| Option | Description | Statut |
+|---|---|---|
+| A | Garder le rattachement automatique à la catégorie ouverte (`expandedCategoryId`) au moment de l'enregistrement | Écartée — comportement jugé surprenant par l'utilisateur ("pas possible de les mettre dans les catégories") |
+| B | `catId` toujours `null` pour une note créée depuis le chat IA, quelle que soit la catégorie dépliée à ce moment | **Retenue** |
+
+Portée volontairement limitée : la fonctionnalité de notes manuelles créées/éditées directement dans l'écran des notes (avec sélecteur "Projet (global)" / catégorie précise) n'est pas touchée — seule la création automatique depuis le chat IA (`performSaveChatAsNote`) est concernée. Vérifié qu'une note créée depuis le chat porte bien `catId:null` même quand une catégorie est dépliée au moment du clic.
+
+### Chat IA — couleur des boutons "copier" / "mettre en note"
+| Option | Description | Statut |
+|---|---|---|
+| A | Garder une seule couleur neutre (gris) pour les deux boutons, comme avant | Écartée — c'est justement ce qui rendait les deux actions peu différenciables d'un coup d'œil |
+| B | Deux couleurs distinctes réutilisant la palette de teintes déjà existante des projets (`--proj-*-solid` / `--proj-*-badge`) plutôt qu'introduire de nouvelles couleurs | **Retenue** — "copier" en azur, "mettre en note" en ambre |
+
+Vérifié en navigateur réel (Playwright) : couleurs calculées distinctes (`rgb(65,150,210)` vs `rgb(198,135,47)`), sur les deux points d'affichage du chat (fenêtre d'accueil multi-projets et fenêtre de chat par projet).
+
+---
+
 ## Repères de méthode (décisions transverses, valables sur tous les chantiers)
 
 - Ne jamais faire calculer un comptage, un statut ou une agrégation par le LLM — toujours un calcul déterministe côté application (origine : bug de comptage observé dans l'audit).
