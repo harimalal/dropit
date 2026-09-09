@@ -45,6 +45,19 @@ Aucune itération : décision stable dès la première proposition.
 - Comportement finalement implémenté (`buildCalendarTasks`) : un projet sans échéance ne s'affiche jamais dans "Aujourd'hui" (fin du fourre-tout) ; sur le jour "aujourd'hui" précisément, les projets en échéance dépassée et non clos remontent aussi, badge "En retard" ; sur un autre jour du calendrier, uniquement les échéances tombant exactement ce jour-là (pas d'"en retard" hors de la vue du jour même).
 - Bug latent corrigé au passage (hors périmètre du chantier, découvert en touchant la fonction) : `tasks.map(renderTlRow)` passait l'index du tableau comme second paramètre (`hideProjectEmoji`) à cause de la signature d'`Array.map` — masquait l'émoji projet sur toutes les lignes sauf la première de la liste du jour.
 
+### Itération 2 — régression signalée par l'utilisateur après mise en prod (décision révisée)
+- **Symptôme remonté** : "Aujourd'hui" n'affiche plus rien la plupart du temps — gater sur la correspondance exacte avec l'échéance du projet revient à n'afficher quelque chose qu'un seul jour dans toute la vie du projet (le jour J de l'échéance), puisqu'une échéance est un point unique, pas une fenêtre quotidienne.
+- **Intention réelle clarifiée par l'utilisateur** : ne pas attendre le dernier moment de l'échéance pour agir ; afficher chaque jour un mélange de tâches issues du top 3 de priorité de plusieurs projets, en donnant la priorité aux échéances les plus courtes ; faire avancer chaque projet un peu chaque semaine plutôt que d'épuiser un seul projet avant de passer au suivant.
+
+| Option | Description | Statut |
+|---|---|---|
+| A | Garder le filtre par correspondance exacte à l'échéance (comportement chantier 3 initial) | **Écartée** — confirmée régressive à l'usage |
+| B | File vivante sur les projets actifs, triée par échéance la plus courte, rotation quotidienne du point de départ, répartition tour par tour (round-robin) dans le top 3 de chaque projet, échéances dépassées toujours en tête | **Retenue** |
+
+- Comportement final : la file vivante ne s'applique qu'à la vue "aujourd'hui" précisément (`calSelectedDate === todayDateStr()`) ; la navigation vers un autre jour précis du calendrier garde le filtre par échéance exacte du chantier 3 initial (pas de rotation, pas de fourre-tout sur un jour qu'on parcourt volontairement).
+- Vérifié par une simulation isolée (mock data en dehors du navigateur) avant de pousser : jamais vide tant qu'il reste une tâche active, échéance dépassée toujours en tête, rotation confirmée sur 7 jours simulés, plusieurs projets distincts représentés le même jour.
+- **Limite assumée, non résolue** : le "mélange tâche facile / tâche compliquée à morceler" demandé n'est pas implémenté au sens strict — le modèle de données n'a aucun champ d'effort ou de complexité par tâche. Le mélange obtenu vient du brassage entre plusieurs projets (round-robin), pas d'un vrai critère de difficulté. Ajouter un tel champ serait un chantier de données à part, non fait ici.
+
 ## Chantier 4 — Capture rapide + Drop Zone
 
 ### Itération 1 — emplacement de Drop Zone (décision révisée)
