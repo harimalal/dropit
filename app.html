@@ -481,10 +481,20 @@
   .drop-sheet-proj-chip.dropzone{background:var(--line);}
   .drop-sheet-proj-chip.active{border-color:var(--accent);}
   .drop-triage-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:30px 0;}
-  .drop-triage-row{
-    display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--grid-line);
+  .drop-badges{display:flex;flex-wrap:wrap;align-content:flex-start;gap:9px;}
+  .drop-badge{
+    border:none;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:600;color:#fff;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    box-shadow:0 2px 6px rgba(43,36,32,0.15);
   }
-  .drop-triage-title{font-size:14px;color:var(--ink);line-height:1.35;}
+  /* "Jeté" dans la Drop Zone : apparition rapide avec un léger rebond et une rotation,
+     jouée automatiquement puisque le badge est un nouveau nœud DOM inséré à la volée
+     (pas de render() complet — voir performDropCapture). */
+  .drop-badge.toss{animation:dropToss .4s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes dropToss{
+    0%{transform:translateY(50px) scale(.4) rotate(-12deg);opacity:0;}
+    100%{transform:translateY(0) scale(1) rotate(0deg);opacity:1;}
+  }
   .chat-messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
   .chat-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:20px 0;}
   .chat-msg-user{align-self:flex-end;max-width:86%;}
@@ -2794,16 +2804,31 @@
     '</button>';
   }
 
+  function renderDropBadge(d, toss){
+    var c = projectColorVars(d.id); // même palette déterministe que les projets, réutilisée telle quelle
+    return '<button class="drop-badge'+(toss?' toss':'')+'" data-drop-check="'+d.id+'" '+
+      'style="background:'+c.solid+';" title="Fait">'+escapeHtml(d.title)+'</button>';
+  }
+
   function renderDropTriageList(){
     var count = dropZoneCount();
     return count
-      ? state.dropZone.map(function(d){
-          return '<div class="drop-triage-row" data-drop-row="'+d.id+'">'+
-            '<button class="tl-check" data-drop-check="'+d.id+'" title="Fait"></button>'+
-            '<div class="drop-triage-title">'+escapeHtml(d.title)+'</div>'+
-          '</div>';
-        }).join('')
+      ? '<div class="drop-badges" id="drop-badges">'+
+          state.dropZone.map(function(d){ return renderDropBadge(d, false); }).join('')+
+        '</div>'
       : '<div class="drop-triage-empty">Rien à trier — la Drop Zone est vide.</div>';
+  }
+
+  function updateDropFabBadgeCount(){
+    var fab = document.getElementById('drop-fab');
+    if(!fab) return;
+    var badge = fab.querySelector('.drop-fab-badge');
+    if(state.dropZone.length > 0){
+      if(badge) badge.textContent = state.dropZone.length;
+      else fab.insertAdjacentHTML('beforeend', '<span class="drop-fab-badge">'+state.dropZone.length+'</span>');
+    } else if(badge){
+      badge.remove();
+    }
   }
 
   function renderDropSheet(){
@@ -2842,22 +2867,43 @@
     var input = document.getElementById('drop-sheet-input');
     var text = input ? input.value.trim() : '';
     if(!text) return;
-    var toastMsg;
     var p = dropSheetProjectPick ? findProject(dropSheetProjectPick) : null;
+
     if(p){
+      // Direction un vrai projet : rien à animer dans la Drop Zone, un render()
+      // classique suffit (comportement inchangé).
       if(!p.categories.length) p.categories.push(makeCategory('À faire', []));
       p.categories[0].items.push(makeItem(text));
       p.updatedAt = nowIso();
-      toastMsg = 'Ajouté à '+p.emoji+' '+p.title;
-    } else {
-      state.dropZone.push({id:uid(), title:text, createdAt:nowIso()});
-      toastMsg = 'Envoyé dans la Drop Zone';
+      persist();
+      dropSheetProjectPick = null;
+      render();
+      showToast('Ajouté à '+p.emoji+' '+p.title);
+      return;
     }
+
+    var entry = {id:uid(), title:text, createdAt:nowIso()};
+    state.dropZone.push(entry);
     persist();
-    dropSheetProjectPick = null;
-    // La fenêtre reste ouverte — on continue d'y ajouter des idées, comme dans un chat.
-    render();
-    showToast(toastMsg);
+    if(input){ input.value = ''; input.focus(); }
+    // Ajout léger dans le DOM (pas de render() complet) : le nouveau badge apparaît
+    // avec l'animation "jeté dans la zone" (voir .drop-badge.toss) sans redessiner
+    // toute la fenêtre — même logique que la sélection de projet et le cochage.
+    var body = document.getElementById('drop-sheet-body');
+    if(body){
+      if(!document.getElementById('drop-badges')){
+        body.innerHTML = '<div class="drop-badges" id="drop-badges"></div>';
+      }
+      var badgesEl = document.getElementById('drop-badges');
+      badgesEl.insertAdjacentHTML('beforeend', renderDropBadge(entry, true));
+      // Nœud inséré hors d'un render() : le rebranchement global des [data-drop-check]
+      // (fait dans bindGlobalEvents, appelé seulement après un render()) ne le voit
+      // jamais — on relie donc son clic directement ici.
+      var newBadge = badgesEl.lastElementChild;
+      if(newBadge) newBadge.addEventListener('click', function(){ performDropCheck(entry.id); });
+    }
+    updateDropFabBadgeCount();
+    showToast('Envoyé dans la Drop Zone');
   }
 
   function performDropCheck(dropId){
@@ -2866,25 +2912,16 @@
     if(foundIdx < 0) return;
     state.dropZone.splice(foundIdx, 1);
     persist();
-    // Mise à jour légère (pas de render() complet) : la ligne cochée disparaît
+    // Mise à jour légère (pas de render() complet) : le badge coché disparaît
     // directement, sans redessiner toute la fenêtre — même logique que pour la
     // sélection de projet, pour ne jamais faire "sauter" la fenêtre en cours d'usage.
-    var row = document.querySelector('[data-drop-row="'+dropId+'"]');
-    if(row) row.remove();
+    var badgeEl = document.querySelector('.drop-badge[data-drop-check="'+dropId+'"]');
+    if(badgeEl) badgeEl.remove();
     if(!state.dropZone.length){
       var body = document.getElementById('drop-sheet-body');
       if(body) body.innerHTML = '<div class="drop-triage-empty">Rien à trier — la Drop Zone est vide.</div>';
     }
-    var fab = document.getElementById('drop-fab');
-    if(fab){
-      var badge = fab.querySelector('.drop-fab-badge');
-      if(state.dropZone.length > 0){
-        if(badge) badge.textContent = state.dropZone.length;
-        else fab.insertAdjacentHTML('beforeend', '<span class="drop-fab-badge">'+state.dropZone.length+'</span>');
-      } else if(badge){
-        badge.remove();
-      }
-    }
+    updateDropFabBadgeCount();
   }
 
   function renderNoteModal(){
