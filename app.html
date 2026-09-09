@@ -483,9 +483,8 @@
   .drop-triage-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:30px 0;}
   .drop-badges{display:flex;flex-wrap:wrap;align-content:flex-start;gap:9px;}
   .drop-badge{
-    border:none;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:600;color:#fff;
+    border:none;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:600;
     max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    box-shadow:0 2px 6px rgba(43,36,32,0.15);
   }
   /* "Jeté" dans la Drop Zone : apparition rapide avec un léger rebond et une rotation,
      jouée automatiquement puisque le badge est un nouveau nœud DOM inséré à la volée
@@ -2805,9 +2804,11 @@
   }
 
   function renderDropBadge(d, toss){
-    var c = projectColorVars(d.id); // même palette déterministe que les projets, réutilisée telle quelle
+    // Même charte que les badges de projet ailleurs dans l'app : voile 28% en fond
+    // (--proj-*-badge) + la teinte pleine (--proj-*-solid) pour le texte, jamais du blanc.
+    var c = projectColorVars(d.id);
     return '<button class="drop-badge'+(toss?' toss':'')+'" data-drop-check="'+d.id+'" '+
-      'style="background:'+c.solid+';" title="Fait">'+escapeHtml(d.title)+'</button>';
+      'style="background:'+c.badge+';color:'+c.solid+';" title="Fait">'+escapeHtml(d.title)+'</button>';
   }
 
   function renderDropTriageList(){
