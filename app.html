@@ -475,8 +475,9 @@
      liste scrollable en corps, saisie fixée en bas), pour une identité visuelle cohérente. */
   .drop-sheet{position:fixed;inset:0;z-index:62;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
   .drop-sheet-box{width:100%;max-width:620px;height:72vh;background:var(--canvas-card);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 32px rgba(43,36,32,0.18);}
-  .drop-sheet-header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-  .drop-sheet-title{font-size:19px;font-weight:800;color:var(--ink);}
+  .drop-sheet-header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;}
+  .drop-sheet-title{font-size:19px;font-weight:800;color:var(--ink);text-align:center;}
+  .drop-sheet-header .chat-close-btn{position:absolute;right:18px;top:50%;transform:translateY(-50%);}
   .drop-sheet-body{flex:1;overflow-y:auto;padding:14px 18px;}
   .drop-sheet-compose{flex-shrink:0;padding:12px 18px;border-top:1px solid var(--line);}
   .drop-sheet-input-row{display:flex;align-items:center;gap:8px;}
@@ -488,15 +489,6 @@
     flex-shrink:0;height:38px;padding:0 16px;border-radius:12px;border:none;background:var(--accent);
     color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;
   }
-  .drop-sheet-proj-label{font-size:11px;color:var(--ink-faint);margin:10px 0 8px;}
-  .drop-sheet-proj-row{display:flex;flex-wrap:wrap;gap:8px;}
-  .drop-sheet-proj-chip{
-    height:32px;padding:0 12px;border-radius:999px;border:1.4px solid var(--line);background:var(--canvas);
-    font-size:12.5px;font-weight:600;color:var(--ink-soft);display:flex;align-items:center;justify-content:center;
-    max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  }
-  .drop-sheet-proj-chip.dropzone{background:var(--line);}
-  .drop-sheet-proj-chip.active{border-color:var(--accent);color:var(--accent);}
   .drop-triage-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:30px 0;}
   .drop-badges{display:flex;flex-wrap:wrap;align-content:flex-start;gap:9px;}
   .drop-badge{
@@ -2780,7 +2772,6 @@
   }
 
   /* ---------- Drop it : bouton flottant + fenêtre de capture / tri de la Drop Zone ---------- */
-  var dropSheetProjectPick = null; // id du projet choisi en mode capture, null = Drop Zone
 
   function dropZoneCount(){ return state.dropZone.length; }
 
@@ -2824,11 +2815,6 @@
   function renderDropSheet(){
     if(!dropSheetOpen) return '';
 
-    var projChips = state.projects.map(function(p){
-      return '<button class="drop-sheet-proj-chip'+(dropSheetProjectPick===p.id?' active':'')+
-        '" data-drop-proj-pick="'+p.id+'" title="'+escapeHtml(p.title)+'">'+escapeHtml(p.title)+'</button>';
-    }).join('');
-
     return '<div class="drop-sheet" id="drop-sheet">'+
       '<div class="drop-sheet-box">'+
         '<div class="drop-sheet-header">'+
@@ -2841,13 +2827,6 @@
             '<input class="drop-sheet-input" id="drop-sheet-input" type="text" placeholder="Une idée, une tâche…" autocomplete="off">'+
             '<button class="drop-sheet-send" id="drop-sheet-send-btn" title="Envoyer">Envoyer</button>'+
           '</div>'+
-          (state.projects.length ? ''+
-            '<div class="drop-sheet-proj-label">Assigner à un projet — sinon direction Drop Zone</div>'+
-            '<div class="drop-sheet-proj-row" id="drop-sheet-proj-row">'+
-              '<button class="drop-sheet-proj-chip dropzone'+(!dropSheetProjectPick?' active':'')+'" data-drop-proj-pick="" title="Drop Zone">Drop Zone</button>'+
-              projChips+
-            '</div>'
-          : '')+
         '</div>'+
       '</div>'+
     '</div>';
@@ -2857,20 +2836,6 @@
     var input = document.getElementById('drop-sheet-input');
     var text = input ? input.value.trim() : '';
     if(!text) return;
-    var p = dropSheetProjectPick ? findProject(dropSheetProjectPick) : null;
-
-    if(p){
-      // Direction un vrai projet : rien à animer dans la Drop Zone, un render()
-      // classique suffit (comportement inchangé).
-      if(!p.categories.length) p.categories.push(makeCategory('À faire', []));
-      p.categories[0].items.push(makeItem(text));
-      p.updatedAt = nowIso();
-      persist();
-      dropSheetProjectPick = null;
-      render();
-      showToast('Ajouté à '+p.emoji+' '+p.title);
-      return;
-    }
 
     var entry = {id:uid(), title:text, createdAt:nowIso()};
     state.dropZone.push(entry);
@@ -3599,7 +3564,6 @@
     var dropFabBtn = document.getElementById("drop-fab");
     if(dropFabBtn) dropFabBtn.addEventListener("click", function(){
       dropSheetOpen = true;
-      dropSheetProjectPick = null;
       render();
     });
     var dropSheetEl = document.getElementById("drop-sheet");
@@ -3610,17 +3574,6 @@
     if(dropSheetCloseBtn) dropSheetCloseBtn.addEventListener("click", function(){
       dropSheetOpen = false;
       render();
-    });
-    // Choisir le projet de destination ne redessine pas toute la fenêtre — juste le
-    // chip actif — pour ne pas faire "sauter" la fenêtre ni perdre le focus du champ
-    // pendant qu'on est en train de taper.
-    document.querySelectorAll("[data-drop-proj-pick]").forEach(function(el){
-      el.addEventListener("click", function(){
-        dropSheetProjectPick = el.dataset.dropProjPick || null;
-        document.querySelectorAll("[data-drop-proj-pick]").forEach(function(c){
-          c.classList.toggle('active', c === el);
-        });
-      });
     });
     var dropSendBtn = document.getElementById("drop-sheet-send-btn");
     if(dropSendBtn) dropSendBtn.addEventListener("click", function(){ performDropCapture(); });
