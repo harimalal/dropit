@@ -180,13 +180,6 @@
   .detail-emoji{font-size:32px;line-height:1;}
   .detail-title{font-size:19px;font-weight:800;letter-spacing:-0.01em;}
   .detail-summary{font-size:13px;color:var(--ink-soft);max-width:440px;line-height:1.4;}
-  .detail-status-row{display:flex;align-items:center;gap:8px;margin-top:2px;}
-  .status-dot{width:8px;height:8px;border-radius:50%;}
-  .status-dot.actif{background:var(--status-actif);}
-  .status-dot.ralentit{background:var(--status-ralentit);}
-  .status-dot.pause{background:var(--status-pause);}
-  .status-dot.accompli{background:var(--status-accompli);}
-  .detail-status-text{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);letter-spacing:0.03em;}
 
   .progress-track{height:6px;border-radius:4px;background:var(--line);overflow:hidden;margin:10px 0 14px;}
   .progress-fill{height:100%;border-radius:4px;background:var(--current-proj-solid, var(--accent));}
@@ -194,21 +187,29 @@
 
   /* Composants colorés par l'identité du projet (--current-proj-*, posé sur .detail-scroll) — design system v5 */
   .next-action-card{
-    background:var(--current-proj-next, var(--accent-soft));border:none;border-radius:var(--radius-lg);padding:16px;
-    display:flex;flex-direction:column;gap:8px;margin-bottom:14px;box-shadow:var(--shadow-card);
+    background:var(--current-proj-next, var(--accent-soft));border:none;border-radius:var(--radius-lg);padding:22px 16px 16px;
+    display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin:18px 0 14px;
+    box-shadow:var(--shadow-card);position:relative;
   }
-  .next-action-top-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-  .next-action-label{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--current-proj-solid, var(--accent));font-weight:700;}
-  /* Flèche discrète pour parcourir les prochaines tâches (jusqu'à 3) sans les valider —
-     tournée à -90° puisque chevronIcon() pointe vers le bas par défaut ailleurs dans l'app. */
+  .next-action-category{font-size:11.5px;font-style:italic;color:var(--current-proj-solid, var(--accent));opacity:.85;}
+  .next-action-badge{
+    display:inline-block;background:#fff;color:var(--current-proj-solid, var(--accent));font-family:var(--font-mono);
+    font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;
+    padding:4px 12px;border-radius:999px;box-shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  /* Bouton carrousel : rond blanc flottant à cheval sur le bord haut de l'encart, pour
+     parcourir les prochaines tâches (jusqu'à 3) sans les valider — plus visible qu'un
+     simple chevron inline. Icône tournée à -90° car chevronIcon() pointe vers le bas par défaut. */
   .next-action-peek-btn{
-    flex-shrink:0;border:none;background:none;color:var(--current-proj-solid, var(--accent));
-    display:flex;align-items:center;padding:2px;opacity:.7;
+    position:absolute;top:-17px;left:50%;transform:translateX(-50%);
+    width:34px;height:34px;border-radius:50%;background:#fff;border:none;
+    display:flex;align-items:center;justify-content:center;color:var(--current-proj-solid, var(--accent));
+    box-shadow:0 2px 8px rgba(0,0,0,.18);
   }
-  .next-action-peek-btn:hover{opacity:1;}
-  .next-action-peek-btn .icon{width:15px;height:15px;transform:rotate(-90deg);}
-  .next-action-title{font-size:17px;font-weight:700;color:var(--ink);line-height:1.35;}
-  .next-action-row{display:flex;gap:10px;}
+  .next-action-peek-btn:hover{box-shadow:0 3px 10px rgba(0,0,0,.24);}
+  .next-action-peek-btn .icon{width:17px;height:17px;transform:rotate(-90deg);}
+  .next-action-title{font-size:18px;font-weight:700;color:var(--ink);line-height:1.35;}
+  .next-action-row{display:flex;gap:10px;width:100%;}
   .next-action-row .btn-primary{
     flex:1;background:var(--current-proj-btn, var(--accent));border-color:var(--current-proj-btn, var(--accent));
     color:var(--ink);
@@ -236,7 +237,7 @@
     display:flex;align-items:center;gap:10px;text-align:left;
   }
   .category-card-title{
-    flex:1;min-width:0;font-size:14px;font-weight:700;color:var(--ink);
+    flex:1;min-width:0;font-size:16.5px;font-weight:700;color:var(--ink);
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
   .category-progress-track{width:56px;flex-shrink:0;height:4px;border-radius:3px;background:rgba(43,36,32,.08);overflow:hidden;}
@@ -409,7 +410,7 @@
   .proj-note-icon{color:var(--ink-faint);flex-shrink:0;display:flex;align-items:center;}
   .proj-note-icon .icon{width:14px;height:14px;}
   .cat-note-title{
-    flex:1;border:none;background:transparent;font-size:13.5px;color:var(--ink);
+    flex:1;border:none;background:transparent;font-size:15.5px;font-weight:600;color:var(--ink);
     padding:0;outline:none;font-family:inherit;min-width:0;
   }
   .cat-note-title::placeholder{color:var(--ink-faint);}
@@ -417,10 +418,6 @@
   .cat-note-delete:hover{color:var(--accent);}
   .proj-note-body{font-size:13px;color:var(--ink);line-height:1.6;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);}
   .proj-note-body-edit{margin-top:8px;}
-  .proj-note-move{
-    border:1px solid var(--line);background:var(--canvas-card);border-radius:6px;
-    font-size:11px;color:var(--ink-faint);padding:2px 5px;max-width:110px;flex-shrink:0;
-  }
 
 
   /* BARRE DE NAVIGATION FIXE — accueil / liste / chat IA / calendrier.
@@ -893,11 +890,6 @@
     width:100%;box-sizing:border-box;display:flex;align-items:center;gap:8px;
     padding:14px;font-size:13px;color:var(--ink-faint);background:none;border:none;text-align:left;
   }
-  .due-date-chip{
-    display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:11px;
-    color:var(--ink-faint);margin-top:4px;
-  }
-  .due-date-chip.overdue{color:#9C4632;}
 </style>
 </head>
 <body>
@@ -908,7 +900,6 @@
   "use strict";
 
   var DEVICE_ID_KEY = "dropit-device-id";
-  var STATUS_LABELS = {actif:"Actif", ralentit:"Ralentit", pause:"En pause", accompli:"Accompli"};
 
   function getOrCreateDeviceId(){
     var id = localStorage.getItem(DEVICE_ID_KEY);
@@ -1448,16 +1439,6 @@
   function computeDueDate(bucketKey){
     var b = dueBucketInfo(bucketKey);
     return b ? new Date(Date.now() + b.days*86400000).toISOString() : null;
-  }
-  function dueDateLabel(p){
-    if(!p.dueDate) return null;
-    var diffDays = Math.ceil((new Date(p.dueDate).getTime() - Date.now()) / 86400000);
-    if(diffDays < 0) return "Échéance dépassée";
-    if(diffDays === 0) return "Échéance aujourd'hui";
-    if(diffDays === 1) return "Échéance demain";
-    if(diffDays <= 13) return "Échéance dans "+diffDays+" jours";
-    if(diffDays <= 60) return "Échéance dans "+Math.round(diffDays/7)+" semaines";
-    return "Échéance dans "+Math.round(diffDays/30)+" mois";
   }
   function dueBucketOrder(key){
     for(var i=0;i<DUE_BUCKETS.length;i++){ if(DUE_BUCKETS[i].key === key) return i; }
@@ -2623,7 +2604,6 @@
 
   function renderDetail(p){
     var pct = progressPct(p);
-    var status = activityStatus(p);
     var accompli = isAccompli(p);
     var items2 = allItems(p);
     var multiCategory = p.categories.length > 1;
@@ -2643,18 +2623,12 @@
       '<button class="top-delete-btn" id="project-menu-btn" title="Options du projet">'+dotsMenuIcon()+'</button>'+
     '</div>';
 
-    var dueLabel = dueDateLabel(p);
-    var dueOverdue = p.dueDate && new Date(p.dueDate).getTime() < Date.now();
-
     var headerHtml = ''+
     '<div class="detail-header">'+
       '<div class="detail-emoji">'+p.emoji+'</div>'+
       '<div class="detail-title">'+escapeHtml(p.title)+'</div>'+
       (p.summary ? '<div class="detail-summary">'+escapeHtml(p.summary)+'</div>' : '')+
       (p.dna ? '<div class="project-dna">'+escapeHtml(p.dna)+'</div>' : '')+
-      '<div class="detail-status-row"><span class="status-dot '+status+'"></span>'+
-        '<span class="detail-status-text">'+STATUS_LABELS[status]+'</span></div>'+
-      (dueLabel ? '<div class="due-date-chip'+(dueOverdue?' overdue':'')+'">'+calendarIcon()+' '+dueLabel+'</div>' : '')+
     '</div>'+
     '<div class="progress-track"><div class="progress-fill" style="width:'+pct+'%;"></div></div>';
 
@@ -2669,10 +2643,9 @@
       var hasMore = priorityList.length > 1;
       mainActionHtml = ''+
       '<div class="next-action-card">'+
-        '<div class="next-action-top-row">'+
-          '<div class="next-action-label">Prochaine action'+(multiCategory?' · '+escapeHtml(next.category.title):'')+'</div>'+
-          (hasMore ? '<button class="next-action-peek-btn" id="next-action-peek-btn" title="Voir la suivante">'+chevronIcon()+'</button>' : '')+
-        '</div>'+
+        (hasMore ? '<button class="next-action-peek-btn" id="next-action-peek-btn" title="Voir la suivante">'+chevronIcon()+'</button>' : '')+
+        (multiCategory ? '<div class="next-action-category">'+escapeHtml(next.category.title)+'</div>' : '')+
+        '<span class="next-action-badge">Prochaine action</span>'+
         '<div class="next-action-title">'+escapeHtml(next.item.title)+'</div>'+
         '<div class="next-action-row">'+
           '<button class="btn btn-primary" data-toggle-item="'+next.item.id+'">'+checkIcon()+' &nbsp;C\'est fait</button>'+
@@ -2698,7 +2671,7 @@
       bodyHtml = ''+
         suiteHtml+
         (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(function(it){ return renderItemUnit(it, false); }).join("") : '')+
-        renderProjectNotes(p, null);
+        renderProjectNotes(p);
       detailBarHtml = renderItemBar(cat.id);
     } else if(!accompli && multiCategory){
       bodyHtml = ''+
@@ -2706,7 +2679,7 @@
         '<div class="category-accordion">'+
           p.categories.map(function(cat){ return renderCategoryAccordionItem(p, cat, priorityIds); }).join("")+
         '</div>'+
-        renderProjectNotes(p, null);
+        renderProjectNotes(p);
       // La catégorie dépliée devient la cible de la barre de saisie (ajouter une tâche
       // dedans) ; repliée, la barre sert à créer une nouvelle catégorie.
       var openCat = expandedCategoryId ? findCategory(p, expandedCategoryId) : null;
@@ -2763,7 +2736,6 @@
       expandedHtml = '<div class="category-expanded">'+
         remaining.map(function(it){ return renderItemUnit(it, priorityIds.indexOf(it.id)>=0); }).join("")+
         (completed.length ? '<div class="section-label">Terminé ('+completed.length+')</div>'+completed.map(function(it){ return renderItemUnit(it, false); }).join("") : '')+
-        renderProjectNotes(p, cat.id)+
         '<button class="category-delete-inline" data-delete-category="'+cat.id+'">'+trashIcon()+' Supprimer cette catégorie</button>'+
       '</div>';
     }
@@ -2945,11 +2917,9 @@
     '</div>';
   }
 
-  function renderProjectNotes(p, catId){
-    var filterCatId = catId || null;
-    var notes = (p.projectNotes||[]).filter(function(n){ return (n.catId||null) === filterCatId; });
+  function renderProjectNotes(p){
+    var notes = p.projectNotes||[];
     if(!notes.length) return '';
-    var hasMultiCat = p.categories.length > 1;
     var notesHtml = notes.map(function(n){
       var isOpen = projectNoteOpenId === n.id || projectNoteEditId === n.id;
       var chevron = isOpen
@@ -2969,14 +2939,6 @@
           bodySection = '<div class="proj-note-body">'+(n.body ? parseAiText(n.body) : '<span style="color:var(--ink-faint);font-size:13px;">Aucun contenu.</span>')+'</div>';
         }
       }
-      var moveHtml = '';
-      if(hasMultiCat){
-        var opts = '<option value=""'+(!(n.catId)?' selected':'')+'>Projet (global)</option>'+
-          p.categories.map(function(cat){
-            return '<option value="'+escapeHtml(cat.id)+'"'+(n.catId===cat.id?' selected':'')+'>'+escapeHtml(cat.title)+'</option>';
-          }).join('');
-        moveHtml = '<select class="proj-note-move" data-pn-move="'+n.id+'" title="Déplacer">'+opts+'</select>';
-      }
       return '<div class="proj-note-row">'+
         '<div class="proj-note-top">'+
           '<button class="proj-note-toggle-btn" data-pn-toggle="'+n.id+'" title="Déplier/replier" style="border:none;background:none;padding:0;margin:0;color:var(--ink-faint);cursor:pointer;display:flex;align-items:center;flex-shrink:0;">'+chevron+'</button>'+
@@ -2984,7 +2946,6 @@
           '<input class="cat-note-title" type="text" value="'+escapeHtml(n.title)+'" '+
             'data-pn-title="'+n.id+'" placeholder="Titre…">'+
           '<button class="note-pencil-btn" data-pn-edit-open="'+n.id+'" title="Modifier le contenu">'+pencilIcon()+'</button>'+
-          moveHtml+
           '<button class="cat-note-delete" data-pn-delete="'+n.id+'" title="Supprimer">×</button>'+
         '</div>'+
         bodySection+
@@ -3323,16 +3284,6 @@
     var p = findProject(projectId);
     if(!p) return;
     p.projectNotes = (p.projectNotes||[]).filter(function(n){ return n.id !== noteId; });
-    p.updatedAt = nowIso();
-    persist(); render();
-  }
-
-  function performMoveProjectNote(projectId, noteId, catId){
-    var p = findProject(projectId);
-    if(!p) return;
-    var n = findProjectNote(p, noteId);
-    if(!n) return;
-    n.catId = catId || null;
     p.updatedAt = nowIso();
     persist(); render();
   }
@@ -4093,10 +4044,6 @@
         projectNoteOpenId = id;
         render();
       });
-    });
-    // Notes projet libres — déplacer (select)
-    document.querySelectorAll("[data-pn-move]").forEach(function(el){
-      el.addEventListener("change", function(){ performMoveProjectNote(currentProjectId, el.dataset.pnMove, el.value||null); });
     });
     // Note tâche — ouvrir modal (nouvelle note)
     document.querySelectorAll("[data-note-modal-add]").forEach(function(el){
