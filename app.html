@@ -2182,28 +2182,60 @@
     '</div>';
   }
 
-  /* ---------- calendrier : uniquement les projets dont l'échéance tombe le jour affiché
-     (+ échéances dépassées non closes, remontées dans "Aujourd'hui" et marquées "En retard").
-     Granularité projet, pas tâche : aucun champ dueDate par tâche dans le modèle actuel.
-     Plus aucun fourre-tout : un projet sans échéance ne s'affiche jamais ici. ---------- */
+  /* ---------- calendrier ----------
+     "Aujourd'hui" (calSelectedDate === aujourd'hui) : file vivante, pas une attente jusqu'à
+     l'échéance — on avance un peu sur chaque projet actif chaque jour plutôt que de foncer sur
+     un seul jusqu'à sa deadline. Ordre de base = échéance la plus courte d'abord ; rotation
+     quotidienne pour que la sélection tourne d'un projet à l'autre au fil de la semaine ;
+     répartition tour par tour dans le top 3 de chaque projet (un peu de chacun avant beaucoup
+     d'un seul). Les échéances dépassées et non closes remontent toujours en tête, "En retard".
+     Un autre jour du calendrier (navigation) : comportement inchangé, uniquement les projets
+     dont l'échéance tombe exactement ce jour-là — pas de rotation, pas de fourre-tout. ---------- */
   var CAL_DAY_MAX = 5;
   function buildCalendarTasks(){
-    var isToday = calSelectedDate === todayDateStr();
-    var candidates = [];
-    state.projects.forEach(function(p){
-      if(!p.dueDate || isAccompli(p)) return;
-      var dueStr = dateToStr(new Date(p.dueDate));
-      var overdue = isToday && dueStr < calSelectedDate;
-      if(dueStr !== calSelectedDate && !overdue) return;
-      priorityItems(p).forEach(function(x){
-        candidates.push({item:x.item, category:x.category, project:p, priority:'cal', overdue:overdue});
+    var todayStr = todayDateStr();
+
+    if(calSelectedDate !== todayStr){
+      var dayCandidates = [];
+      state.projects.forEach(function(p){
+        if(!p.dueDate || isAccompli(p)) return;
+        if(dateToStr(new Date(p.dueDate)) !== calSelectedDate) return;
+        priorityItems(p).forEach(function(x){
+          dayCandidates.push({item:x.item, category:x.category, project:p, priority:'cal'});
+        });
       });
+      return dayCandidates.slice(0, CAL_DAY_MAX);
+    }
+
+    var active = state.projects.filter(function(p){
+      return !isAccompli(p) && priorityItems(p).length > 0;
     });
-    candidates.sort(function(a,b){
-      if(a.overdue !== b.overdue) return a.overdue ? -1 : 1;
-      return dueBucketOrder(a.project.dueBucket) - dueBucketOrder(b.project.dueBucket);
+    if(!active.length) return [];
+
+    active.sort(function(a,b){
+      return dueBucketOrder(a.dueBucket) - dueBucketOrder(b.dueBucket);
     });
-    return candidates.slice(0, CAL_DAY_MAX);
+
+    // Décale le point de départ de la rotation chaque jour civil, pour que ce ne soit pas
+    // toujours les mêmes projets en tête de liste d'un jour sur l'autre.
+    var dayIndex = Math.floor(Date.now()/86400000);
+    var offset = dayIndex % active.length;
+    var rotated = active.slice(offset).concat(active.slice(0, offset));
+
+    var pools = rotated.map(function(p){ return {project:p, items:priorityItems(p)}; });
+    var ordered = [];
+    for(var round=0; round<3; round++){
+      pools.forEach(function(x){
+        if(x.items.length > round) ordered.push({project:x.project, entry:x.items[round]});
+      });
+    }
+
+    var entries = ordered.map(function(o){
+      var overdue = !!(o.project.dueDate && dateToStr(new Date(o.project.dueDate)) < todayStr);
+      return {item:o.entry.item, category:o.entry.category, project:o.project, priority:'cal', overdue:overdue};
+    });
+    entries.sort(function(a,b){ return (b.overdue?1:0) - (a.overdue?1:0); });
+    return entries.slice(0, CAL_DAY_MAX);
   }
 
   function tlTargetProject(){
