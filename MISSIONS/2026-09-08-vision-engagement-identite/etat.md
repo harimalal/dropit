@@ -1,7 +1,7 @@
 mission: 2026-09-08-vision-engagement-identite
 dossier: MISSIONS/2026-09-08-vision-engagement-identite
 phase: 1
-statut: IMPLÉMENTATION EN COURS — chantiers 1, 2 et 3 livrés
+statut: IMPLÉMENTATION EN COURS — chantiers 1, 2, 3 et 4 livrés, plus 6 chantiers bonus (accordéon catégories, retouches vue projet/chat IA, refonte Prochaine action, Drop Zone sans icônes/scroll stable, titre centré + fin de l'assignation directe)
 derniere_sous_tache_finie: Chantier bonus 6 (titre Drop Zone centré, suppression complète de l'assignation directe à un projet depuis la Drop Zone) livré, poussé (commit 4fdbd60, app.html)
 prochaine_sous_tache: Chantier 5 (statuts de vélocité) — à confirmer avec l'utilisateur avant de démarrer
 modele_courant: sonnet
