@@ -485,17 +485,18 @@
     color:var(--ink);background:var(--canvas);
   }
   .drop-sheet-send{
-    flex-shrink:0;width:38px;height:38px;border-radius:50%;border:none;background:var(--accent);
-    color:#fff;display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;height:38px;padding:0 16px;border-radius:12px;border:none;background:var(--accent);
+    color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;
   }
   .drop-sheet-proj-label{font-size:11px;color:var(--ink-faint);margin:10px 0 8px;}
   .drop-sheet-proj-row{display:flex;flex-wrap:wrap;gap:8px;}
   .drop-sheet-proj-chip{
-    width:36px;height:36px;border-radius:10px;border:1.4px solid transparent;background:var(--canvas);
-    font-size:18px;display:flex;align-items:center;justify-content:center;
+    height:32px;padding:0 12px;border-radius:999px;border:1.4px solid var(--line);background:var(--canvas);
+    font-size:12.5px;font-weight:600;color:var(--ink-soft);display:flex;align-items:center;justify-content:center;
+    max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
   .drop-sheet-proj-chip.dropzone{background:var(--line);}
-  .drop-sheet-proj-chip.active{border-color:var(--accent);}
+  .drop-sheet-proj-chip.active{border-color:var(--accent);color:var(--accent);}
   .drop-triage-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:30px 0;}
   .drop-badges{display:flex;flex-wrap:wrap;align-content:flex-start;gap:9px;}
   .drop-badge{
@@ -1815,7 +1816,19 @@
     // déjà à l'accueil : rien à faire côté app, le navigateur reprend la main normalement
   }
 
+  // render() reconstruit tout le HTML de l'app à chaque appel (coche, ajout, suppression,
+  // changement d'écran...), ce qui réinitialiserait le défilement de l'écran actif à chaque
+  // fois. On mémorise donc la position de chaque conteneur scrollable connu juste avant, et on
+  // la réapplique juste après — une seule fois ici plutôt que dans chaque gestionnaire d'événement.
+  var SCROLL_CONTAINER_IDS = ['detail-scroll','tl-scroll','cal-list'];
+
   function render(){
+    var scrollSnapshot = {};
+    SCROLL_CONTAINER_IDS.forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) scrollSnapshot[id] = el.scrollTop;
+    });
+
     var app = document.getElementById("app");
     if(calendarOpen){
       app.innerHTML = renderCalendarScreen();
@@ -1853,6 +1866,12 @@
     }
     bindGlobalEvents();
     if(generating) renderLoadingOverlay();
+
+    SCROLL_CONTAINER_IDS.forEach(function(id){
+      if(!(id in scrollSnapshot)) return;
+      var el = document.getElementById(id);
+      if(el) el.scrollTop = scrollSnapshot[id];
+    });
   }
 
   function googleIcon(){
@@ -2574,13 +2593,7 @@
     found.item.done = true;
     p.updatedAt = nowIso();
     persist();
-    // Pas d'animation de balayage plein écran ni de saut de scroll : on coche sur
-    // place, en réappliquant la position de défilement après le nouveau rendu.
-    var scroller = document.getElementById('tl-scroll') || document.getElementById('cal-list');
-    var scrollTop = scroller ? scroller.scrollTop : 0;
     render();
-    scroller = document.getElementById('tl-scroll') || document.getElementById('cal-list');
-    if(scroller) scroller.scrollTop = scrollTop;
   }
 
   function renderItemBar(catId){
@@ -2813,25 +2826,25 @@
 
     var projChips = state.projects.map(function(p){
       return '<button class="drop-sheet-proj-chip'+(dropSheetProjectPick===p.id?' active':'')+
-        '" data-drop-proj-pick="'+p.id+'" title="'+escapeHtml(p.title)+'">'+p.emoji+'</button>';
+        '" data-drop-proj-pick="'+p.id+'" title="'+escapeHtml(p.title)+'">'+escapeHtml(p.title)+'</button>';
     }).join('');
 
     return '<div class="drop-sheet" id="drop-sheet">'+
       '<div class="drop-sheet-box">'+
         '<div class="drop-sheet-header">'+
-          '<div class="drop-sheet-title">Tu es dans la Drop Zone</div>'+
+          '<div class="drop-sheet-title">👇 La Drop Zone 👇</div>'+
           '<button class="chat-close-btn" id="drop-sheet-close-btn">×</button>'+
         '</div>'+
         '<div class="drop-sheet-body" id="drop-sheet-body">'+renderDropTriageList()+'</div>'+
         '<div class="drop-sheet-compose">'+
           '<div class="drop-sheet-input-row">'+
             '<input class="drop-sheet-input" id="drop-sheet-input" type="text" placeholder="Une idée, une tâche…" autocomplete="off">'+
-            '<button class="drop-sheet-send" id="drop-sheet-send-btn" title="Envoyer">'+checkIcon()+'</button>'+
+            '<button class="drop-sheet-send" id="drop-sheet-send-btn" title="Envoyer">Envoyer</button>'+
           '</div>'+
           (state.projects.length ? ''+
             '<div class="drop-sheet-proj-label">Assigner à un projet — sinon direction Drop Zone</div>'+
             '<div class="drop-sheet-proj-row" id="drop-sheet-proj-row">'+
-              '<button class="drop-sheet-proj-chip dropzone'+(!dropSheetProjectPick?' active':'')+'" data-drop-proj-pick="" title="Drop Zone">♻️</button>'+
+              '<button class="drop-sheet-proj-chip dropzone'+(!dropSheetProjectPick?' active':'')+'" data-drop-proj-pick="" title="Drop Zone">Drop Zone</button>'+
               projChips+
             '</div>'
           : '')+
@@ -3705,17 +3718,11 @@
       }
     });
 
-    // Accordéon catégories : un clic déplie/replie, en gardant la position de
-    // défilement (sinon le render() complet renvoie l'écran en haut à chaque clic).
     document.querySelectorAll("[data-open-category]").forEach(function(el){
       el.addEventListener("click", function(){
         var catId = el.dataset.openCategory;
-        var scroller = document.getElementById('detail-scroll');
-        var scrollTop = scroller ? scroller.scrollTop : 0;
         expandedCategoryId = (expandedCategoryId === catId) ? null : catId;
         render();
-        var scroller2 = document.getElementById('detail-scroll');
-        if(scroller2) scroller2.scrollTop = scrollTop;
       });
     });
     document.querySelectorAll("[data-delete-category]").forEach(function(el){
