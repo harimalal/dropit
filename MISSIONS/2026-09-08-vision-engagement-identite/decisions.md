@@ -265,6 +265,45 @@ Vérifié en navigateur réel (Playwright) : couleurs calculées distinctes (`rg
 
 ---
 
+## Chantier bonus 3 — Statut/échéance retirés, refonte "Prochaine action", notes toujours projet
+
+Suite directe du chantier bonus 2 : nouvelles retouches de l'utilisateur sur la même vue projet.
+
+### Retrait du statut et de l'échéance dans l'en-tête du projet
+| Option | Description | Statut |
+|---|---|---|
+| A | Garder la ligne de statut ("Actif"/"Ralentit"/...) et le chip d'échéance sous le titre du projet | Écartée — demande explicite de suppression, jugés redondants une fois le bloc Priorités retiré (chantier bonus 2) et sans lien direct avec l'action du jour |
+| B | Supprimer les deux, ne garder que titre/résumé/barre de progression | **Retenue** |
+
+Portée limitée à l'écran projet (`renderDetail`) : les indicateurs de statut/vélocité de la grille d'accueil (tuiles du treemap, chantier 5 pas encore fait) ne sont pas touchés — variables et fonctions différentes (`activityStatus` y est encore appelée). `STATUS_LABELS` et `dueDateLabel()` n'avaient plus aucun appelant après ce retrait : supprimés plutôt que laissés en code mort, ainsi que le CSS `.detail-status-row`/`.status-dot`/`.due-date-chip` associé (vérifié qu'aucune autre vue ne réutilisait ces classes avant suppression).
+
+### Refonte de la carte "Prochaine action"
+| Option | Description | Statut |
+|---|---|---|
+| A | Garder le texte "PROCHAINE ACTION · CATÉGORIE" en petit texte coloré au-dessus du titre de la tâche | Écartée — l'utilisateur veut le libellé "Prochaine action" mis en évidence dans un badge blanc, et la catégorie déplacée en italique au-dessus |
+| B | Catégorie en italique en tout haut de l'encart, badge blanc arrondi "Prochaine action" en dessous, titre de la tâche en dessous | **Retenue** |
+
+- Bouton carrousel : passé d'un chevron discret inline (à côté du libellé texte) à un **rond blanc flottant, à cheval sur le bord supérieur de l'encart, centré horizontalement** — repris du pattern déjà utilisé ailleurs dans l'app pour des éléments flottants proéminents (bouton DROP●IT). Demande explicite : "un bouton carrousel plus visible".
+- Le badge "Prochaine action" n'est plus un simple libellé texte coloré mais un vrai badge (fond blanc, coins arrondis, ombre légère) pour le distinguer visuellement du reste du texte de la carte.
+
+### Titres de catégorie et de note agrandis
+Demande directe, sans option alternative posée : `.category-card-title` 14px → 16.5px, `.cat-note-title` 13.5px → 15.5px (poids de police également renforcé sur les notes, 400 → 600, pour rester lisible à cette taille).
+
+### Notes — suppression totale de la possibilité de rattachement à une catégorie
+- **Constat en relisant le code** : le chantier bonus 2 avait bien forcé `catId:null` pour les notes créées *depuis le chat IA*, mais deux chemins permettaient encore de faire atterrir une note dans une catégorie : (1) un sélecteur "Déplacer" (`data-pn-move`) sur chaque note existante, montré dès qu'un projet a plusieurs catégories ; (2) l'affichage des notes était filtré et dupliqué par catégorie dans l'accordéon (`renderProjectNotes(p, cat.id)` appelé depuis `renderCategoryAccordionItem`).
+- Demande de l'utilisateur ("plus possibilité de le mettre dans les catégories") lue comme couvrant ces deux chemins, pas seulement la création depuis le chat.
+
+| Option | Description | Statut |
+|---|---|---|
+| A | Ne toucher que la création depuis le chat (déjà fait), garder le sélecteur "Déplacer" pour les notes existantes | Écartée — laisse un moyen détourné de recréer exactement ce que l'utilisateur vient de refuser |
+| B | Retirer entièrement le sélecteur "Déplacer" et l'affichage de notes par catégorie ; `renderProjectNotes(p)` affiche désormais systématiquement toutes les notes du projet, au niveau projet uniquement | **Retenue** |
+
+`performMoveProjectNote()` et son binding d'événement supprimés (plus aucun appelant). Le champ `catId` reste dans le modèle de donnée des notes (compatibilité avec d'éventuelles notes existantes créées avant ce changement) mais n'est plus jamais lu pour filtrer l'affichage ni jamais écrit ailleurs qu'à `null`.
+
+Vérifié en navigateur réel (Playwright) : statut/échéance absents de l'écran projet, badge "Prochaine action" et catégorie en italique affichés, carrousel fonctionnel (clic fait défiler les tâches), titres de catégorie mesurés à 16.5px et de note à 15.5px, note créée depuis le chat avec une catégorie dépliée au moment du clic enregistrée avec `catId:null`, sélecteur "Déplacer" absent du DOM.
+
+---
+
 ## Repères de méthode (décisions transverses, valables sur tous les chantiers)
 
 - Ne jamais faire calculer un comptage, un statut ou une agrégation par le LLM — toujours un calcul déterministe côté application (origine : bug de comptage observé dans l'audit).
