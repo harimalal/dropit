@@ -187,8 +187,8 @@
 
   /* Composants colorés par l'identité du projet (--current-proj-*, posé sur .detail-scroll) — design system v5 */
   .next-action-card{
-    background:var(--current-proj-next, var(--accent-soft));border:none;border-radius:var(--radius-lg);padding:22px 16px 16px;
-    display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin:18px 0 14px;
+    background:var(--current-proj-next, var(--accent-soft));border:none;border-radius:var(--radius-lg);padding:16px 30px 16px 16px;
+    display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin:14px 0;
     box-shadow:var(--shadow-card);position:relative;
   }
   .next-action-category{font-size:11.5px;font-style:italic;color:var(--current-proj-solid, var(--accent));opacity:.85;}
@@ -197,11 +197,12 @@
     font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;
     padding:4px 12px;border-radius:999px;box-shadow:0 1px 3px rgba(0,0,0,.08);
   }
-  /* Bouton carrousel : rond blanc flottant à cheval sur le bord haut de l'encart, pour
-     parcourir les prochaines tâches (jusqu'à 3) sans les valider — plus visible qu'un
-     simple chevron inline. Icône tournée à -90° car chevronIcon() pointe vers le bas par défaut. */
+  /* Bouton carrousel : rond blanc flottant à cheval sur le bord droit de l'encart, centré
+     verticalement, pour parcourir les prochaines tâches (jusqu'à 3) sans les valider — plus
+     visible qu'un simple chevron inline. Icône tournée à -90° car chevronIcon() pointe vers
+     le bas par défaut (une fois tournée, elle pointe vers la droite, sens de la navigation). */
   .next-action-peek-btn{
-    position:absolute;top:-17px;left:50%;transform:translateX(-50%);
+    position:absolute;top:50%;right:-17px;transform:translateY(-50%);
     width:34px;height:34px;border-radius:50%;background:#fff;border:none;
     display:flex;align-items:center;justify-content:center;color:var(--current-proj-solid, var(--accent));
     box-shadow:0 2px 8px rgba(0,0,0,.18);
@@ -269,11 +270,11 @@
     border-radius:var(--radius);padding:11px 12px;margin-bottom:8px;
   }
   .step-check{
-    flex-shrink:0;width:22px;height:22px;border-radius:50%;border:1.6px solid var(--ink-faint);background:transparent;
+    flex-shrink:0;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--ink-faint);background:transparent;
     display:flex;align-items:center;justify-content:center;color:#fff;
   }
   .step-check.checked{background:var(--current-proj-solid, var(--status-actif));border-color:var(--current-proj-solid, var(--status-actif));}
-  .step-check .icon{width:12px;height:12px;}
+  .step-check .icon{width:10px;height:10px;}
   .step-title{flex:1;font-size:14px;color:var(--ink);min-width:0;}
   .step-row.done .step-title{color:var(--ink-faint);}
   .step-row.priority{background:var(--current-proj-priority, var(--accent-soft));border-color:transparent;}
