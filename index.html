@@ -20,105 +20,56 @@
 </script>
 <style>
   :root{
-    --canvas:#F8F8F9; --canvas-card:#FFFFFF; --ink:#2B2420; --ink-soft:#7A7168; --ink-faint:#A79E93;
-    --line:#EFEBE6; --accent:#BF5B44; --accent-soft:#F3E2DC; --cta:#9CECCB; --cta-hover:#7FE0B5;
-    --terracotta:#D25C41; --terracotta-soft:#F5D4CD;
-    --corail:#D24165; --corail-soft:#F5CDD7;
-    --ambre:#C6872F; --ambre-soft:#F5E4CD;
-    --emeraude:#27A571; --emeraude-soft:#CDF5E4;
-    --azur:#4196D2; --azur-soft:#CDE4F5;
-    --mure:#AE41D2; --mure-soft:#EBCDF5;
-    /* Fonds pleine page des panneaux du carrousel — pastels très clairs, façon captures App Store */
-    --rose-bg:#FBEAEF; --lavender-bg:#EEEAFB; --peach-bg:#FDEEE1; --mint-bg:#E4F7EF;
+    --canvas:#F8F8F9; --ink:#2B2420; --ink-soft:#7A7168; --line:#EFEBE6;
+    --accent:#BF5B44; --cta:#9CECCB; --cta-hover:#7FE0B5;
     --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    --font-mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   html,body{height:100%;overflow:hidden;}
   body{
-    font-family:var(--font);background:var(--canvas);color:var(--ink);
-    height:100vh;height:100svh;display:flex;flex-direction:column;
+    font-family:var(--font);background:#fff;color:var(--ink);
+    height:100vh;height:100svh;position:relative;
     -webkit-tap-highlight-color:transparent;
   }
 
-  /* ---------- Header ---------- */
-  .site-header{flex-shrink:0;display:flex;justify-content:center;padding:calc(10px + env(safe-area-inset-top)) 20px 6px;position:relative;z-index:6;}
-  .logo-pill{
-    display:inline-flex;align-items:center;gap:2px;padding:7px 16px;border-radius:999px;
-    background:var(--canvas-card);box-shadow:0 8px 20px rgba(43,36,32,.1);border:1px solid var(--line);
-  }
-  .logo-pill .word{font-size:13px;font-weight:800;letter-spacing:-.02em;color:var(--ink);}
-  .logo-pill .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);margin:0 3px;}
-
-  /* ---------- Carousel ---------- */
-  .carousel-viewport{flex:1;min-height:0;position:relative;overflow:hidden;}
+  /* ---------- Carrousel plein écran ---------- */
+  .carousel-viewport{position:absolute;inset:0;overflow:hidden;background:#fff;}
   .carousel-track{display:flex;height:100%;transition:transform .45s cubic-bezier(.25,.9,.35,1);touch-action:pan-y;}
-  .slide{
-    flex:0 0 100%;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    padding:8px 20px;gap:clamp(4px,1.2vh,10px);text-align:center;
-  }
-  .panel-headline{font-size:clamp(19px,5.6vw,25px);font-weight:800;line-height:1.14;color:var(--ink);max-width:290px;letter-spacing:-.02em;}
-  .panel-caption{
-    display:flex;align-items:center;justify-content:center;gap:7px;font-size:12.5px;color:var(--ink-soft);
-    font-style:italic;max-width:290px;line-height:1.4;
-  }
-  .panel-caption .icon{font-size:17px;flex-shrink:0;font-style:normal;}
-  .slide-mock{width:100%;display:flex;justify-content:center;flex:1;min-height:0;align-items:center;}
-  .slide-mock svg{height:100%;max-height:clamp(300px,54vh,480px);width:auto;max-width:100%;overflow:visible;}
-  .slide-mock svg text{font-family:var(--font);}
+  .slide{flex:0 0 100%;width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
+  .slide img{width:100%;height:100%;object-fit:contain;object-position:center;display:block;}
 
   /* ---------- Nav flèches ---------- */
   .nav-arrow{
-    position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;
-    background:var(--canvas-card);border:1px solid var(--line);box-shadow:0 6px 16px rgba(43,36,32,.12);
+    position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;
+    background:rgba(255,255,255,.92);border:1px solid var(--line);box-shadow:0 6px 16px rgba(43,36,32,.16);
     display:flex;align-items:center;justify-content:center;color:var(--ink);z-index:5;
   }
   .nav-arrow:disabled{opacity:0;pointer-events:none;}
-  .nav-arrow.prev{left:6px;}
-  .nav-arrow.next{right:6px;}
-  .nav-arrow .icon{width:14px;height:14px;}
+  .nav-arrow.prev{left:10px;}
+  .nav-arrow.next{right:10px;}
+  .nav-arrow .icon{width:15px;height:15px;}
 
-  /* ---------- Dots ---------- */
-  .dots{flex-shrink:0;display:flex;justify-content:center;gap:7px;padding:3px 0 1px;position:relative;z-index:6;}
-  .dot{width:6px;height:6px;border-radius:50%;background:var(--line);border:none;padding:0;transition:width .25s ease, background .25s ease;}
-  .dot.active{width:18px;border-radius:4px;background:var(--accent);}
-
-  /* ---------- Footer CTA ---------- */
-  .site-footer{
-    flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;z-index:6;
-    padding:6px 20px calc(12px + env(safe-area-inset-bottom));
+  /* ---------- Overlay CTA (par-dessus l'image, en bas) ---------- */
+  .cta-overlay{
+    position:absolute;left:0;right:0;bottom:0;z-index:6;
+    padding:74px 20px calc(14px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg, rgba(248,248,249,0) 0%, rgba(248,248,249,.97) 22%, var(--canvas) 42%);
+    display:flex;flex-direction:column;align-items:center;gap:8px;
   }
+  .dots{display:flex;justify-content:center;gap:7px;margin-bottom:2px;}
+  .dot{width:6px;height:6px;border-radius:50%;background:rgba(43,36,32,.22);border:none;padding:0;transition:width .25s ease, background .25s ease;}
+  .dot.active{width:18px;border-radius:4px;background:var(--accent);}
   .cta-btn{
-    display:inline-block;width:100%;max-width:340px;border:none;border-radius:14px;
-    padding:13px 28px;font-size:14.5px;font-weight:800;background:var(--cta);color:var(--ink);cursor:pointer;
-    box-shadow:0 12px 26px rgba(43,36,32,.16);transition:transform .15s ease, background .15s ease;
+    display:block;width:100%;max-width:340px;border:none;border-radius:14px;
+    padding:14px 28px;font-size:15px;font-weight:800;background:var(--cta);color:var(--ink);cursor:pointer;
+    box-shadow:0 12px 26px rgba(43,36,32,.2);transition:transform .15s ease, background .15s ease;
     text-decoration:none;text-align:center;
   }
   .cta-btn:hover{background:var(--cta-hover);transform:translateY(-2px);}
-  .cta-proof{font-size:11px;color:var(--ink-faint);}
-
-  /* ---------- Slide 0 : couverture ---------- */
-  .cover-title{display:flex;align-items:center;gap:9px;font-size:clamp(30px,9vw,42px);font-weight:800;letter-spacing:-.03em;color:var(--ink);}
-  .cover-title .dot{width:13px;height:13px;border-radius:50%;background:var(--accent);flex-shrink:0;}
-  .cover-sub{font-size:clamp(16px,4.6vw,20px);font-weight:800;line-height:1.25;max-width:300px;color:var(--ink);}
-  .cover-body{font-size:13.5px;color:var(--ink-soft);line-height:1.5;max-width:280px;}
-
-  /* ---------- Slide finale : récap bénéfices + CTA ---------- */
-  .recap-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:320px;}
-  .recap-item{background:var(--canvas-card);border:1px solid var(--line);border-radius:14px;padding:12px 10px;text-align:left;}
-  .recap-item .icon-circle{
-    width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:6px;
-  }
-  .recap-item .rtitle{font-size:12.5px;font-weight:800;color:var(--ink);line-height:1.2;margin-bottom:3px;}
-  .recap-item .rbody{font-size:10.5px;color:var(--ink-soft);line-height:1.35;}
-  .recap-final-tagline{font-size:13px;font-weight:700;color:var(--ink-soft);margin-top:2px;}
+  .cta-secondary{font-size:13px;font-weight:700;color:var(--ink-soft);text-decoration:underline;padding:4px;}
 </style>
 </head>
 <body>
-
-<div class="site-header">
-  <div class="logo-pill"><span class="word">DROP</span><span class="dot"></span><span class="word">IT</span></div>
-</div>
 
 <div class="carousel-viewport">
   <button class="nav-arrow prev" id="prev-btn" aria-label="Précédent">
@@ -129,319 +80,19 @@
   </button>
 
   <div class="carousel-track" id="track">
-
-    <!-- Panneau 0 : couverture -->
-    <div class="slide" style="background:var(--canvas-card);">
-      <div class="cover-title"><span class="dot"></span>Drop It</div>
-      <div class="cover-sub">Toutes tes idées.<br>Un plan. Des résultats.</div>
-      <div class="cover-body">L'IA qui t'aide à passer de l'idée à l'action, sans charge mentale.</div>
-      <div class="slide-mock">
-        <svg viewBox="0 0 300 560" fill="none">
-          <!-- callout -->
-          <text x="18" y="30" font-size="13.5" font-weight="800" fill="var(--accent)" transform="rotate(-4 90 25)">Capture tout</text>
-          <text x="18" y="48" font-size="13.5" font-weight="800" fill="var(--accent)" transform="rotate(-4 90 43)">ce qui te passe par la tête !</text>
-          <path d="M232 40 Q 258 46 254 76" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 6" fill="none"/>
-          <path d="M242 68 L252 78 L260 66" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-
-          <!-- iPhone -->
-          <rect x="40" y="76" width="220" height="430" rx="38" fill="var(--ink)"/>
-          <rect x="46" y="82" width="208" height="418" rx="32" fill="var(--canvas)"/>
-          <text x="64" y="108" font-size="11" font-weight="700" fill="var(--ink)">9:41</text>
-          <rect x="215" y="99" width="3" height="7" rx="1" fill="var(--ink)"/>
-          <rect x="220" y="97" width="3" height="9" rx="1" fill="var(--ink)"/>
-          <rect x="225" y="95" width="3" height="11" rx="1" fill="var(--ink)"/>
-          <rect x="233" y="98" width="15" height="9" rx="2.5" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
-          <rect x="235" y="100" width="10" height="5" rx="1" fill="var(--ink)"/>
-
-          <text x="64" y="134" font-size="14" font-weight="800" fill="var(--ink)">Let's Go ! 🔥</text>
-
-          <rect x="64" y="148" width="82" height="82" rx="16" fill="var(--mure-soft)"/>
-          <text x="105" y="184" font-size="26" text-anchor="middle">🧘</text>
-          <text x="105" y="210" font-size="9.5" font-weight="700" text-anchor="middle" fill="var(--ink)">Souffler un peu</text>
-
-          <rect x="154" y="148" width="82" height="82" rx="16" fill="var(--ambre-soft)"/>
-          <text x="195" y="184" font-size="26" text-anchor="middle">🎂</text>
-          <text x="195" y="210" font-size="9.5" font-weight="700" text-anchor="middle" fill="var(--ink)">Anniv. Noah</text>
-
-          <rect x="64" y="238" width="82" height="82" rx="16" fill="var(--azur-soft)"/>
-          <text x="105" y="274" font-size="26" text-anchor="middle">💼</text>
-          <text x="105" y="300" font-size="9.5" font-weight="700" text-anchor="middle" fill="var(--ink)">Objectifs pro</text>
-
-          <rect x="154" y="238" width="82" height="82" rx="16" fill="var(--terracotta-soft)"/>
-          <text x="195" y="274" font-size="26" text-anchor="middle">🎒</text>
-          <text x="195" y="300" font-size="9.5" font-weight="700" text-anchor="middle" fill="var(--ink)">Rentrée</text>
-
-          <rect x="126" y="480" width="48" height="4" rx="2" fill="var(--ink)" opacity=".3"/>
-
-          <!-- bouton flottant Drop It -->
-          <g transform="translate(0 4)">
-            <rect x="146" y="336" width="108" height="40" rx="20" fill="#2B2420" opacity=".14"/>
-            <rect x="142" y="332" width="108" height="40" rx="20" fill="#fff"/>
-            <text x="163" y="357" font-size="13" font-weight="800" fill="var(--ink)">DROP</text>
-            <circle cx="196" cy="352" r="3" fill="var(--accent)"/>
-            <text x="203" y="357" font-size="13" font-weight="800" fill="var(--ink)">IT</text>
-            <circle cx="242" cy="336" r="11" fill="var(--accent)"/>
-            <text x="242" y="340" font-size="10.5" font-weight="800" text-anchor="middle" fill="#fff">5</text>
-          </g>
-        </svg>
-      </div>
-      <div class="panel-caption"><span class="icon">🌾</span>Une vie plus organisée, plus sereine, plus libre.<span class="icon">🌾</span></div>
-    </div>
-
-    <!-- Panneau 1 : projets structurés -->
-    <div class="slide" style="background:var(--rose-bg);">
-      <div class="panel-headline">Des projets concrets<br>et bien structurés</div>
-      <div class="slide-mock">
-        <svg viewBox="0 0 300 560" fill="none">
-          <rect x="40" y="12" width="220" height="430" rx="38" fill="var(--ink)"/>
-          <rect x="46" y="18" width="208" height="418" rx="32" fill="#fff"/>
-          <text x="64" y="44" font-size="11" font-weight="700" fill="var(--ink)">9:41</text>
-          <rect x="215" y="35" width="3" height="7" rx="1" fill="var(--ink)"/>
-          <rect x="220" y="33" width="3" height="9" rx="1" fill="var(--ink)"/>
-          <rect x="225" y="31" width="3" height="11" rx="1" fill="var(--ink)"/>
-          <rect x="233" y="34" width="15" height="9" rx="2.5" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
-          <rect x="235" y="36" width="10" height="5" rx="1" fill="var(--ink)"/>
-
-          <text x="150" y="70" font-size="14" font-weight="800" text-anchor="middle" fill="var(--ink)">🎒 Rentrée scolaire</text>
-          <rect x="54" y="80" width="192" height="6" rx="3" fill="var(--line)"/>
-          <rect x="54" y="80" width="77" height="6" rx="3" fill="var(--terracotta)"/>
-
-          <rect x="54" y="96" width="192" height="94" rx="18" fill="var(--corail-soft)"/>
-          <text x="150" y="116" font-size="10" font-style="italic" text-anchor="middle" fill="var(--corail)">Fournitures scolaires</text>
-          <rect x="106" y="122" width="88" height="16" rx="8" fill="#fff"/>
-          <text x="150" y="134" font-size="8" font-weight="800" letter-spacing="0.5" text-anchor="middle" fill="var(--corail)">PROCHAINE ACTION</text>
-          <text x="150" y="155" font-size="12.5" font-weight="800" text-anchor="middle" fill="var(--ink)">Préparer le sac</text>
-          <text x="150" y="171" font-size="12.5" font-weight="800" text-anchor="middle" fill="var(--ink)">de sport de Léo</text>
-          <circle cx="54" cy="143" r="14" fill="#fff"/>
-          <path d="M51 143 l4 -4 M51 143 l4 4" stroke="var(--corail)" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="246" cy="143" r="14" fill="#fff"/>
-          <path d="M249 143 l-4 -4 M249 143 l-4 4" stroke="var(--corail)" stroke-width="2" stroke-linecap="round"/>
-
-          <text x="54" y="206" font-size="9" font-family="var(--font-mono)" letter-spacing="0.5" fill="var(--ink-faint)">CATÉGORIES</text>
-
-          <rect x="54" y="214" width="192" height="50" rx="14" fill="var(--canvas)"/>
-          <text x="66" y="236" font-size="11.5" font-weight="800" fill="var(--ink)">Fournitures scolaires</text>
-          <rect x="66" y="246" width="100" height="5" rx="2.5" fill="var(--line)"/>
-          <rect x="66" y="246" width="44" height="5" rx="2.5" fill="var(--corail)"/>
-          <text x="234" y="250" font-size="9.5" fill="var(--ink-faint)" text-anchor="end">4/9</text>
-
-          <rect x="54" y="272" width="192" height="50" rx="14" fill="var(--canvas)"/>
-          <text x="66" y="294" font-size="11.5" font-weight="800" fill="var(--ink)">Inscriptions</text>
-          <rect x="66" y="304" width="100" height="5" rx="2.5" fill="var(--line)"/>
-          <rect x="66" y="304" width="40" height="5" rx="2.5" fill="var(--corail)"/>
-          <text x="234" y="308" font-size="9.5" fill="var(--ink-faint)" text-anchor="end">2/5</text>
-
-          <rect x="54" y="330" width="192" height="50" rx="14" fill="var(--canvas)"/>
-          <text x="66" y="352" font-size="11.5" font-weight="800" fill="var(--ink)">Papiers médicaux</text>
-          <rect x="66" y="362" width="100" height="5" rx="2.5" fill="var(--line)"/>
-          <text x="234" y="366" font-size="9.5" fill="var(--ink-faint)" text-anchor="end">0/6</text>
-
-          <rect x="126" y="416" width="48" height="4" rx="2" fill="var(--ink)" opacity=".3"/>
-        </svg>
-      </div>
-      <div class="panel-caption"><span class="icon">💡</span>L'IA découpe ton objectif en étapes claires.</div>
-    </div>
-
-    <!-- Panneau 2 : Drop Zone -->
-    <div class="slide" style="background:var(--lavender-bg);">
-      <div class="panel-headline">Tout ce qui te passe par<br>la tête, au même endroit</div>
-      <div class="slide-mock">
-        <svg viewBox="0 0 300 560" fill="none">
-          <rect x="40" y="12" width="220" height="430" rx="38" fill="var(--ink)"/>
-          <rect x="46" y="18" width="208" height="418" rx="32" fill="#fff"/>
-          <text x="64" y="44" font-size="11" font-weight="700" fill="var(--ink)">9:41</text>
-          <rect x="215" y="35" width="3" height="7" rx="1" fill="var(--ink)"/>
-          <rect x="220" y="33" width="3" height="9" rx="1" fill="var(--ink)"/>
-          <rect x="225" y="31" width="3" height="11" rx="1" fill="var(--ink)"/>
-          <rect x="233" y="34" width="15" height="9" rx="2.5" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
-          <rect x="235" y="36" width="10" height="5" rx="1" fill="var(--ink)"/>
-
-          <text x="150" y="70" font-size="15" font-weight="800" text-anchor="middle" fill="var(--ink)">👇 La Drop Zone 👇</text>
-          <line x1="54" y1="82" x2="246" y2="82" stroke="var(--line)" stroke-width="1.5"/>
-
-          <rect x="54" y="94" width="140" height="32" rx="16" fill="var(--terracotta-soft)"/>
-          <text x="124" y="115" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--terracotta)">Vaccin rappel Léo</text>
-
-          <rect x="54" y="132" width="192" height="32" rx="16" fill="var(--azur-soft)"/>
-          <text x="150" y="153" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--azur)">Cahier de vacances Emma</text>
-
-          <rect x="54" y="170" width="160" height="32" rx="16" fill="var(--ambre-soft)"/>
-          <text x="134" y="191" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--ambre)">Gâteau anniv. Noah</text>
-
-          <rect x="54" y="208" width="150" height="32" rx="16" fill="var(--emeraude-soft)"/>
-          <text x="129" y="229" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--emeraude)">RDV orthodontiste</text>
-
-          <rect x="54" y="246" width="146" height="32" rx="16" fill="var(--mure-soft)"/>
-          <text x="127" y="267" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--mure)">Robe soirée jeudi</text>
-
-          <rect x="54" y="284" width="180" height="32" rx="16" fill="var(--corail-soft)"/>
-          <text x="144" y="305" font-size="11.5" font-weight="700" text-anchor="middle" fill="var(--corail)">Payer la cantine</text>
-
-          <rect x="54" y="370" width="192" height="38" rx="14" fill="var(--canvas)" stroke="var(--line)" stroke-width="1.5"/>
-          <text x="66" y="393" font-size="11.5" fill="var(--ink-faint)">Une idée, une tâche…</text>
-          <rect x="196" y="376" width="40" height="26" rx="8" fill="var(--accent)"/>
-          <text x="216" y="393" font-size="9.5" font-weight="700" text-anchor="middle" fill="#fff">Envoyer</text>
-
-          <rect x="126" y="416" width="48" height="4" rx="2" fill="var(--ink)" opacity=".3"/>
-        </svg>
-      </div>
-      <div class="panel-caption"><span class="icon">🪄</span>Tu déposes, l'IA trie, catégorise et planifie.</div>
-    </div>
-
-    <!-- Panneau 3 : Aujourd'hui -->
-    <div class="slide" style="background:var(--peach-bg);">
-      <div class="panel-headline">Une journée claire et<br>une vision d'ensemble</div>
-      <div class="slide-mock">
-        <svg viewBox="0 0 300 560" fill="none">
-          <rect x="40" y="12" width="220" height="430" rx="38" fill="var(--ink)"/>
-          <rect x="46" y="18" width="208" height="418" rx="32" fill="#fff"/>
-          <text x="64" y="44" font-size="11" font-weight="700" fill="var(--ink)">9:41</text>
-          <rect x="215" y="35" width="3" height="7" rx="1" fill="var(--ink)"/>
-          <rect x="220" y="33" width="3" height="9" rx="1" fill="var(--ink)"/>
-          <rect x="225" y="31" width="3" height="11" rx="1" fill="var(--ink)"/>
-          <rect x="233" y="34" width="15" height="9" rx="2.5" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
-          <rect x="235" y="36" width="10" height="5" rx="1" fill="var(--ink)"/>
-
-          <text x="150" y="70" font-size="15" font-weight="800" text-anchor="middle" fill="var(--ink)">Aujourd'hui</text>
-          <text x="150" y="86" font-size="10" text-anchor="middle" fill="var(--ink-faint)">Septembre 2026</text>
-
-          <text x="66" y="106" font-size="9.5" fill="var(--ink-faint)" text-anchor="middle">8</text>
-          <text x="98" y="106" font-size="9.5" fill="var(--ink-faint)" text-anchor="middle">9</text>
-          <circle cx="150" cy="102" r="12" fill="var(--ambre-soft)"/>
-          <text x="150" y="106" font-size="10" font-weight="800" fill="var(--ambre)" text-anchor="middle">10</text>
-          <text x="202" y="106" font-size="9.5" fill="var(--ink-faint)" text-anchor="middle">11</text>
-          <text x="234" y="106" font-size="9.5" fill="var(--ink-faint)" text-anchor="middle">12</text>
-
-          <line x1="54" y1="124" x2="246" y2="124" stroke="var(--line)" stroke-width="1.5"/>
-          <text x="54" y="140" font-size="9" font-family="var(--font-mono)" letter-spacing="0.5" fill="var(--ink-faint)">AUJOURD'HUI · 4 TÂCHES</text>
-
-          <rect x="54" y="150" width="192" height="56" rx="16" fill="var(--canvas)"/>
-          <circle cx="70" cy="178" r="9" fill="#fff" stroke="var(--ink-faint)" stroke-width="1.5"/>
-          <text x="88" y="174" font-size="11.5" font-weight="800" fill="var(--ink)">Sac de sport</text>
-          <text x="88" y="190" font-size="9.5" fill="var(--ink-faint)">Léo · Rentrée</text>
-          <rect x="204" y="164" width="28" height="28" rx="8" fill="var(--terracotta-soft)"/>
-          <text x="218" y="183" font-size="12" text-anchor="middle">🎒</text>
-
-          <rect x="54" y="214" width="192" height="56" rx="16" fill="var(--canvas)"/>
-          <circle cx="70" cy="242" r="9" fill="#fff" stroke="var(--ink-faint)" stroke-width="1.5"/>
-          <text x="88" y="238" font-size="11.5" font-weight="800" fill="var(--ink)">RDV parents-profs</text>
-          <text x="88" y="254" font-size="9.5" fill="var(--ink-faint)">Emma · École</text>
-          <rect x="204" y="228" width="28" height="28" rx="8" fill="var(--mure-soft)"/>
-          <text x="218" y="247" font-size="12" text-anchor="middle">🏫</text>
-
-          <rect x="54" y="278" width="192" height="56" rx="16" fill="var(--canvas)"/>
-          <circle cx="70" cy="306" r="9" fill="#fff" stroke="var(--ink-faint)" stroke-width="1.5"/>
-          <text x="88" y="302" font-size="11.5" font-weight="800" fill="var(--ink)">Relancer traiteur</text>
-          <text x="88" y="318" font-size="9.5" fill="var(--ink-faint)">Anniversaire Noah</text>
-          <rect x="204" y="292" width="28" height="28" rx="8" fill="var(--azur-soft)"/>
-          <text x="218" y="311" font-size="12" text-anchor="middle">🎂</text>
-
-          <rect x="54" y="342" width="192" height="56" rx="16" fill="var(--canvas)"/>
-          <circle cx="70" cy="370" r="9" fill="#fff" stroke="var(--ink-faint)" stroke-width="1.5"/>
-          <text x="88" y="366" font-size="11.5" font-weight="800" fill="var(--ink)">Rapport trimestriel</text>
-          <text x="88" y="382" font-size="9.5" fill="var(--ink-faint)">Travail</text>
-          <rect x="204" y="356" width="28" height="28" rx="8" fill="var(--emeraude-soft)"/>
-          <text x="218" y="375" font-size="12" text-anchor="middle">💼</text>
-
-          <rect x="126" y="416" width="48" height="4" rx="2" fill="var(--ink)" opacity=".3"/>
-        </svg>
-      </div>
-      <div class="panel-caption"><span class="icon">📅</span>Des journées plus productives. Moins de stress.</div>
-    </div>
-
-    <!-- Panneau 4 : Priorités -->
-    <div class="slide" style="background:var(--mint-bg);">
-      <div class="panel-headline">Des priorités qui<br>te font avancer</div>
-      <div class="slide-mock">
-        <svg viewBox="0 0 300 560" fill="none">
-          <rect x="40" y="12" width="220" height="430" rx="38" fill="var(--ink)"/>
-          <rect x="46" y="18" width="208" height="418" rx="32" fill="#fff"/>
-          <text x="64" y="44" font-size="11" font-weight="700" fill="var(--ink)">9:41</text>
-          <rect x="215" y="35" width="3" height="7" rx="1" fill="var(--ink)"/>
-          <rect x="220" y="33" width="3" height="9" rx="1" fill="var(--ink)"/>
-          <rect x="225" y="31" width="3" height="11" rx="1" fill="var(--ink)"/>
-          <rect x="233" y="34" width="15" height="9" rx="2.5" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
-          <rect x="235" y="36" width="10" height="5" rx="1" fill="var(--ink)"/>
-
-          <text x="64" y="70" font-size="15" font-weight="800" fill="var(--ink)">Priorités</text>
-          <text x="236" y="70" font-size="10" fill="var(--ink-faint)" text-anchor="end">18 prioritaires</text>
-          <line x1="54" y1="82" x2="246" y2="82" stroke="var(--line)" stroke-width="1.5"/>
-
-          <circle cx="66" cy="100" r="11" fill="var(--terracotta-soft)"/><text x="66" y="104" font-size="11" text-anchor="middle">🎒</text>
-          <circle cx="92" cy="100" r="11" fill="var(--mure-soft)"/><text x="92" y="104" font-size="11" text-anchor="middle">💼</text>
-          <circle cx="118" cy="100" r="11" fill="var(--emeraude-soft)"/><text x="118" y="104" font-size="11" text-anchor="middle">📖</text>
-          <circle cx="144" cy="100" r="11" fill="var(--azur-soft)"/><text x="144" y="104" font-size="11" text-anchor="middle">🏠</text>
-          <circle cx="170" cy="100" r="11" fill="var(--ambre-soft)"/><text x="170" y="104" font-size="11" text-anchor="middle">🎂</text>
-
-          <line x1="54" y1="118" x2="246" y2="118" stroke="var(--line)" stroke-width="1.5"/>
-
-          <rect x="54" y="130" width="192" height="52" rx="14" fill="var(--canvas)"/>
-          <text x="66" y="152" font-size="11.5" font-weight="700" fill="var(--ink)">Préparer le sac de sport</text>
-          <text x="66" y="168" font-size="9.5" fill="var(--ink-faint)">Rentrée scolaire</text>
-          <rect x="196" y="140" width="22" height="15" rx="6" fill="var(--terracotta-soft)"/>
-          <text x="207" y="151" font-size="8" font-weight="800" text-anchor="middle" fill="var(--terracotta)">P1</text>
-
-          <rect x="54" y="190" width="192" height="52" rx="14" fill="var(--canvas)"/>
-          <text x="66" y="212" font-size="11.5" font-weight="700" fill="var(--ink)">Réviser le dossier client</text>
-          <text x="66" y="228" font-size="9.5" fill="var(--ink-faint)">Travail</text>
-          <rect x="196" y="200" width="22" height="15" rx="6" fill="var(--mure-soft)"/>
-          <text x="207" y="211" font-size="8" font-weight="800" text-anchor="middle" fill="var(--mure)">P2</text>
-
-          <rect x="54" y="250" width="192" height="52" rx="14" fill="var(--canvas)"/>
-          <text x="66" y="272" font-size="11.5" font-weight="700" fill="var(--ink)">Lire avant de dormir</text>
-          <text x="66" y="288" font-size="9.5" fill="var(--ink-faint)">Temps pour moi</text>
-          <rect x="196" y="260" width="22" height="15" rx="6" fill="var(--emeraude-soft)"/>
-          <text x="207" y="271" font-size="8" font-weight="800" text-anchor="middle" fill="var(--emeraude)">P3</text>
-
-          <rect x="54" y="310" width="192" height="52" rx="14" fill="var(--canvas)"/>
-          <text x="66" y="332" font-size="11.5" font-weight="700" fill="var(--ink)">Anniversaire de Noah</text>
-          <text x="66" y="348" font-size="9.5" fill="var(--ink-faint)">Prestataire à confirmer</text>
-          <rect x="196" y="320" width="22" height="15" rx="6" fill="var(--ambre-soft)"/>
-          <text x="207" y="331" font-size="8" font-weight="800" text-anchor="middle" fill="var(--ambre)">P1</text>
-
-          <rect x="126" y="416" width="48" height="4" rx="2" fill="var(--ink)" opacity=".3"/>
-        </svg>
-      </div>
-      <div class="panel-caption"><span class="icon">🎯</span>Reste focalisée sur l'essentiel. Des résultats concrets.</div>
-    </div>
-
-    <!-- Panneau 5 : récap bénéfices + CTA -->
-    <div class="slide" style="background:var(--canvas-card);">
-      <div class="panel-headline">Pourquoi Drop It</div>
-      <div class="recap-grid">
-        <div class="recap-item">
-          <div class="icon-circle" style="background:var(--terracotta-soft);">🧠</div>
-          <div class="rtitle">Décharge mentale</div>
-          <div class="rbody">Tout est pris en charge, rien n'est oublié.</div>
-        </div>
-        <div class="recap-item">
-          <div class="icon-circle" style="background:var(--azur-soft);">⚙️</div>
-          <div class="rtitle">Organisation automatique</div>
-          <div class="rbody">L'IA crée le plan et suit l'avancement.</div>
-        </div>
-        <div class="recap-item">
-          <div class="icon-circle" style="background:var(--emeraude-soft);">🚀</div>
-          <div class="rtitle">Des projets concrets</div>
-          <div class="rbody">De l'idée à l'action, plus rapidement.</div>
-        </div>
-        <div class="recap-item">
-          <div class="icon-circle" style="background:var(--mure-soft);">✨</div>
-          <div class="rtitle">Une vie plus alignée</div>
-          <div class="rbody">Pro, perso, santé... tout dans une app.</div>
-        </div>
-      </div>
-      <a class="cta-btn" href="app.html" style="margin-top:6px;">Essayer Drop It →</a>
-      <div class="recap-final-tagline">Moins penser. Plus vivre.</div>
-    </div>
-
+    <div class="slide"><img src="landing-assets/slide-1-cover-full.jpg" alt="Toutes tes idées, tes envies, tes projets prennent vie ici"></div>
+    <div class="slide"><img src="landing-assets/slide-2-hero.jpg" alt="Toutes tes idées. Un plan. Des résultats."></div>
+    <div class="slide"><img src="landing-assets/slide-3-projet.jpg" alt="Des projets concrets et bien structurés"></div>
+    <div class="slide"><img src="landing-assets/slide-4-priorites.jpg" alt="Des priorités claires qui te font avancer"></div>
+    <div class="slide"><img src="landing-assets/slide-5-aujourdhui.jpg" alt="Une journée claire et une vision d'ensemble"></div>
+    <div class="slide"><img src="landing-assets/slide-6-chat.jpg" alt="Chat IA"></div>
   </div>
-</div>
 
-<div class="dots" id="dots"></div>
-
-<div class="site-footer">
-  <a class="cta-btn" href="app.html">Essayer gratuitement — 30 secondes</a>
-  <div class="cta-proof">Aucune carte bancaire requise</div>
+  <div class="cta-overlay">
+    <div class="dots" id="dots"></div>
+    <a class="cta-btn" href="app.html">Essayer Drop●It</a>
+    <a class="cta-secondary" href="app.html">Se connecter</a>
+  </div>
 </div>
 
 <script>
