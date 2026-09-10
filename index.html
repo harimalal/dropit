@@ -36,7 +36,7 @@
   .carousel-viewport{position:absolute;inset:0;overflow:hidden;background:#fff;}
   .carousel-track{display:flex;height:100%;transition:transform .45s cubic-bezier(.25,.9,.35,1);touch-action:pan-y;}
   .slide{flex:0 0 100%;width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
-  .slide img{width:100%;height:100%;object-fit:contain;object-position:center;display:block;}
+  .slide img{width:100%;height:100%;object-fit:contain;object-position:top center;display:block;}
 
   /* ---------- Nav flèches ---------- */
   .nav-arrow{
@@ -52,10 +52,14 @@
   /* ---------- Overlay CTA (par-dessus l'image, en bas) ---------- */
   .cta-overlay{
     position:absolute;left:0;right:0;bottom:0;z-index:6;
-    padding:74px 20px calc(14px + env(safe-area-inset-bottom));
-    background:linear-gradient(180deg, rgba(248,248,249,0) 0%, rgba(248,248,249,.97) 22%, var(--canvas) 42%);
+    padding:16px 20px calc(14px + env(safe-area-inset-bottom));
+    background:var(--canvas);border-top:1px solid var(--line);box-shadow:0 -6px 20px rgba(43,36,32,.1);
     display:flex;flex-direction:column;align-items:center;gap:8px;
+    transition:padding-top .2s ease;
   }
+  /* Le 1er visuel a son propre bouton "Télécharger" intégré à l'image :
+     l'overlay doit le recouvrir entièrement, pas juste l'atténuer. */
+  .cta-overlay.cover-badge{padding-top:118px;}
   .dots{display:flex;justify-content:center;gap:7px;margin-bottom:2px;}
   .dot{width:6px;height:6px;border-radius:50%;background:rgba(43,36,32,.22);border:none;padding:0;transition:width .25s ease, background .25s ease;}
   .dot.active{width:18px;border-radius:4px;background:var(--accent);}
@@ -88,7 +92,7 @@
     <div class="slide"><img src="landing-assets/slide-6-chat.jpg" alt="Chat IA"></div>
   </div>
 
-  <div class="cta-overlay">
+  <div class="cta-overlay" id="cta-overlay">
     <div class="dots" id="dots"></div>
     <a class="cta-btn" href="app.html">Essayer Drop●It</a>
     <a class="cta-secondary" href="app.html">Se connecter</a>
@@ -101,6 +105,7 @@
   var dotsWrap = document.getElementById('dots');
   var prevBtn = document.getElementById('prev-btn');
   var nextBtn = document.getElementById('next-btn');
+  var ctaOverlay = document.getElementById('cta-overlay');
   var index = 0;
   var total = slides.length;
 
@@ -117,6 +122,7 @@
     for(var i=0; i<dots.length; i++) dots[i].classList.toggle('active', i===index);
     prevBtn.disabled = index === 0;
     nextBtn.disabled = index === total-1;
+    ctaOverlay.classList.toggle('cover-badge', index === 0);
   }
   function goTo(i){ index = Math.max(0, Math.min(total-1, i)); update(); }
 
