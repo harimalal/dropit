@@ -369,6 +369,31 @@ Vérifié en navigateur réel (Playwright) : titre centré (mesuré au pixel pr�
 
 ---
 
+## Chantier bonus 7 — Retrait du bouton retour, carrousel bidirectionnel, Drop Zone resserrée
+
+### Retrait du bouton retour de la vue projet
+| Option | Description | Statut |
+|---|---|---|
+| A | Garder le bouton retour rond en haut à gauche, à côté du menu options | Écartée — demande explicite de suppression |
+| B | Retirer le bouton, ne garder que le menu options (⋮) en haut à droite | **Retenue** |
+
+Le retour à l'accueil reste possible via l'onglet "Accueil" de la barre de navigation du bas, déjà présent sur cet écran — aucune perte de fonctionnalité, juste un point d'accès redondant en moins. `.top-bar` passé de `justify-content:space-between` à `flex-end` pour que le bouton options restant reste ancré à droite plutôt que de glisser à gauche une fois seul. Le handler JS devenu mort (`detail-back-btn`) supprimé ; la classe CSS `.top-back-btn` est conservée car partagée avec les écrans Liste et Aujourd'hui, non concernés par cette demande.
+
+### Carrousel bidirectionnel sur "Prochaine action"
+| Option | Description | Statut |
+|---|---|---|
+| A | Garder uniquement la flèche droite (avancer) posée au chantier bonus 3/4 | Écartée — demande explicite d'une flèche gauche pour revenir en arrière |
+| B | Ajouter une flèche gauche symétrique, même style de bouton rond flottant, à cheval sur le bord gauche de l'encart | **Retenue** |
+
+Padding de `.next-action-card` rendu symétrique (30px de chaque côté) pour dégager la place des deux boutons. La flèche gauche décrémente `nextActionPreviewIndex` (avec bouclage en fin de liste), la flèche droite l'incrémente — même liste `priorityItems(p)`, sens opposé.
+
+### Badges de la Drop Zone resserrés
+Demande directe ("le plus compact possible") : padding des badges réduit (10px 16px → 7px 12px), taille de police légèrement réduite (13px → 12.5px), espacement entre badges réduit (9px → 6px). Le comportement d'enchaînement sur la même ligne quand la place le permet existait déjà (`flex-wrap` sur `.drop-badges`) — seul l'habillage devient plus compact, pour faire tenir davantage de badges par ligne.
+
+Vérifié en navigateur réel (Playwright) : bouton retour absent du DOM, un seul bouton dans `.top-bar`, les deux flèches du carrousel présentes et fonctionnelles dans les deux sens (avant/arrière, avec retour à la position de départ), badges plus resserrés mesurés côte à côte.
+
+---
+
 ## Repères de méthode (décisions transverses, valables sur tous les chantiers)
 
 - Ne jamais faire calculer un comptage, un statut ou une agrégation par le LLM — toujours un calcul déterministe côté application (origine : bug de comptage observé dans l'audit).
