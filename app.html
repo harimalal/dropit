@@ -159,7 +159,7 @@
   .empty-state b{color:var(--ink);}
 
   /* TOP BAR (project detail) */
-  .top-bar{position:fixed;top:12px;left:12px;right:12px;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .top-bar{position:fixed;top:12px;left:12px;right:12px;z-index:40;display:flex;align-items:center;justify-content:flex-end;gap:8px;}
   .top-back-btn{
     width:34px;height:34px;flex-shrink:0;border-radius:50%;background:var(--canvas-card);border:1px solid var(--line);
     display:flex;align-items:center;justify-content:center;color:var(--ink);box-shadow:0 6px 16px rgba(43,36,32,0.14);
@@ -187,7 +187,7 @@
 
   /* Composants colorés par l'identité du projet (--current-proj-*, posé sur .detail-scroll) — design system v5 */
   .next-action-card{
-    background:var(--current-proj-next, var(--accent-soft));border:none;border-radius:var(--radius-lg);padding:16px 30px 16px 16px;
+    background:var(--current-proj-next, var(--accent-soft));border:none;border-radius:var(--radius-lg);padding:16px 30px;
     display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin:14px 0;
     box-shadow:var(--shadow-card);position:relative;
   }
@@ -209,6 +209,8 @@
   }
   .next-action-peek-btn:hover{box-shadow:0 3px 10px rgba(0,0,0,.24);}
   .next-action-peek-btn .icon{width:17px;height:17px;transform:rotate(-90deg);}
+  .next-action-peek-btn.prev{left:-17px;right:auto;}
+  .next-action-peek-btn.prev .icon{transform:rotate(90deg);}
   .next-action-title{font-size:18px;font-weight:700;color:var(--ink);line-height:1.35;}
   .next-action-row{display:flex;gap:10px;width:100%;}
   .next-action-row .btn-primary{
@@ -490,9 +492,9 @@
     color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;
   }
   .drop-triage-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:30px 0;}
-  .drop-badges{display:flex;flex-wrap:wrap;align-content:flex-start;gap:9px;}
+  .drop-badges{display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;}
   .drop-badge{
-    border:none;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:600;
+    border:none;border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:600;
     max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
   /* "Jeté" dans la Drop Zone : apparition rapide avec un léger rebond et une rotation,
@@ -2625,7 +2627,6 @@
 
     var topBarHtml = ''+
     '<div class="top-bar">'+
-      '<button class="top-back-btn" id="detail-back-btn" title="Retour">'+backIcon()+'</button>'+
       '<button class="top-delete-btn" id="project-menu-btn" title="Options du projet">'+dotsMenuIcon()+'</button>'+
     '</div>';
 
@@ -2649,6 +2650,7 @@
       var hasMore = priorityList.length > 1;
       mainActionHtml = ''+
       '<div class="next-action-card">'+
+        (hasMore ? '<button class="next-action-peek-btn prev" id="next-action-prev-btn" title="Voir la précédente">'+chevronIcon()+'</button>' : '')+
         (hasMore ? '<button class="next-action-peek-btn" id="next-action-peek-btn" title="Voir la suivante">'+chevronIcon()+'</button>' : '')+
         (multiCategory ? '<div class="next-action-category">'+escapeHtml(next.category.title)+'</div>' : '')+
         '<span class="next-action-badge">Prochaine action</span>'+
@@ -3596,9 +3598,6 @@
     var composeSendBtn = document.getElementById("compose-send-btn");
     if(composeSendBtn && !generating) composeSendBtn.addEventListener("click", function(){ performCreateFromIntention(); });
 
-    var backBtn = document.getElementById("detail-back-btn");
-    if(backBtn) backBtn.addEventListener("click", function(){ history.back(); });
-
     // Menu projet — renommer / objectif / échéance / supprimer
     var pmenuBtn = document.getElementById("project-menu-btn");
     if(pmenuBtn) pmenuBtn.addEventListener("click", function(){
@@ -3828,6 +3827,17 @@
         var list = priorityItems(p);
         if(!list.length) return;
         nextActionPreviewIndex = (nextActionPreviewIndex + 1) % list.length;
+        render();
+      });
+    }
+    var nextActionPrevBtn = document.getElementById("next-action-prev-btn");
+    if(nextActionPrevBtn){
+      nextActionPrevBtn.addEventListener("click", function(){
+        var p = findProject(currentProjectId);
+        if(!p) return;
+        var list = priorityItems(p);
+        if(!list.length) return;
+        nextActionPreviewIndex = (nextActionPreviewIndex - 1 + list.length) % list.length;
         render();
       });
     }
