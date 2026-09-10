@@ -61,8 +61,8 @@
   }
   .slide-title{font-size:clamp(19px,5vw,27px);font-weight:800;letter-spacing:-.025em;line-height:1.16;max-width:340px;}
   .slide-body{font-size:13.5px;color:var(--ink-soft);line-height:1.45;max-width:290px;}
-  .slide-mock{width:100%;display:flex;justify-content:center;flex:1;min-height:0;align-items:center;}
-  .slide-mock svg{height:100%;max-height:clamp(280px,50vh,460px);width:auto;max-width:100%;overflow:visible;}
+  .slide-mock{width:100%;display:flex;justify-content:center;flex:1;min-height:0;align-items:center;overflow:hidden;}
+  .slide-mock svg{height:100%;max-height:clamp(340px,58vh,560px);width:auto;max-width:100%;overflow:visible;}
   .slide-mock svg text{font-family:var(--font);}
 
   /* Slide 0 : hero */
@@ -163,34 +163,45 @@
       <div class="slide-title">Tu notes tout, rien ne se perd.</div>
       <div class="slide-body">Une idée, une inquiétude — jetée en 2 secondes. Elle est prise en charge.</div>
       <div class="slide-mock">
-        <svg viewBox="0 0 340 400" fill="none">
-          <circle cx="150" cy="190" r="150" fill="var(--terracotta-soft)" opacity=".5" style="filter:blur(30px);"/>
+        <svg viewBox="0 0 300 600" fill="none">
+          <circle cx="150" cy="300" r="230" fill="var(--terracotta-soft)" opacity=".45" style="filter:blur(36px);"/>
 
-          <rect x="43" y="62" width="228" height="254" rx="28" fill="#fff"/>
-          <rect x="43" y="62" width="228" height="254" rx="28" fill="none" stroke="var(--line)" stroke-width="2"/>
-          <text x="157" y="98" font-size="17" font-weight="800" text-anchor="middle" fill="var(--ink)">👇 La Drop Zone 👇</text>
-          <line x1="67" y1="114" x2="247" y2="114" stroke="var(--line)" stroke-width="1.5"/>
+          <!-- iPhone, cadré large et coupé haut/bas -->
+          <rect x="-6" y="-6" width="312" height="612" rx="54" fill="var(--ink)"/>
+          <rect x="6" y="6" width="288" height="588" rx="46" fill="#fff"/>
+          <rect x="110" y="20" width="80" height="26" rx="13" fill="var(--ink)"/>
 
-          <rect x="67" y="132" width="192" height="42" rx="21" fill="var(--terracotta-soft)"/>
-          <text x="163" y="158" font-size="14.5" font-weight="700" text-anchor="middle" fill="var(--terracotta)">Racheter des piles</text>
+          <text x="150" y="92" font-size="19" font-weight="800" text-anchor="middle" fill="var(--ink)">👇 La Drop Zone 👇</text>
+          <line x1="28" y1="112" x2="272" y2="112" stroke="var(--line)" stroke-width="1.5"/>
 
-          <rect x="67" y="184" width="150" height="42" rx="21" fill="var(--azur-soft)"/>
-          <text x="142" y="210" font-size="14.5" font-weight="700" text-anchor="middle" fill="var(--azur)">Devis toiture</text>
+          <rect x="28" y="130" width="196" height="42" rx="21" fill="var(--terracotta-soft)"/>
+          <text x="126" y="156" font-size="15" font-weight="700" text-anchor="middle" fill="var(--terracotta)">Racheter des piles</text>
 
-          <rect x="67" y="236" width="184" height="42" rx="21" fill="var(--ambre-soft)"/>
-          <text x="159" y="262" font-size="14.5" font-weight="700" text-anchor="middle" fill="var(--ambre)">Appeler le plombier</text>
+          <rect x="28" y="180" width="150" height="42" rx="21" fill="var(--azur-soft)"/>
+          <text x="103" y="206" font-size="15" font-weight="700" text-anchor="middle" fill="var(--azur)">Devis toiture</text>
+
+          <rect x="28" y="230" width="212" height="42" rx="21" fill="var(--ambre-soft)"/>
+          <text x="134" y="256" font-size="15" font-weight="700" text-anchor="middle" fill="var(--ambre)">Appeler le plombier</text>
+
+          <rect x="28" y="280" width="158" height="42" rx="21" fill="var(--emeraude-soft)"/>
+          <text x="107" y="306" font-size="15" font-weight="700" text-anchor="middle" fill="var(--emeraude)">RDV dentiste</text>
+
+          <rect x="28" y="330" width="194" height="42" rx="21" fill="var(--mure-soft)"/>
+          <text x="125" y="356" font-size="15" font-weight="700" text-anchor="middle" fill="var(--mure)">Idée cadeau Léo</text>
+
+          <rect x="28" y="440" width="244" height="46" rx="16" fill="var(--canvas)" stroke="var(--line)" stroke-width="1.5"/>
+          <text x="44" y="468" font-size="13.5" fill="var(--ink-faint)">Une idée, une tâche…</text>
+          <rect x="212" y="449" width="50" height="28" rx="9" fill="var(--accent)"/>
+          <text x="237" y="468" font-size="11.5" font-weight="700" text-anchor="middle" fill="#fff">Envoyer</text>
 
           <!-- badge flottant -->
-          <g transform="rotate(-8 262 44)">
-            <rect x="200" y="27" width="128" height="36" rx="18" fill="#2B2420" opacity=".14"/>
-            <rect x="197" y="24" width="128" height="36" rx="18" fill="#fff"/>
-            <text x="261" y="47" font-size="13" font-weight="800" text-anchor="middle" fill="var(--terracotta)">🧠 Charge mentale : 0</text>
+          <g transform="rotate(-4 150 25)">
+            <rect x="66" y="10" width="168" height="34" rx="17" fill="#2B2420" opacity=".16"/>
+            <rect x="62" y="6" width="168" height="34" rx="17" fill="#fff"/>
+            <text x="146" y="28" font-size="13.5" font-weight="800" text-anchor="middle" fill="var(--terracotta)">🧠 Charge mentale : 0</text>
           </g>
-
-          <!-- flèche annotée -->
-          <path d="M228 66 Q 200 100 168 126" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 7" fill="none"/>
-          <path d="M160 112 L166 128 L182 124" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <text x="185" y="118" font-size="10.5" font-family="var(--font-mono)" font-weight="700" fill="var(--ink-faint)">EN 2 SEC</text>
+          <path d="M120 44 Q 92 66 74 118" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 7" fill="none"/>
+          <path d="M66 104 L72 120 L88 116" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
       </div>
     </div>
@@ -201,33 +212,43 @@
       <div class="slide-title">L'IA se souvient de tout, tu ne répètes rien.</div>
       <div class="slide-body">Elle garde chaque détail — même ceux que toi tu as oubliés.</div>
       <div class="slide-mock">
-        <svg viewBox="0 0 340 400" fill="none">
-          <circle cx="180" cy="190" r="150" fill="var(--emeraude-soft)" opacity=".5" style="filter:blur(30px);"/>
+        <svg viewBox="0 0 300 600" fill="none">
+          <circle cx="150" cy="300" r="230" fill="var(--emeraude-soft)" opacity=".45" style="filter:blur(36px);"/>
 
-          <rect x="50" y="70" width="228" height="230" rx="28" fill="#fff"/>
-          <rect x="50" y="70" width="228" height="230" rx="28" fill="none" stroke="var(--line)" stroke-width="2"/>
-          <text x="164" y="102" font-size="13.5" font-weight="800" text-anchor="middle" fill="var(--ink)">Chat · Rénovation cuisine</text>
-          <line x1="74" y1="116" x2="254" y2="116" stroke="var(--line)" stroke-width="1.5"/>
+          <rect x="-6" y="-6" width="312" height="612" rx="54" fill="var(--ink)"/>
+          <rect x="6" y="6" width="288" height="588" rx="46" fill="#fff"/>
+          <rect x="110" y="20" width="80" height="26" rx="13" fill="var(--ink)"/>
 
-          <rect x="104" y="132" width="150" height="38" rx="16" fill="var(--accent)"/>
-          <text x="169" y="147" font-size="11.5" fill="#fff" text-anchor="middle">Il me reste combien</text>
-          <text x="169" y="162" font-size="11.5" fill="#fff" text-anchor="middle">pour la déco ?</text>
+          <text x="150" y="90" font-size="15.5" font-weight="800" text-anchor="middle" fill="var(--ink)">Chat · Rénovation cuisine</text>
+          <line x1="28" y1="108" x2="272" y2="108" stroke="var(--line)" stroke-width="1.5"/>
 
-          <rect x="74" y="182" width="188" height="94" rx="18" fill="var(--canvas)"/>
-          <text x="90" y="208" font-size="12" fill="var(--ink)">Tu avais dit vouloir</text>
-          <text x="90" y="226" font-size="12" fill="var(--ink)">rester sous 3000€.</text>
-          <text x="90" y="244" font-size="12" font-weight="800" fill="var(--emeraude)">Dépensé : 1140€.</text>
+          <rect x="86" y="122" width="186" height="46" rx="18" fill="var(--accent)"/>
+          <text x="264" y="141" font-size="12.5" fill="#fff" text-anchor="end">Il me reste combien</text>
+          <text x="264" y="159" font-size="12.5" fill="#fff" text-anchor="end">pour la déco ?</text>
+
+          <rect x="28" y="178" width="208" height="82" rx="18" fill="var(--canvas)"/>
+          <text x="44" y="204" font-size="12.5" fill="var(--ink)">Tu avais dit vouloir rester</text>
+          <text x="44" y="222" font-size="12.5" fill="var(--ink)">sous 3000€.</text>
+          <text x="44" y="242" font-size="12.5" font-weight="800" fill="var(--emeraude)">Dépensé jusqu'ici : 1140€.</text>
+
+          <rect x="86" y="272" width="186" height="34" rx="17" fill="var(--accent)"/>
+          <text x="264" y="293" font-size="12.5" fill="#fff" text-anchor="end">Et pour la plomberie ?</text>
+
+          <rect x="28" y="316" width="208" height="66" rx="18" fill="var(--canvas)"/>
+          <text x="44" y="342" font-size="12.5" fill="var(--ink)">Budget plomberie : 800€,</text>
+          <text x="44" y="362" font-size="12.5" font-weight="800" fill="var(--emeraude)">pas encore entamé.</text>
+
+          <rect x="28" y="440" width="244" height="46" rx="16" fill="var(--canvas)" stroke="var(--line)" stroke-width="1.5"/>
+          <text x="44" y="468" font-size="13.5" fill="var(--ink-faint)">Pose une question…</text>
 
           <!-- badge flottant -->
-          <g transform="rotate(-7 78 46)">
-            <rect x="16" y="30" width="146" height="36" rx="18" fill="#2B2420" opacity=".14"/>
-            <rect x="13" y="27" width="146" height="36" rx="18" fill="#fff"/>
-            <text x="86" y="50" font-size="12.5" font-weight="800" text-anchor="middle" fill="var(--emeraude)">🧭 Elle se souvient</text>
+          <g transform="rotate(-4 150 25)">
+            <rect x="76" y="10" width="148" height="34" rx="17" fill="#2B2420" opacity=".16"/>
+            <rect x="72" y="6" width="148" height="34" rx="17" fill="#fff"/>
+            <text x="146" y="28" font-size="13" font-weight="800" text-anchor="middle" fill="var(--emeraude)">🧭 Elle se souvient</text>
           </g>
-
-          <path d="M156 278 Q 190 300 224 280" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 7" fill="none"/>
-          <path d="M212 288 L226 281 L216 269" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <text x="170" y="322" font-size="11" font-family="var(--font-mono)" font-weight="700" fill="var(--ink-faint)">DÉTAIL OUBLIÉ PAR TOI</text>
+          <path d="M120 44 Q 96 66 80 118" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 7" fill="none"/>
+          <path d="M72 104 L78 120 L94 116" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
       </div>
     </div>
@@ -238,40 +259,53 @@
       <div class="slide-title">Tu donnes l'objectif, l'IA fait le plan.</div>
       <div class="slide-body">Une phrase suffit. Le chemin se découpe en étapes claires.</div>
       <div class="slide-mock">
-        <svg viewBox="0 0 340 400" fill="none">
-          <circle cx="170" cy="190" r="150" fill="var(--azur-soft)" opacity=".5" style="filter:blur(30px);"/>
+        <svg viewBox="0 0 300 600" fill="none">
+          <circle cx="150" cy="300" r="230" fill="var(--azur-soft)" opacity=".45" style="filter:blur(36px);"/>
 
-          <rect x="50" y="46" width="228" height="54" rx="18" fill="#fff" stroke="var(--accent)" stroke-width="2"/>
-          <text x="70" y="68" font-size="12.5" fill="var(--ink-faint)">✨ Organiser le mariage</text>
-          <text x="70" y="86" font-size="12.5" fill="var(--ink-faint)">de Julie</text>
-          <rect x="228" y="60" width="34" height="28" rx="10" fill="var(--accent)"/>
-          <path d="M238 74 l5 5 10-11" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <rect x="-6" y="-6" width="312" height="612" rx="54" fill="var(--ink)"/>
+          <rect x="6" y="6" width="288" height="588" rx="46" fill="#fff"/>
+          <rect x="110" y="20" width="80" height="26" rx="13" fill="var(--ink)"/>
 
-          <rect x="50" y="122" width="228" height="60" rx="18" fill="var(--terracotta-soft)"/>
-          <text x="70" y="150" font-size="14" font-weight="800" fill="var(--ink)">Traiteur &amp; lieu</text>
-          <rect x="70" y="164" width="140" height="7" rx="3.5" fill="#fff"/>
-          <rect x="70" y="164" width="24" height="7" rx="3.5" fill="var(--terracotta)"/>
-          <text x="258" y="171" font-size="11" fill="var(--ink-faint)" text-anchor="end">1/6</text>
+          <rect x="28" y="66" width="244" height="58" rx="18" fill="#fff" stroke="var(--accent)" stroke-width="2"/>
+          <text x="44" y="90" font-size="13.5" fill="var(--ink-faint)">✨ Organiser le mariage</text>
+          <text x="44" y="109" font-size="13.5" fill="var(--ink-faint)">de Julie</text>
+          <rect x="220" y="80" width="38" height="30" rx="11" fill="var(--accent)"/>
+          <path d="M231 95 l6 6 11-12" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 
-          <rect x="50" y="192" width="228" height="60" rx="18" fill="var(--mure-soft)"/>
-          <text x="70" y="220" font-size="14" font-weight="800" fill="var(--ink)">Invités</text>
-          <rect x="70" y="234" width="140" height="7" rx="3.5" fill="#fff"/>
-          <rect x="70" y="234" width="80" height="7" rx="3.5" fill="var(--mure)"/>
-          <text x="258" y="241" font-size="11" fill="var(--ink-faint)" text-anchor="end">3/5</text>
+          <text x="28" y="146" font-size="11.5" font-family="var(--font-mono)" fill="var(--ink-faint)">PLAN GÉNÉRÉ · 21% COMPLÉTÉ</text>
+          <rect x="28" y="154" width="244" height="6" rx="3" fill="var(--line)"/>
+          <rect x="28" y="154" width="52" height="6" rx="3" fill="var(--azur)"/>
 
-          <rect x="50" y="262" width="228" height="60" rx="18" fill="var(--emeraude-soft)"/>
-          <text x="70" y="290" font-size="14" font-weight="800" fill="var(--ink)">Décoration</text>
-          <rect x="70" y="304" width="140" height="7" rx="3.5" fill="#fff"/>
-          <text x="258" y="311" font-size="11" fill="var(--ink-faint)" text-anchor="end">0/4</text>
+          <rect x="28" y="174" width="244" height="62" rx="18" fill="var(--terracotta-soft)"/>
+          <text x="46" y="203" font-size="15" font-weight="800" fill="var(--ink)">Traiteur &amp; lieu</text>
+          <rect x="46" y="216" width="150" height="7" rx="3.5" fill="#fff"/>
+          <rect x="46" y="216" width="26" height="7" rx="3.5" fill="var(--terracotta)"/>
+          <text x="252" y="223" font-size="11.5" fill="var(--ink-faint)" text-anchor="end">1/6</text>
+
+          <rect x="28" y="246" width="244" height="62" rx="18" fill="var(--mure-soft)"/>
+          <text x="46" y="275" font-size="15" font-weight="800" fill="var(--ink)">Invités</text>
+          <rect x="46" y="288" width="150" height="7" rx="3.5" fill="#fff"/>
+          <rect x="46" y="288" width="88" height="7" rx="3.5" fill="var(--mure)"/>
+          <text x="252" y="295" font-size="11.5" fill="var(--ink-faint)" text-anchor="end">3/5</text>
+
+          <rect x="28" y="318" width="244" height="62" rx="18" fill="var(--emeraude-soft)"/>
+          <text x="46" y="347" font-size="15" font-weight="800" fill="var(--ink)">Décoration</text>
+          <rect x="46" y="360" width="150" height="7" rx="3.5" fill="#fff"/>
+          <text x="252" y="367" font-size="11.5" fill="var(--ink-faint)" text-anchor="end">0/4</text>
+
+          <rect x="28" y="390" width="244" height="62" rx="18" fill="var(--ambre-soft)"/>
+          <text x="46" y="419" font-size="15" font-weight="800" fill="var(--ink)">Musique &amp; photographe</text>
+          <rect x="46" y="432" width="150" height="7" rx="3.5" fill="#fff"/>
+          <text x="252" y="439" font-size="11.5" fill="var(--ink-faint)" text-anchor="end">0/3</text>
 
           <!-- badge flottant -->
-          <g transform="rotate(6 292 108)">
-            <rect x="222" y="90" width="140" height="36" rx="18" fill="#2B2420" opacity=".14"/>
-            <rect x="219" y="87" width="140" height="36" rx="18" fill="#fff"/>
-            <text x="289" y="110" font-size="12.5" font-weight="800" text-anchor="middle" fill="var(--azur)">⚡ 1 phrase → plan</text>
+          <g transform="rotate(-4 150 25)">
+            <rect x="72" y="10" width="156" height="34" rx="17" fill="#2B2420" opacity=".16"/>
+            <rect x="68" y="6" width="156" height="34" rx="17" fill="#fff"/>
+            <text x="146" y="28" font-size="13.5" font-weight="800" text-anchor="middle" fill="var(--azur)">⚡ 1 phrase → plan</text>
           </g>
-          <path d="M262 92 Q 278 100 278 118" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 7" fill="none"/>
-          <path d="M267 111 L278 120 L285 108" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M204 44 Q 224 56 232 78" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 7" fill="none"/>
+          <path d="M220 68 L234 80 L240 64" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
       </div>
     </div>
@@ -282,40 +316,49 @@
       <div class="slide-title">Chaque jour, elle te dit quoi faire — sur tous tes projets.</div>
       <div class="slide-body">La prochaine étape de chaque objectif remonte toute seule.</div>
       <div class="slide-mock">
-        <svg viewBox="0 0 340 400" fill="none">
-          <circle cx="170" cy="190" r="150" fill="var(--ambre-soft)" opacity=".5" style="filter:blur(30px);"/>
+        <svg viewBox="0 0 300 600" fill="none">
+          <circle cx="150" cy="300" r="230" fill="var(--ambre-soft)" opacity=".45" style="filter:blur(36px);"/>
 
-          <rect x="50" y="64" width="228" height="252" rx="28" fill="#fff"/>
-          <rect x="50" y="64" width="228" height="252" rx="28" fill="none" stroke="var(--line)" stroke-width="2"/>
-          <text x="164" y="98" font-size="17" font-weight="800" text-anchor="middle" fill="var(--ink)">Aujourd'hui</text>
-          <line x1="74" y1="112" x2="254" y2="112" stroke="var(--line)" stroke-width="1.5"/>
+          <rect x="-6" y="-6" width="312" height="612" rx="54" fill="var(--ink)"/>
+          <rect x="6" y="6" width="288" height="588" rx="46" fill="#fff"/>
+          <rect x="110" y="20" width="80" height="26" rx="13" fill="var(--ink)"/>
 
-          <rect x="74" y="130" width="180" height="58" rx="17" fill="var(--canvas)"/>
-          <circle cx="102" cy="159" r="16" fill="var(--terracotta-soft)"/>
-          <text x="102" y="165" font-size="16" text-anchor="middle">🏠</text>
-          <text x="128" y="154" font-size="13.5" font-weight="800" fill="var(--ink)">Devis toiture</text>
-          <text x="128" y="171" font-size="11.5" fill="var(--ink-faint)">Maison</text>
+          <text x="150" y="90" font-size="19" font-weight="800" text-anchor="middle" fill="var(--ink)">Aujourd'hui</text>
+          <text x="150" y="108" font-size="11.5" text-anchor="middle" fill="var(--ink-faint)">mardi 10 septembre</text>
+          <line x1="28" y1="122" x2="272" y2="122" stroke="var(--line)" stroke-width="1.5"/>
 
-          <rect x="74" y="196" width="180" height="58" rx="17" fill="var(--canvas)"/>
-          <circle cx="102" cy="225" r="16" fill="var(--mure-soft)"/>
-          <text x="102" y="231" font-size="16" text-anchor="middle">💍</text>
-          <text x="128" y="220" font-size="13.5" font-weight="800" fill="var(--ink)">Réserver traiteur</text>
-          <text x="128" y="237" font-size="11.5" fill="var(--ink-faint)">Mariage de Julie</text>
+          <rect x="28" y="138" width="244" height="66" rx="18" fill="var(--canvas)"/>
+          <circle cx="62" cy="171" r="18" fill="var(--terracotta-soft)"/>
+          <text x="62" y="178" font-size="17" text-anchor="middle">🏠</text>
+          <text x="92" y="166" font-size="14.5" font-weight="800" fill="var(--ink)">Devis toiture</text>
+          <text x="92" y="185" font-size="12" fill="var(--ink-faint)">Maison</text>
 
-          <rect x="74" y="262" width="180" height="58" rx="17" fill="var(--canvas)"/>
-          <circle cx="102" cy="291" r="16" fill="var(--azur-soft)"/>
-          <text x="102" y="297" font-size="16" text-anchor="middle">💼</text>
-          <text x="128" y="286" font-size="13.5" font-weight="800" fill="var(--ink)">Relancer M. Dupont</text>
-          <text x="128" y="303" font-size="11.5" fill="var(--ink-faint)">Freelance</text>
+          <rect x="28" y="212" width="244" height="66" rx="18" fill="var(--canvas)"/>
+          <circle cx="62" cy="245" r="18" fill="var(--mure-soft)"/>
+          <text x="62" y="252" font-size="17" text-anchor="middle">💍</text>
+          <text x="92" y="240" font-size="14.5" font-weight="800" fill="var(--ink)">Réserver le traiteur</text>
+          <text x="92" y="259" font-size="12" fill="var(--ink-faint)">Mariage de Julie</text>
+
+          <rect x="28" y="286" width="244" height="66" rx="18" fill="var(--canvas)"/>
+          <circle cx="62" cy="319" r="18" fill="var(--azur-soft)"/>
+          <text x="62" y="326" font-size="17" text-anchor="middle">💼</text>
+          <text x="92" y="314" font-size="14.5" font-weight="800" fill="var(--ink)">Relancer M. Dupont</text>
+          <text x="92" y="333" font-size="12" fill="var(--ink-faint)">Freelance</text>
+
+          <rect x="28" y="360" width="244" height="66" rx="18" fill="var(--canvas)"/>
+          <circle cx="62" cy="393" r="18" fill="var(--emeraude-soft)"/>
+          <text x="62" y="400" font-size="17" text-anchor="middle">🍳</text>
+          <text x="92" y="388" font-size="14.5" font-weight="800" fill="var(--ink)">Photos avant/après</text>
+          <text x="92" y="407" font-size="12" fill="var(--ink-faint)">Rénovation cuisine</text>
 
           <!-- badge flottant -->
-          <g transform="rotate(-7 74 46)">
-            <rect x="8" y="28" width="140" height="36" rx="18" fill="#2B2420" opacity=".14"/>
-            <rect x="5" y="25" width="140" height="36" rx="18" fill="#fff"/>
-            <text x="75" y="48" font-size="12.5" font-weight="800" text-anchor="middle" fill="var(--ambre)">🔁 3 projets, 1 écran</text>
+          <g transform="rotate(-4 150 25)">
+            <rect x="70" y="10" width="160" height="34" rx="17" fill="#2B2420" opacity=".16"/>
+            <rect x="66" y="6" width="160" height="34" rx="17" fill="#fff"/>
+            <text x="146" y="28" font-size="13" font-weight="800" text-anchor="middle" fill="var(--ambre)">🔁 4 projets, 1 écran</text>
           </g>
-          <path d="M60 62 Q 68 90 82 122" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 7" fill="none"/>
-          <path d="M72 112 L83 124 L94 111" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M110 44 Q 90 66 78 120" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 7" fill="none"/>
+          <path d="M70 106 L76 122 L92 118" stroke="var(--ink-faint)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
       </div>
     </div>
@@ -326,23 +369,35 @@
       <div class="slide-title">Tout est sauvegardé, toujours.</div>
       <div class="slide-body">Notes, réponses, progression : rien à faire, rien à perdre.</div>
       <div class="slide-mock">
-        <svg viewBox="0 0 340 320" fill="none">
-          <circle cx="170" cy="160" r="150" fill="var(--corail-soft)" opacity=".5" style="filter:blur(30px);"/>
+        <svg viewBox="0 0 300 600" fill="none">
+          <circle cx="150" cy="300" r="230" fill="var(--corail-soft)" opacity=".45" style="filter:blur(36px);"/>
 
-          <rect x="46" y="70" width="248" height="150" rx="22" fill="#fff"/>
-          <rect x="46" y="70" width="248" height="150" rx="22" fill="none" stroke="var(--line)" stroke-width="2"/>
-          <text x="68" y="102" font-size="15" font-weight="800" fill="var(--ink)">Itinéraire jours 3-4</text>
-          <text x="68" y="126" font-size="12" fill="var(--ink-soft)">Proposé par l'IA : matinée</text>
-          <text x="68" y="144" font-size="12" fill="var(--ink-soft)">temple, déjeuner à Ubud,</text>
-          <text x="68" y="162" font-size="12" fill="var(--ink-soft)">rizières l'après-midi…</text>
+          <rect x="-6" y="-6" width="312" height="612" rx="54" fill="var(--ink)"/>
+          <rect x="6" y="6" width="288" height="588" rx="46" fill="#fff"/>
+          <rect x="110" y="20" width="80" height="26" rx="13" fill="var(--ink)"/>
 
-          <circle cx="264" cy="94" r="20" fill="var(--emeraude-soft)"/>
-          <path d="M255 94 l6 6 12-13" stroke="var(--emeraude)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <text x="150" y="92" font-size="16" font-weight="800" text-anchor="middle" fill="var(--ink)">Notes du projet</text>
+          <line x1="28" y1="108" x2="272" y2="108" stroke="var(--line)" stroke-width="1.5"/>
 
-          <g transform="rotate(-4 170 254)">
-            <rect x="94" y="234" width="156" height="38" rx="19" fill="#2B2420" opacity=".14"/>
-            <rect x="91" y="231" width="156" height="38" rx="19" fill="var(--emeraude-soft)"/>
-            <text x="169" y="255" font-size="13.5" font-weight="800" text-anchor="middle" fill="var(--emeraude)">☁️ Sauvegardé — instantané</text>
+          <rect x="28" y="124" width="244" height="122" rx="20" fill="var(--canvas)"/>
+          <text x="46" y="154" font-size="14.5" font-weight="800" fill="var(--ink)">Itinéraire jours 3-4</text>
+          <text x="46" y="176" font-size="12.5" fill="var(--ink-soft)">Proposé par l'IA : matinée</text>
+          <text x="46" y="194" font-size="12.5" fill="var(--ink-soft)">temple, déjeuner à Ubud,</text>
+          <text x="46" y="212" font-size="12.5" fill="var(--ink-soft)">rizières l'après-midi…</text>
+          <circle cx="240" cy="152" r="18" fill="var(--emeraude-soft)"/>
+          <path d="M231 152 l5 5 11-12" stroke="var(--emeraude)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+          <rect x="28" y="258" width="244" height="96" rx="20" fill="var(--canvas)"/>
+          <text x="46" y="288" font-size="14.5" font-weight="800" fill="var(--ink)">Liste des invités VIP</text>
+          <text x="46" y="310" font-size="12.5" fill="var(--ink-soft)">Famille proche + témoins,</text>
+          <text x="46" y="328" font-size="12.5" fill="var(--ink-soft)">table d'honneur…</text>
+          <circle cx="240" cy="286" r="18" fill="var(--emeraude-soft)"/>
+          <path d="M231 286 l5 5 11-12" stroke="var(--emeraude)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+          <g transform="rotate(-3 150 396)">
+            <rect x="60" y="376" width="180" height="38" rx="19" fill="#2B2420" opacity=".16"/>
+            <rect x="56" y="372" width="180" height="38" rx="19" fill="var(--emeraude-soft)"/>
+            <text x="146" y="397" font-size="13" font-weight="800" text-anchor="middle" fill="var(--emeraude)">☁️ Sauvegardé à l'instant</text>
           </g>
         </svg>
       </div>
