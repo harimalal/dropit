@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DROPIT — Une nuit, trois comptes, une fuite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #16151C; --ink-soft: #55535F; --paper: #FAF9F6; --surface: #FFFFFF; --line: #E4E1DA;
+    --accent: #3F8A5C; --accent-soft: #E3EFE6;
+    --good: #1E8E5A; --good-soft: #E4F3EB; --warn: #B4700F; --warn-soft: #FBF0DD; --bad: #C4432C; --bad-soft: #FBE9E4;
+    --night: #131219; --night-surface: #1C1B26; --night-ink: #F2F0EA; --night-ink-soft: #A6A3B4; --night-line: #302E3E;
+    --night-accent: #4ADE80; --night-accent-soft: rgba(74,222,128,.15); --night-good: #4ADE80; --night-good-soft: rgba(74,222,128,.12);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink); font-family: 'IBM Plex Sans', -apple-system, sans-serif; }
+  .display { font-family: 'Fraunces', Georgia, serif; text-wrap: balance; }
+  .mono { font-family: 'IBM Plex Mono', 'Courier New', monospace; }
+
+  .deck { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+  .slide {
+    position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center;
+    padding: 7vh 9vw 10vh 12vw; opacity: 0; transform: translateY(10px) scale(.995);
+    transition: opacity .5s cubic-bezier(.2,.7,.3,1), transform .5s cubic-bezier(.2,.7,.3,1);
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; opacity: 1; transform: none; z-index: 5; }
+  .slide.light { background: var(--paper); color: var(--ink); }
+  .slide.dark { background: var(--night); color: var(--night-ink); }
+  .slide.dark .ink-soft { color: var(--night-ink-soft); }
+  .light .ink-soft { color: var(--ink-soft); }
+
+  @keyframes riseIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .slide.active .eyebrow { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) both; }
+  .slide.active h1, .slide.active h2 { animation: riseIn .55s cubic-bezier(.2,.8,.3,1) .07s both; }
+  .slide.active .vo { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .16s both; }
+  .slide.active > p { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .2s both; }
+  .slide.active .io-card { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .24s both; }
+  .slide.active .stat-grid > *, .slide.active .grid-4 > *, .slide.active .grid-2 > *,
+  .slide.active .timeline > *, .slide.active .control-split > *, .slide.active .checklist > li,
+  .slide.active .case-steps > .case-step, .slide.active .shot-compare > * { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) both; }
+  .slide.active .stat-grid>*:nth-child(1), .slide.active .grid-4>*:nth-child(1), .slide.active .grid-2>*:nth-child(1),
+  .slide.active .timeline>*:nth-child(1), .slide.active .control-split>*:nth-child(1), .slide.active .checklist>li:nth-child(1),
+  .slide.active .case-steps>.case-step:nth-child(1), .slide.active .shot-compare>*:nth-child(1) { animation-delay: .24s; }
+  .slide.active .stat-grid>*:nth-child(2), .slide.active .grid-4>*:nth-child(2), .slide.active .grid-2>*:nth-child(2),
+  .slide.active .timeline>*:nth-child(2), .slide.active .control-split>*:nth-child(2), .slide.active .checklist>li:nth-child(2),
+  .slide.active .case-steps>.case-step:nth-child(2), .slide.active .shot-compare>*:nth-child(2) { animation-delay: .38s; }
+  .slide.active .stat-grid>*:nth-child(3), .slide.active .grid-4>*:nth-child(3), .slide.active .timeline>*:nth-child(3),
+  .slide.active .checklist>li:nth-child(3), .slide.active .case-steps>.case-step:nth-child(3) { animation-delay: .4s; }
+  .slide.active .stat-grid>*:nth-child(4), .slide.active .grid-4>*:nth-child(4), .slide.active .timeline>*:nth-child(4),
+  .slide.active .checklist>li:nth-child(4), .slide.active .case-steps>.case-step:nth-child(4) { animation-delay: .48s; }
+  .slide.active .stat-grid>*:nth-child(5), .slide.active .timeline>*:nth-child(5), .slide.active .checklist>li:nth-child(5) { animation-delay: .56s; }
+  .slide.active .checklist>li:nth-child(6), .slide.active .checklist>li:nth-child(7), .slide.active .checklist>li:nth-child(8),
+  .slide.active .stat-grid>*:nth-child(6) { animation-delay: .62s; }
+  .slide.active .terme { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .5s both; }
+  .slide.active .loop { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .66s both; }
+  @media (prefers-reduced-motion: reduce) { .slide, .slide * { animation: none !important; transition: none !important; } }
+
+  .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: .74rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .dark .eyebrow { color: var(--night-accent); }
+  .eyebrow .icon { width: 16px; height: 16px; }
+  .eyebrow .chap { opacity: .55; }
+
+  h1 { font-size: clamp(2.1rem, 4.6vw, 3.7rem); font-weight: 600; line-height: 1.05; margin: 0 0 18px; max-width: 19ch; }
+  h2 { font-size: clamp(1.7rem, 3.3vw, 2.6rem); font-weight: 600; line-height: 1.1; margin: 0 0 18px; max-width: 22ch; }
+  p { font-size: 1.02rem; line-height: 1.62; max-width: 60ch; margin: 0 0 12px; }
+  svg.icon { width: 22px; height: 22px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+  .vo { font-size: 1.16rem; line-height: 1.58; max-width: 56ch; margin: 2px 0 8px; padding-left: 18px; border-left: 3px solid var(--accent); color: var(--ink); }
+  .dark .vo { border-left-color: var(--night-accent); color: var(--night-ink); }
+  .vo .vo-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 7px; }
+  .dark .vo .vo-tag { color: var(--night-accent); }
+  .vo strong { font-weight: 600; }
+
+  .loop { margin-top: 26px; font-family: 'IBM Plex Mono', monospace; font-size: .8rem; letter-spacing: .01em; color: var(--accent); display: flex; align-items: baseline; gap: 9px; max-width: 52ch; }
+  .dark .loop { color: var(--night-accent); }
+  .loop::before { content: "↳"; font-size: 1rem; }
+
+  .terme { margin-top: 18px; border: 1px solid var(--line); border-left: 3px solid var(--warn); border-radius: 10px; padding: 13px 18px; max-width: 620px; background: var(--surface); }
+  .dark .terme { border-color: var(--night-line); border-left-color: var(--warn); background: var(--night-surface); }
+  .terme .t-label { font-family: 'IBM Plex Mono', monospace; font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--warn); }
+  .terme .t-term { font-weight: 600; font-size: 1rem; margin: 3px 0 2px; }
+  .terme .t-def { font-size: .88rem; color: var(--ink-soft); line-height: 1.48; }
+  .dark .terme .t-def { color: var(--night-ink-soft); }
+  .terme + .terme { margin-top: 10px; }
+
+  .io-card { border: 1.5px solid var(--line); border-radius: 16px; padding: 22px 24px; background: var(--surface); max-width: 780px; margin-top: 8px; }
+  .dark .io-card { border-color: var(--night-line); background: var(--night-surface); }
+  .io-card .io-label { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  .dark .io-card .io-label { color: var(--night-accent); }
+  .io-card .io-body { font-size: .92rem; line-height: 1.65; color: var(--ink-soft); white-space: pre-wrap; }
+  .dark .io-card .io-body { color: var(--night-ink-soft); }
+  .io-card.mono-body .io-body { font-family: 'IBM Plex Mono', monospace; font-size: .8rem; line-height: 1.75; }
+
+  .rail { position: fixed; left: 32px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 50; }
+  .rail .tick { width: 5px; height: 16px; border-radius: 3px; background: rgba(120,116,140,.28); cursor: pointer; transition: background .25s, transform .25s; }
+  .rail .tick.active { background: var(--accent); transform: scaleY(1.2); }
+  .nav-buttons { position: fixed; bottom: 26px; right: 32px; display: flex; gap: 10px; z-index: 60; }
+  .nav-btn { font-family: 'IBM Plex Mono', monospace; font-size: .8rem; background: transparent; border: 1px solid var(--line); color: var(--ink); padding: 9px 15px; border-radius: 999px; cursor: pointer; transition: border-color .2s, color .2s; }
+  body:has(.slide.dark.active) .nav-btn { border-color: var(--night-line); color: var(--night-ink); }
+  .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-btn:disabled { opacity: .35; cursor: default; }
+  .counter { position: fixed; bottom: 28px; left: 56px; font-family: 'IBM Plex Mono', monospace; font-size: .78rem; color: var(--ink-soft); z-index: 60; }
+  body:has(.slide.dark.active) .counter { color: var(--night-ink-soft); }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 980px; margin-top: 8px; }
+  .stat-card { border: 1px solid var(--line); border-radius: 14px; padding: 20px 18px; background: var(--surface); transition: transform .2s, box-shadow .2s; }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(20,18,30,.08); }
+  .dark .stat-card { border-color: var(--night-line); background: var(--night-surface); }
+  .stat-value { font-family: 'Fraunces', serif; font-size: 2.4rem; font-weight: 600; line-height: 1; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+  .stat-value.good { color: var(--good); }
+  .stat-label { font-size: .88rem; line-height: 1.4; color: var(--ink-soft); }
+  .dark .stat-label { color: var(--night-ink-soft); }
+  .stat-card.time { grid-column: span 2; }
+  .stat-card.time .stat-value { font-size: 2.9rem; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; max-width: 940px; margin-top: 6px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; max-width: 940px; margin-top: 6px; }
+  .box { border: 1px solid var(--line); border-radius: 16px; padding: 20px; background: var(--surface); transition: transform .2s, box-shadow .2s; }
+  .box:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(20,18,30,.08); }
+  .dark .box { border-color: var(--night-line); background: var(--night-surface); }
+  .box h3 { font-size: 1rem; font-weight: 600; margin: 0 0 7px; }
+  .box p { font-size: .9rem; margin: 0; color: var(--ink-soft); }
+  .dark .box p { color: var(--night-ink-soft); }
+  .box ul { margin: 7px 0 0; padding-left: 17px; font-size: .85rem; line-height: 1.58; color: var(--ink-soft); }
+  .dark .box ul { color: var(--night-ink-soft); }
+  .box ul li { margin: 4px 0; }
+  .box .box-tag { font-family: 'IBM Plex Mono', monospace; font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  .dark .box .box-tag { color: var(--night-accent); }
+
+  .case-steps { position: relative; padding-left: 52px; max-width: 680px; margin-top: 12px; }
+  .case-steps::before { content: ''; position: absolute; left: 20px; top: 6px; bottom: 6px; width: 2px; background: var(--night-line); }
+  .case-step { position: relative; margin-bottom: 20px; }
+  .case-step:last-child { margin-bottom: 0; }
+  .case-num { position: absolute; left: -52px; top: 0; width: 36px; height: 36px; border-radius: 50%; background: var(--night); border: 1.5px solid var(--night-line); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: .82rem; color: var(--night-ink-soft); }
+  .case-step.resolved .case-num { border-color: var(--night-good); color: var(--night-good); background: var(--night-good-soft); }
+  .case-title { font-weight: 600; font-size: .98rem; margin-bottom: 4px; }
+  .case-step.resolved .case-title { color: var(--night-good); }
+  .case-desc { font-size: .89rem; color: var(--night-ink-soft); line-height: 1.5; max-width: 58ch; }
+
+  .control-split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px; margin-top: 6px; }
+  .control-col { border-radius: 16px; padding: 20px 22px; background: var(--night-surface); }
+  .control-col h3 { font-size: 1rem; margin: 0 0 12px; display: flex; align-items: center; gap: 9px; }
+  .control-col ul { list-style: none; padding: 0; margin: 0; }
+  .control-col li { padding: 7px 0; font-size: .87rem; border-bottom: 1px solid rgba(255,255,255,.06); color: var(--night-ink-soft); }
+  .control-col li:last-child { border-bottom: none; }
+  .ratio-bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; max-width: 900px; margin: 20px 0 8px; border: 1px solid var(--night-line); }
+  .ratio-bar .r-you { background: var(--night-accent); width: 10%; }
+  .ratio-bar .r-ia { background: var(--night-surface); width: 90%; }
+  .ratio-legend { display: flex; gap: 22px; font-family: 'IBM Plex Mono', monospace; font-size: .76rem; color: var(--night-ink-soft); }
+  .ratio-legend b { color: var(--night-ink); }
+
+  .checklist { list-style: none; padding: 0; margin: 16px 0 0; max-width: 760px; }
+  .checklist li { display: flex; gap: 12px; padding: 9px 0; font-size: .97rem; border-bottom: 1px solid var(--night-line); align-items: flex-start; }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist .icon { margin-top: 3px; color: var(--night-good); flex-shrink: 0; }
+  .checklist .icon.todo { color: var(--warn); }
+
+  /* --- comparaison avant/après (ajouté pour ce deck) --- */
+  .shot-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; max-width: 720px; margin-top: 14px; }
+  .shot { border: 1px solid var(--line); border-radius: 16px; padding: 14px; background: var(--surface); text-align: center; }
+  .dark .shot { border-color: var(--night-line); background: var(--night-surface); }
+  .shot .shot-label { font-family: 'IBM Plex Mono', monospace; font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 10px; }
+  .dark .shot .shot-label { color: var(--night-ink-soft); }
+  .shot.after .shot-label { color: var(--good); }
+  .dark .shot.after .shot-label { color: var(--night-good); }
+  .shot img { width: 100%; max-height: 380px; object-fit: cover; object-position: top; border-radius: 10px; display: block; }
+  .shot-single { max-width: 340px; margin-top: 14px; }
+  .shot-single img { width: 100%; max-height: 460px; object-fit: cover; object-position: top; border-radius: 12px; border: 1px solid var(--night-line); }
+
+  @media (max-width: 820px) {
+    .slide { padding: 8vh 7vw 12vh 8vw; }
+    .stat-grid, .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-2, .control-split, .shot-compare { grid-template-columns: 1fr; }
+    .timeline { grid-template-columns: 1fr 1fr; } .timeline::before { display: none; }
+    .rail { display: none; }
+    .stat-card.time { grid-column: span 2; }
+  }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <!-- 1 · COLD OPEN -->
+  <section class="slide dark active">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Dropit · le sujet <span class="chap">· 01</span></div>
+    <h1 class="display">Une nuit, trois comptes, une fuite de données — trouvée et fermée avant le matin.</h1>
+    <div class="vo">
+      <span class="vo-tag">Narration</span>
+      Une session, un onboarding livré, une landing page publique lancée — et au milieu, un message : "mes projets du premier compte sont visibles sur tous mes comptes". La faille a été trouvée, prouvée en base, corrigée et nettoyée en production le soir même.
+    </div>
+    <div class="loop">D'abord, ce qui a été demandé au tout début de la nuit.</div>
+    <p class="ink-soft mono" style="margin-top:22px;font-size:.8rem;">2026-09-05/06 · Claude Code · lecture ~6 min</p>
+  </section>
+
+  <!-- 2 · DONNÉE D'ENTRÉE -->
+  <section class="slide light">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/><path d="M9 15l10-10M15 5h4v4"/></svg>La commande <span class="chap">· 02</span></div>
+    <h2>Le message qui a fait basculer la nuit.</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>Au milieu d'une session de design, ce message tombe — sans prévenir.</div>
+    <div class="io-card mono-body">
+      <div class="io-label"><svg class="icon" style="width:13px;height:13px" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>Message reçu</div>
+      <div class="io-body">"je me suis connecté a plusieurs compte et mes projet du premier compte esr sur visible sur mon tous les compte cest pas possible cest quoi ce job"</div>
+    </div>
+    <div class="loop">Pas de panique, pas de supposition — direction le code, en direct.</div>
+  </section>
+
+  <!-- 3 · CONTEXTE -->
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>L'enjeu <span class="chap">· 03</span></div>
+    <h2 class="display">Dropit n'est pas un outil perso. C'est une vraie app SaaS multi-tenant.</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>Chaque compte doit être une bulle étanche : ses projets, à lui seul, jamais visibles par un autre. C'était déjà vérifié en direct plus tôt — jusqu'à ce message.</div>
+    <div class="terme">
+      <div class="t-label">Terme à retenir</div>
+      <div class="t-term">Multi-tenant</div>
+      <div class="t-def">Une seule application sert tous les comptes, mais chacun ne doit voir que ses propres données — comme des appartements dans un même immeuble.</div>
+    </div>
+    <div class="loop">Mais avant la fuite, il y a eu tout le reste de la nuit.</div>
+  </section>
+
+  <!-- 5 · METHODE -->
+  <section class="slide light">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6L3 10l6-1z"/></svg>La méthode <span class="chap">· 04</span></div>
+    <h2>Trois réflexes qui reviennent toute la nuit.</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>Rien n'est déployé sans preuve — visuelle ou factuelle.</div>
+    <div class="grid-4">
+      <div class="box"><span class="box-tag">1 · Mockup avant réel</span><h3>Toujours prototyper à part</h3><ul><li>Onboarding et landing construits en fichiers isolés</li><li>Testés en local (Playwright) avant d'être appliqués à l'app</li></ul></div>
+      <div class="box"><span class="box-tag">2 · Contraste calculé</span><h3>Jamais à l'œil</h3><ul><li>Formule WCAG relative luminance, en Python</li><li>5 essais de couleur de bouton, chacun vérifié</li></ul></div>
+      <div class="box"><span class="box-tag">3 · Preuve avant conclusion</span><h3>La base de données ne ment pas</h3><ul><li>Bug confirmé par une requête réelle, pas une supposition</li><li>Fix vérifié en rechargeant la vraie table ensuite</li></ul></div>
+      <div class="box"><span class="box-tag">4 · Rollback propre</span><h3>Identifiants jamais gardés</h3><ul><li>Clé Supabase utilisée le temps du nettoyage</li><li>Supprimée du poste juste après usage</li></ul></div>
+    </div>
+    <div class="loop">Premier livrable de la nuit : l'accueil de tout nouveau compte.</div>
+  </section>
+
+  <!-- 6 · LIVRABLE ONBOARDING -->
+  <section class="slide light">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>Livrable 1 · Onboarding <span class="chap">· 05</span></div>
+    <h2>Le premier écran qu'un nouveau compte voit, jamais improvisé.</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>Une popup modale, six écrans, une couleur différente à chaque fois — construite après un premier retour "trop plein écran, pas assez popup".</div>
+    <div class="grid-2">
+      <div class="box"><span class="box-tag">Objectif</span><h3>Montrer, pas décrire</h3><p>Chaque écran reprend une vraie capture de l'app, recadrée sur l'élément qui compte — jamais une image générique.</p></div>
+      <div class="box"><span class="box-tag">Comment</span><h3>Cutout agrandi</h3><ul><li>Chaque bouton clé (Suggérer, C'est fait, badge P1) ressort de son cadre, agrandi</li><li>Une couleur d'accent dédiée par écran</li><li>Ne s'affiche qu'une seule fois par compte (localStorage)</li></ul></div>
+    </div>
+    <div class="shot-compare">
+      <div class="shot"><div class="shot-label">Avant</div><img src="assets/before-auth.png" alt="Écran de connexion d'origine"></div>
+      <div class="shot after"><div class="shot-label">Après</div><img src="assets/onboarding-after.png" alt="Onboarding en popup modale"></div>
+    </div>
+    <div class="loop">Cette même technique de cutout va revenir plus tard, sur un tout autre écran.</div>
+  </section>
+
+  <!-- 7 · GRAIN DE SABLE : LA FUITE -->
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>Le grain de sable <span class="chap">· 06</span></div>
+    <h2 class="display">Le message tombe juste après le déploiement de l'onboarding.</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>Pas de recherche à l'aveugle : le code contenait déjà l'explication, il fallait juste le lire au bon endroit.</div>
+    <div class="case-steps">
+      <div class="case-step"><div class="case-num">1</div><div class="case-title">Lecture du endpoint /api/projects</div><div class="case-desc">Une fonctionnalité de "reprise" existait : les projets créés avant la création d'un compte sont rattachés au premier compte qui se connecte, via un identifiant d'appareil (device_id).</div></div>
+      <div class="case-step"><div class="case-num">2</div><div class="case-title">Le vrai défaut</div><div class="case-desc">Cette ligne "en attente" n'était jamais supprimée après avoir été réclamée — un identifiant d'appareil est partagé par tous les comptes créés sur le même navigateur.</div></div>
+      <div class="case-step"><div class="case-num">3</div><div class="case-title">Vérification en base</div><div class="case-desc">Accès Supabase fourni par l'utilisateur : requête directe, 3 comptes trouvés avec les mêmes 13 projets, créés à 20 secondes d'écart pour deux d'entre eux.</div></div>
+      <div class="case-step resolved"><div class="case-num"><svg class="icon" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M5 12l5 5L20 6"/></svg></div><div class="case-title">Corrigé et nettoyé le soir même</div><div class="case-desc">La ligne est supprimée dès qu'elle est réclamée — plus jamais réutilisable. Les 2 comptes concernés remis à zéro en base, le compte légitime intact.</div></div>
+    </div>
+    <div class="loop">Ce fix a ouvert une question plus large : quoi d'autre pourrait casser à 1000 comptes ?</div>
+  </section>
+
+  <!-- 8 · LIVRABLE AUDIT -->
+  <section class="slide light">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>Livrable 2 · Audit <span class="chap">· 07</span></div>
+    <h2>Un audit complet, demandé dans la foulée — "pour 1000 utilisateurs pérennes".</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>Lecture ligne par ligne du code serveur et client. Verdict : l'isolation de base tenait, mais trois failles auraient coûté cher à l'échelle.</div>
+    <div class="grid-2">
+      <div class="box"><span class="box-tag">Trouvé</span><h3>3 failles majeures</h3><ul><li>/api/ai acceptait n'importe quel modèle IA, sans limite de coût</li><li>/api/projects sans plafond de taille</li><li>Sauvegarde perdue silencieusement à la fermeture d'un onglet</li></ul></div>
+      <div class="box"><span class="box-tag">Corrigé le jour même</span><h3>Les 3, avant la fin de la nuit</h3><ul><li>Liste blanche de modèles + plafond de tokens</li><li>500 Ko / 300 projets max par compte</li><li>Sauvegarde forcée à la fermeture (visibilitychange + keepalive)</li></ul></div>
+    </div>
+    <div class="terme"><div class="t-label">Terme à retenir</div><div class="t-term">keepalive</div><div class="t-def">Option qui permet à une requête réseau de terminer son envoi même si l'onglet se ferme au même moment.</div></div>
+    <div class="loop">Dernier chantier de la nuit : la toute première page que voit un inconnu.</div>
+  </section>
+
+  <!-- 9 · LIVRABLE LANDING -->
+  <section class="slide light">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>Livrable 3 · Landing page <span class="chap">· 08</span></div>
+    <h2>De "juste la promesse" à une vraie page publique, en six versions.</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>Chaque retour a compté : "trop peu impactant", "les écrans sont tronqués", "enlève les gros emoji". La version finale sépare l'app (déplacée sur /app.html) de la nouvelle page publique.</div>
+    <div class="grid-2">
+      <div class="box"><span class="box-tag">Objectif</span><h3>Convertir avant d'expliquer</h3><p>Angle copywriting choisi parmi 3 profils proposés : conversion directe, bénéfices concrets, une seule promesse par écran.</p></div>
+      <div class="box"><span class="box-tag">Comment</span><h3>Vraies captures, pas des illustrations</h3><ul><li>Mobile-first, sections quasi plein écran comme le hero</li><li>Cutout agrandi sur la carte "Prochaine action"</li><li>Redirection automatique vers l'app pour un compte déjà connecté</li></ul></div>
+    </div>
+    <div class="shot-compare">
+      <div class="shot"><div class="shot-label">Version 1</div><img src="assets/landing-before.png" alt="Première version de la landing"></div>
+      <div class="shot after"><div class="shot-label">Version finale</div><img src="assets/landing-after.png" alt="Landing finale, fond blanc et cercles colorés"></div>
+    </div>
+    <div class="loop">Et cette carte qui "ressort du cadre" — la voici en gros plan.</div>
+  </section>
+
+  <!-- 9bis · zoom cutout -->
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M3 12h18M12 3v18"/></svg>Le détail qui change tout <span class="chap">· 09</span></div>
+    <h2 class="display">Un bouton qui sort littéralement de l'écran — la même idée reprise deux fois.</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>La technique du "cutout agrandi" mise au point sur l'onboarding a été redemandée telle quelle sur la landing page, pour la carte "Prochaine action".</div>
+    <div class="shot-single"><img src="assets/landing-cutout.png" alt="Carte prochaine action en cutout agrandi"></div>
+    <div class="loop">Au final, ça donne quoi en chiffres qu'on peut vérifier ?</div>
+  </section>
+
+  <!-- 10 · CHIFFRES -->
+  <section class="slide light">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>Les chiffres <span class="chap">· 10</span></div>
+    <h2>6h30. Pas une estimation — les horodatages des commits git.</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>Du premier commit de la soirée (branding, 20:25) au dernier ajustement de la landing (02:55).</div>
+    <div class="stat-grid">
+      <div class="stat-card time"><div class="stat-value">6h30</div><div class="stat-label">de 20:25 à 02:55, en continu (horodatages git)</div></div>
+      <div class="stat-card"><div class="stat-value good">13</div><div class="stat-label">commits poussés en production</div></div>
+      <div class="stat-card"><div class="stat-value">1</div><div class="stat-label">faille critique trouvée, prouvée et fermée le soir même</div></div>
+      <div class="stat-card"><div class="stat-value">6</div><div class="stat-label">écrans d'onboarding livrés, un par fonctionnalité</div></div>
+    </div>
+    <div class="loop">Reste une question qui fâche : qui a vraiment fait quoi ?</div>
+  </section>
+
+  <!-- 11 · QUI DECIDE QUOI -->
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>Le partage des rôles <span class="chap">· 11</span></div>
+    <h2 class="display">Un message flou a suffi à déclencher toute l'enquête. Le reste, c'est de l'exécution.</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>Chaque couleur, chaque titre, chaque recadrage vient d'un retour direct — souvent en une phrase dictée. La lecture du code, la preuve en base et le fix, c'est l'IA qui les a faits.</div>
+    <div class="control-split">
+      <div class="control-col" style="border:1px solid var(--night-accent);">
+        <h3><svg class="icon" viewBox="0 0 24 24" style="color:var(--night-accent)"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Toi</h3>
+        <ul><li>Signalé la fuite de données</li><li>Choisi l'angle copywriting et les couleurs</li><li>Fourni l'accès Supabase pour le nettoyage</li><li>Tranché chaque itération visuelle</li></ul>
+      </div>
+      <div class="control-col" style="border:1px solid var(--night-line);">
+        <h3><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="12" rx="2"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>L'IA</h3>
+        <ul><li>Lu le code, trouvé et prouvé la faille</li><li>Corrigé, testé, déployé les 3 failles de l'audit</li><li>Construit et itéré les 6 versions de la landing</li><li>Nettoyé les données en base, supprimé les accès après usage</li></ul>
+      </div>
+    </div>
+    <div class="ratio-bar"><div class="r-you" style="width:12%"></div><div class="r-ia" style="width:88%"></div></div>
+    <div class="ratio-legend"><span><b>~12 %</b> toi · les décisions qui orientent</span><span><b>~88 %</b> IA · lecture, preuve, production</span></div>
+    <div class="loop">Concrètement, il te reste quoi à faire ?</div>
+  </section>
+
+  <!-- 12 · CHECKLIST -->
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12l5 5L20 6"/></svg>Ta checklist <span class="chap">· 12</span></div>
+    <h2>Ce qui est fait. Ce qui dépend de toi maintenant.</h2>
+    <ul class="checklist">
+      <li><svg class="icon" viewBox="0 0 24 24"><path d="M5 12l5 5L20 6"/></svg><span><b>Fait</b> — Onboarding 6 écrans en ligne sur dropit-dbx.pages.dev/app.html</span></li>
+      <li><svg class="icon" viewBox="0 0 24 24"><path d="M5 12l5 5L20 6"/></svg><span><b>Fait</b> — Fuite de données fermée, 2 comptes nettoyés en base</span></li>
+      <li><svg class="icon" viewBox="0 0 24 24"><path d="M5 12l5 5L20 6"/></svg><span><b>Fait</b> — 3 failles de l'audit corrigées (AUDIT.md dans MISSIONS/2026-09-06-audit-securite/)</span></li>
+      <li><svg class="icon" viewBox="0 0 24 24"><path d="M5 12l5 5L20 6"/></svg><span><b>Fait</b> — Landing page publique en ligne sur dropit-dbx.pages.dev</span></li>
+      <li><svg class="icon todo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4"/></svg><span><b>À toi</b> — Vérifier ta limite de dépense Anthropic dans la console (jamais vérifiée à distance, pas d'accès)</span></li>
+      <li><svg class="icon todo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4"/></svg><span><b>À toi</b> — Prioriser les points mineurs de l'audit : CSP, suppression de compte, conflit multi-appareils</span></li>
+    </ul>
+    <div class="loop">Et là, le truc que personne ne te dit sur ce genre de bug.</div>
+  </section>
+
+  <!-- 13 · INSIGHT -->
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>Le vrai insight <span class="chap">· 13</span></div>
+    <h2 class="display">La faille n'était pas cachée. Elle était commentée dans le code, en français, depuis le début.</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>Le commentaire disait littéralement pourquoi la fonctionnalité existait — mais personne n'avait posé la question "et si elle est réclamée deux fois ?" avant qu'un vrai utilisateur ne le fasse à sa place.</div>
+    <div class="terme"><div class="t-label">Terme à retenir</div><div class="t-term">Réclamation à usage unique</div><div class="t-def">Une donnée transférée une fois doit être supprimée de sa source — sinon elle reste disponible pour être reprise par n'importe qui d'autre.</div></div>
+    <div class="loop">Retour au chiffre du début : 6h30, une fuite fermée dedans.</div>
+  </section>
+
+  <!-- 14 · CLOTURE -->
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-7h6v7"/></svg>Dropit · le sujet <span class="chap">· 14</span></div>
+    <h1 class="display">6h30, 13 commits, 1 fuite fermée avant le matin — et une landing page pour accueillir le compte 1001.</h1>
+    <div class="vo"><span class="vo-tag">Narration</span>L'onboarding et la landing sont en ligne, testés de bout en bout. La seule chose qui reste vraie pour la prochaine session : vérifier la limite de dépense Anthropic, seul point que personne n'a encore regardé.</div>
+    <p class="ink-soft mono" style="margin-top:20px;font-size:.82rem;">Prochain épisode : rate limiting, suppression de compte, et la vraie synchronisation multi-appareils.</p>
+  </section>
+
+</div>
+
+<div class="rail" id="rail"></div>
+<div class="counter" id="counter">01 / 12</div>
+<div class="nav-buttons">
+  <button class="nav-btn" id="prev">← préc.</button>
+  <button class="nav-btn" id="next">suiv. →</button>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const rail = document.getElementById('rail');
+  const counter = document.getElementById('counter');
+  let i = 0;
+  slides.forEach((_, idx) => {
+    const t = document.createElement('div');
+    t.className = 'tick' + (idx === 0 ? ' active' : '');
+    t.addEventListener('click', () => go(idx));
+    rail.appendChild(t);
+  });
+  const ticks = Array.from(rail.children);
+  counter.textContent = '01 / ' + String(slides.length).padStart(2, '0');
+  function go(n) {
+    if (n < 0 || n >= slides.length || n === i) return;
+    slides[i].classList.remove('active'); ticks[i].classList.remove('active');
+    i = n;
+    const incoming = slides[i];
+    incoming.classList.remove('active'); void incoming.offsetWidth; incoming.classList.add('active');
+    ticks[i].classList.add('active');
+    counter.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    document.getElementById('prev').disabled = i === 0;
+    document.getElementById('next').disabled = i === slides.length - 1;
+    incoming.scrollTop = 0;
+  }
+  document.getElementById('next').addEventListener('click', () => go(i + 1));
+  document.getElementById('prev').addEventListener('click', () => go(i - 1));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(i + 1); }
+    if (e.key === 'ArrowLeft') go(i - 1);
+  });
+  document.getElementById('prev').disabled = true;
+</script>
+</body>
+</html>

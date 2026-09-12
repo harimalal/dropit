@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DROPIT — Du prototype à l'app live en une session</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #16151C; --ink-soft: #55535F; --paper: #FAF9F6; --surface: #FFFFFF; --line: #E4E1DA;
+    --accent: #BF5B44; --accent-soft: #F3E2DC;
+    --good: #1E8E5A; --good-soft: #E4F3EB; --warn: #B4700F; --warn-soft: #FBF0DD; --bad: #C4432C; --bad-soft: #FBE9E4;
+    --night: #131219; --night-surface: #1C1B26; --night-ink: #F2F0EA; --night-ink-soft: #A6A3B4; --night-line: #302E3E;
+    --night-accent: #D97B61; --night-accent-soft: rgba(217,123,97,.15); --night-good: #4ADE80; --night-good-soft: rgba(74,222,128,.12);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink); font-family: 'IBM Plex Sans', -apple-system, sans-serif; }
+  .display { font-family: 'Fraunces', Georgia, serif; text-wrap: balance; }
+  .mono { font-family: 'IBM Plex Mono', 'Courier New', monospace; }
+
+  .deck { width: 100%; height: 100vh; position: relative; overflow: hidden; }
+  .slide {
+    position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center;
+    padding: 7vh 9vw 10vh 12vw; opacity: 0; transform: translateY(10px) scale(.995);
+    transition: opacity .5s cubic-bezier(.2,.7,.3,1), transform .5s cubic-bezier(.2,.7,.3,1);
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; opacity: 1; transform: none; z-index: 5; }
+  .slide.light { background: var(--paper); color: var(--ink); }
+  .slide.dark { background: var(--night); color: var(--night-ink); }
+  .slide.dark .ink-soft { color: var(--night-ink-soft); }
+  .light .ink-soft { color: var(--ink-soft); }
+
+  @keyframes riseIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .slide.active .eyebrow { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) both; }
+  .slide.active h1, .slide.active h2 { animation: riseIn .55s cubic-bezier(.2,.8,.3,1) .07s both; }
+  .slide.active .vo { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .16s both; }
+  .slide.active > p { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .2s both; }
+  .slide.active .io-card { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .24s both; }
+  .slide.active .stat-grid > *, .slide.active .grid-4 > *, .slide.active .grid-2 > *,
+  .slide.active .timeline > *, .slide.active .control-split > *, .slide.active .checklist > li,
+  .slide.active .case-steps > .case-step { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) both; }
+  .slide.active .stat-grid>*:nth-child(1), .slide.active .grid-4>*:nth-child(1), .slide.active .grid-2>*:nth-child(1),
+  .slide.active .timeline>*:nth-child(1), .slide.active .control-split>*:nth-child(1), .slide.active .checklist>li:nth-child(1),
+  .slide.active .case-steps>.case-step:nth-child(1) { animation-delay: .24s; }
+  .slide.active .stat-grid>*:nth-child(2), .slide.active .grid-4>*:nth-child(2), .slide.active .grid-2>*:nth-child(2),
+  .slide.active .timeline>*:nth-child(2), .slide.active .control-split>*:nth-child(2), .slide.active .checklist>li:nth-child(2),
+  .slide.active .case-steps>.case-step:nth-child(2) { animation-delay: .32s; }
+  .slide.active .stat-grid>*:nth-child(3), .slide.active .grid-4>*:nth-child(3), .slide.active .timeline>*:nth-child(3),
+  .slide.active .checklist>li:nth-child(3), .slide.active .case-steps>.case-step:nth-child(3) { animation-delay: .4s; }
+  .slide.active .stat-grid>*:nth-child(4), .slide.active .grid-4>*:nth-child(4), .slide.active .timeline>*:nth-child(4),
+  .slide.active .checklist>li:nth-child(4), .slide.active .case-steps>.case-step:nth-child(4) { animation-delay: .48s; }
+  .slide.active .stat-grid>*:nth-child(5), .slide.active .timeline>*:nth-child(5), .slide.active .checklist>li:nth-child(5) { animation-delay: .56s; }
+  .slide.active .checklist>li:nth-child(6), .slide.active .checklist>li:nth-child(7), .slide.active .checklist>li:nth-child(8),
+  .slide.active .stat-grid>*:nth-child(6) { animation-delay: .62s; }
+  .slide.active .terme { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .5s both; }
+  .slide.active .loop { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .66s both; }
+  @media (prefers-reduced-motion: reduce) { .slide, .slide * { animation: none !important; transition: none !important; } }
+
+  .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: .74rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .dark .eyebrow { color: var(--night-accent); }
+  .eyebrow .icon { width: 16px; height: 16px; }
+  .eyebrow .chap { opacity: .55; }
+
+  h1 { font-size: clamp(2.1rem, 4.6vw, 3.7rem); font-weight: 600; line-height: 1.05; margin: 0 0 18px; max-width: 19ch; }
+  h2 { font-size: clamp(1.7rem, 3.3vw, 2.6rem); font-weight: 600; line-height: 1.1; margin: 0 0 18px; max-width: 22ch; }
+  p { font-size: 1.02rem; line-height: 1.62; max-width: 60ch; margin: 0 0 12px; }
+  svg.icon { width: 22px; height: 22px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+  .vo { font-size: 1.16rem; line-height: 1.58; max-width: 56ch; margin: 2px 0 8px; padding-left: 18px; border-left: 3px solid var(--accent); color: var(--ink); }
+  .dark .vo { border-left-color: var(--night-accent); color: var(--night-ink); }
+  .vo .vo-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 7px; }
+  .dark .vo .vo-tag { color: var(--night-accent); }
+  .vo strong { font-weight: 600; }
+
+  .loop { margin-top: 26px; font-family: 'IBM Plex Mono', monospace; font-size: .8rem; letter-spacing: .01em; color: var(--accent); display: flex; align-items: baseline; gap: 9px; max-width: 52ch; }
+  .dark .loop { color: var(--night-accent); }
+  .loop::before { content: "↳"; font-size: 1rem; }
+
+  .terme { margin-top: 18px; border: 1px solid var(--line); border-left: 3px solid var(--warn); border-radius: 10px; padding: 13px 18px; max-width: 620px; background: var(--surface); }
+  .dark .terme { border-color: var(--night-line); border-left-color: var(--warn); background: var(--night-surface); }
+  .terme .t-label { font-family: 'IBM Plex Mono', monospace; font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--warn); }
+  .terme .t-term { font-weight: 600; font-size: 1rem; margin: 3px 0 2px; }
+  .terme .t-def { font-size: .88rem; color: var(--ink-soft); line-height: 1.48; }
+  .dark .terme .t-def { color: var(--night-ink-soft); }
+  .terme + .terme { margin-top: 10px; }
+
+  .io-card { border: 1.5px solid var(--line); border-radius: 16px; padding: 22px 24px; background: var(--surface); max-width: 780px; margin-top: 8px; }
+  .dark .io-card { border-color: var(--night-line); background: var(--night-surface); }
+  .io-card .io-label { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  .dark .io-card .io-label { color: var(--night-accent); }
+  .io-card .io-body { font-size: .92rem; line-height: 1.65; color: var(--ink-soft); white-space: pre-wrap; }
+  .dark .io-card .io-body { color: var(--night-ink-soft); }
+  .io-card.mono-body .io-body { font-family: 'IBM Plex Mono', monospace; font-size: .8rem; line-height: 1.75; }
+
+  .rail { position: fixed; left: 32px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 50; }
+  .rail .tick { width: 5px; height: 16px; border-radius: 3px; background: rgba(120,116,140,.28); cursor: pointer; transition: background .25s, transform .25s; }
+  .rail .tick.active { background: var(--accent); transform: scaleY(1.2); }
+  .nav-buttons { position: fixed; bottom: 26px; right: 32px; display: flex; gap: 10px; z-index: 60; }
+  .nav-btn { font-family: 'IBM Plex Mono', monospace; font-size: .8rem; background: transparent; border: 1px solid var(--line); color: var(--ink); padding: 9px 15px; border-radius: 999px; cursor: pointer; transition: border-color .2s, color .2s; }
+  body:has(.slide.dark.active) .nav-btn { border-color: var(--night-line); color: var(--night-ink); }
+  .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-btn:disabled { opacity: .35; cursor: default; }
+  .counter { position: fixed; bottom: 28px; left: 56px; font-family: 'IBM Plex Mono', monospace; font-size: .78rem; color: var(--ink-soft); z-index: 60; }
+  body:has(.slide.dark.active) .counter { color: var(--night-ink-soft); }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 980px; margin-top: 8px; }
+  .stat-card { border: 1px solid var(--line); border-radius: 14px; padding: 20px 18px; background: var(--surface); transition: transform .2s, box-shadow .2s; }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(20,18,30,.08); }
+  .dark .stat-card { border-color: var(--night-line); background: var(--night-surface); }
+  .stat-value { font-family: 'Fraunces', serif; font-size: 2.4rem; font-weight: 600; line-height: 1; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+  .stat-value.good { color: var(--good); }
+  .stat-label { font-size: .88rem; line-height: 1.4; color: var(--ink-soft); }
+  .dark .stat-label { color: var(--night-ink-soft); }
+  .stat-card.time { grid-column: span 2; }
+  .stat-card.time .stat-value { font-size: 2.9rem; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; max-width: 940px; margin-top: 6px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; max-width: 940px; margin-top: 6px; }
+  .box { border: 1px solid var(--line); border-radius: 16px; padding: 20px; background: var(--surface); transition: transform .2s, box-shadow .2s; }
+  .box:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(20,18,30,.08); }
+  .dark .box { border-color: var(--night-line); background: var(--night-surface); }
+  .box h3 { font-size: 1rem; font-weight: 600; margin: 0 0 7px; }
+  .box p { font-size: .9rem; margin: 0; color: var(--ink-soft); }
+  .dark .box p { color: var(--night-ink-soft); }
+  .box ul { margin: 7px 0 0; padding-left: 17px; font-size: .85rem; line-height: 1.58; color: var(--ink-soft); }
+  .dark .box ul { color: var(--night-ink-soft); }
+  .box ul li { margin: 4px 0; }
+  .box .box-tag { font-family: 'IBM Plex Mono', monospace; font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  .dark .box .box-tag { color: var(--night-accent); }
+
+  .case-steps { position: relative; padding-left: 52px; max-width: 680px; margin-top: 12px; }
+  .case-steps::before { content: ''; position: absolute; left: 20px; top: 6px; bottom: 6px; width: 2px; background: var(--night-line); }
+  .case-step { position: relative; margin-bottom: 20px; }
+  .case-step:last-child { margin-bottom: 0; }
+  .case-num { position: absolute; left: -52px; top: 0; width: 36px; height: 36px; border-radius: 50%; background: var(--night); border: 1.5px solid var(--night-line); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: .82rem; color: var(--night-ink-soft); }
+  .case-step.resolved .case-num { border-color: var(--night-good); color: var(--night-good); background: var(--night-good-soft); }
+  .case-title { font-weight: 600; font-size: .98rem; margin-bottom: 4px; }
+  .case-step.resolved .case-title { color: var(--night-good); }
+  .case-desc { font-size: .89rem; color: var(--night-ink-soft); line-height: 1.5; max-width: 58ch; }
+
+  .control-split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px; margin-top: 6px; }
+  .control-col { border-radius: 16px; padding: 20px 22px; background: var(--night-surface); }
+  .control-col h3 { font-size: 1rem; margin: 0 0 12px; display: flex; align-items: center; gap: 9px; }
+  .control-col ul { list-style: none; padding: 0; margin: 0; }
+  .control-col li { padding: 7px 0; font-size: .87rem; border-bottom: 1px solid rgba(255,255,255,.06); color: var(--night-ink-soft); }
+  .control-col li:last-child { border-bottom: none; }
+  .ratio-bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; max-width: 900px; margin: 20px 0 8px; border: 1px solid var(--night-line); }
+  .ratio-bar .r-you { background: var(--night-accent); }
+  .ratio-bar .r-ia { background: var(--night-surface); }
+  .ratio-legend { display: flex; gap: 22px; font-family: 'IBM Plex Mono', monospace; font-size: .76rem; color: var(--night-ink-soft); }
+  .ratio-legend b { color: var(--night-ink); }
+
+  .checklist { list-style: none; padding: 0; margin: 16px 0 0; max-width: 760px; }
+  .checklist li { display: flex; gap: 12px; padding: 9px 0; font-size: .97rem; border-bottom: 1px solid var(--night-line); align-items: flex-start; }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist .icon { margin-top: 3px; color: var(--night-good); flex-shrink: 0; }
+  .checklist .icon.todo { color: var(--warn); }
+
+  @media (max-width: 820px) {
+    .slide { padding: 8vh 7vw 12vh 8vw; }
+    .stat-grid, .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-2, .control-split { grid-template-columns: 1fr; }
+    .rail { display: none; }
+    .stat-card.time { grid-column: span 2; }
+  }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <!-- 01 · COLD OPEN -->
+  <section class="slide dark active">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      DROPIT · session 1
+      <span class="chap">· 01</span>
+    </div>
+    <h1 class="display">Un fichier HTML. Une app en prod. Avec de l'IA dedans.</h1>
+    <div class="vo">
+      <span class="vo-tag">Narration</span>
+      On est parti d'un prototype qui vivait dans un artifact Claude — zéro backend, clé API exposée dans le navigateur. <strong>En une session : déploiement live + 3 nouvelles features.</strong> Sans écrire une ligne de config serveur.
+    </div>
+    <div class="loop">Mais d'abord, regarde ce qu'on m'a demandé de faire.</div>
+    <p class="ink-soft mono" style="margin-top:22px;font-size:.8rem;">2026-09-02 · Claude Sonnet 4.6 · lecture ~6 min</p>
+  </section>
+
+  <!-- 02 · LA COMMANDE -->
+  <section class="slide light">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"/><path d="M9 15l10-10M15 5h4v4"/></svg>
+      La commande
+      <span class="chap">· 02</span>
+    </div>
+    <h2>Voilà ce qui est arrivé dans ma boîte. En entier.</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>Deux demandes distinctes, l'une après l'autre. Comment fait-on tout ça sans y passer la nuit ?</div>
+    <div class="io-card mono-body">
+      <div class="io-label">
+        <svg class="icon" style="width:13px;height:13px" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
+        Demandes reçues
+      </div>
+      <div class="io-body">1. "j'ai créé un nouveau dossier DROPIT. je t'ai mis les deux fichiers le MVP
+   de l'application HTML et un dossier transfert qui décrit et qui cadre tout.
+   analisto prends-en connaissance on va le travailler puis après on va le
+   lancer en ligne"
+
+2. /maestro — "le mvp fonctionne bien, on va rester sur le mvp mais on va le
+   pousser bout. 1 page = 1 fonction, 1 clic = action. l'objectif est que
+   le user n'a rien à penser, rien à réfléchir, rien à taper [...] les
+   priorités des tâches sont définies par l'IA [...] pour les tâches le user
+   puisse cliquer sur un icône à côté de la tâche pour lancer une recherche IA
+   [...]"</div>
+    </div>
+    <div class="loop">Le problème : ce prototype ne pouvait pas vivre hors de Claude. Scène 3.</div>
+  </section>
+
+  <!-- 03 · L'ENJEU -->
+  <section class="slide dark">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+      L'enjeu
+      <span class="chap">· 03</span>
+    </div>
+    <h2 class="display">Un prototype dans un artifact Claude, c'est une app en cage.</h2>
+    <div class="vo">
+      <span class="vo-tag">Narration</span>
+      L'artifact avait sa propre API de stockage (<span class="mono">window.storage</span>) et appelait Anthropic directement avec la clé dedans. En dehors de Claude.ai, il ne fonctionne pas. Et même à l'intérieur : zéro persistance, zéro sécurité, impossible à partager.
+    </div>
+    <div class="terme">
+      <div class="t-label">Terme à retenir</div>
+      <div class="t-term">Cloudflare Pages Functions</div>
+      <div class="t-def">Serveur V8 isolé qui tourne à l'edge — fetch natif, pas de Node.js. On y stocke les clés API. Le client n'y a jamais accès.</div>
+    </div>
+    <div class="loop">La décision stack était la première bifurcation. Scène 4.</div>
+  </section>
+
+  <!-- 04 · LE CHOIX STACK -->
+  <section class="slide light">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M3 12h18M12 3v18"/></svg>
+      Le choix stack
+      <span class="chap">· 04</span>
+    </div>
+    <h2>Cloudflare plutôt que Netlify. Supabase plutôt qu'un fichier JSON.</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>Un choix qui détermine tout : gratuit sans limite de déploiements, clés API côté serveur, persistance cross-session. Et zéro config serveur.</div>
+    <div class="grid-2">
+      <div class="box">
+        <div class="box-tag">Cloudflare Pages</div>
+        <h3>Hébergement + edge fonctions</h3>
+        <ul>
+          <li>Déploiements GitHub illimités (Netlify = 300/mois gratuit)</li>
+          <li>Pages Functions en V8 isolate — fetch natif, pas de npm</li>
+          <li>ANTHROPIC_API_KEY et SUPABASE_SERVICE_ROLE_KEY côté serveur uniquement</li>
+        </ul>
+      </div>
+      <div class="box">
+        <div class="box-tag">Supabase</div>
+        <h3>PostgreSQL + REST API</h3>
+        <ul>
+          <li>Une table : device_id (clé) + data (JSONB blob complet)</li>
+          <li>Upsert avec <span class="mono">Prefer: resolution=merge-duplicates</span></li>
+          <li>Pas de client lib — fetch natif sur PostgREST</li>
+          <li>device_id = UUID en localStorage, jamais d'auth</li>
+        </ul>
+      </div>
+    </div>
+    <div class="loop">Stack décidée. 4 fichiers à écrire. La méthode ensuite.</div>
+  </section>
+
+  <!-- 05 · LA MÉTHODE -->
+  <section class="slide dark">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 3l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6L3 10l6-1z"/></svg>
+      La méthode
+      <span class="chap">· 05</span>
+    </div>
+    <h2 class="display">MAESTRO : un gate de cadrage, puis zéro interruption.</h2>
+    <div class="vo">
+      <span class="vo-tag">Narration</span>
+      Pour la phase UX Push, on a invoqué <span class="mono">/maestro</span>. Un seul moment de décision : le gate CADRAGE.md avec 4 choix fermés. Après validation, la machine tourne seule jusqu'à la livraison.
+    </div>
+    <div class="grid-4">
+      <div class="box">
+        <div class="box-tag">A1</div>
+        <h3>Focus strict</h3>
+        <p>Masquer complètement la suite. Seule la prochaine action est visible. Lien "Voir la suite (N)".</p>
+      </div>
+      <div class="box">
+        <div class="box-tag">B1</div>
+        <h3>Panneau inline</h3>
+        <p>Recherche IA déployable sous la tâche. Pas de modal, pas de drawer. Contexte préservé.</p>
+      </div>
+      <div class="box">
+        <div class="box-tag">C1</div>
+        <h3>Ordre implicite</h3>
+        <p>Pas de badge P1/P2/P3. L'ordre des tâches est la priorité. Bouton "Reclasser" pour reprendre la main.</p>
+      </div>
+      <div class="box">
+        <div class="box-tag">D1</div>
+        <h3>Vues détail only</h3>
+        <p>On ne touche pas le treemap d'accueil. Scope maîtrisé, risque de régression nul.</p>
+      </div>
+    </div>
+    <div class="loop">Les experts ont débattu. Les décisions sont prises. On produit. Scène 6.</div>
+  </section>
+
+  <!-- 06 · BEAT 1 — DÉPLOIEMENT -->
+  <section class="slide light">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="4"/></svg>
+      Livrable 1 — Le socle
+      <span class="chap">· 06</span>
+    </div>
+    <h2>4 fichiers. Une app qui persiste. Des clés qui ne fuient pas.</h2>
+    <div class="vo">
+      <span class="vo-tag">Narration</span>
+      Le prototype <span class="mono">vivre.html</span> avait 3 points de contact à couper et remplacer : le stockage artifact, le fetch Anthropic direct, et le titre. Tout le reste — treemap, logique, CSS — est resté intact.
+    </div>
+    <div class="grid-4">
+      <div class="box">
+        <div class="box-tag">index.html</div>
+        <h3>L'app</h3>
+        <p><span class="mono">load()</span> → <span class="mono">GET /api/projects</span><br><span class="mono">persist()</span> → <span class="mono">POST /api/projects</span><br>Les 3 <span class="mono">generateXxx()</span> → <span class="mono">POST /api/ai</span></p>
+      </div>
+      <div class="box">
+        <div class="box-tag">functions/api/ai.js</div>
+        <h3>Proxy Anthropic</h3>
+        <p>Reçoit le body, l'envoie à Anthropic avec la clé en env var. Retourne la réponse telle quelle. 37 lignes.</p>
+      </div>
+      <div class="box">
+        <div class="box-tag">functions/api/projects.js</div>
+        <h3>CRUD Supabase</h3>
+        <p>GET → lit le blob JSONB par device_id.<br>POST → upsert avec merge-duplicates. 87 lignes.</p>
+      </div>
+      <div class="box">
+        <div class="box-tag">_headers</div>
+        <h3>Sécurité</h3>
+        <p>X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict. 4 lignes.</p>
+      </div>
+    </div>
+    <div class="loop">Le socle est en prod. On ajoute les 3 features. Scène 7.</div>
+  </section>
+
+  <!-- 07 · BEAT 2 — FOCUS STRICT -->
+  <section class="slide dark">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+      Livrable 2 — Focus strict
+      <span class="chap">· 07</span>
+    </div>
+    <h2 class="display">L'utilisateur voit une tâche. Une seule.</h2>
+    <div class="vo">
+      <span class="vo-tag">Narration</span>
+      Pour les projets à une catégorie : la "PROCHAINE ACTION" occupe tout l'écran. Les tâches suivantes existent — on voit juste "Voir la suite (2 tâches)". Un chiffre qui rassure sans distraire. Inspiré de Goblin.tools Taskmaster.
+    </div>
+    <div class="terme">
+      <div class="t-label">Terme à retenir</div>
+      <div class="t-term">Progressive disclosure</div>
+      <div class="t-def">N'afficher que ce qui est pertinent maintenant. Le reste existe mais attend. Réduit la charge cognitive sans cacher d'information.</div>
+    </div>
+    <div class="loop">Une tâche visible, l'IA peut l'enrichir en contexte. Scène 8.</div>
+  </section>
+
+  <!-- 08 · BEAT 3 — RESEARCH PANEL -->
+  <section class="slide light">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>
+      Livrable 3 — Recherche IA inline
+      <span class="chap">· 08</span>
+    </div>
+    <h2>Un clic sur la loupe. 6 options contextuelles. Zéro prompt à écrire.</h2>
+    <div class="vo">
+      <span class="vo-tag">Narration</span>
+      L'IA reçoit le titre du projet, le résumé, et le titre de la tâche. Elle retourne 4 à 6 options condensées. L'utilisateur coche ce qui l'intéresse. Le panneau reste ouvert même après que la tâche est marquée faite. Même sur les tâches saisies manuellement.
+    </div>
+    <div class="grid-2">
+      <div class="box">
+        <div class="box-tag">Modèle de données</div>
+        <h3>item.research</h3>
+        <p><span class="mono">{ options: [{text, checked}], open: bool, loading: bool, fetchedAt }</span><br><br>Stocké dans le JSONB Supabase comme le reste de l'état. Pas de table séparée.</p>
+      </div>
+      <div class="box">
+        <div class="box-tag">UX</div>
+        <h3>Inline, pas de modal</h3>
+        <p>Le panneau s'ouvre <em>sous</em> la ligne de tâche, pousse le reste vers le bas. Fermable. Persistant à travers les recharges. Checkbox <span class="mono">onChange</span> → debounce persist → Supabase.</p>
+      </div>
+    </div>
+    <div class="loop">L'IA trie aussi les tâches par priorité. Scène 9.</div>
+  </section>
+
+  <!-- 09 · BEAT 4 — RECLASSER -->
+  <section class="slide dark">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M7 12h10M11 18h2"/></svg>
+      Livrable 4 — Reclasser par priorité
+      <span class="chap">· 09</span>
+    </div>
+    <h2 class="display">Un clic. L'IA décide qui passe en premier.</h2>
+    <div class="vo">
+      <span class="vo-tag">Narration</span>
+      Le bouton "Reclasser par priorité" envoie toutes les tâches non terminées à l'IA, qui retourne les IDs dans l'ordre recommandé. Les tâches se réorganisent. La "PROCHAINE ACTION" change. Aucun badge visible — l'ordre dit tout.
+    </div>
+    <div class="terme">
+      <div class="t-label">Terme à retenir</div>
+      <div class="t-term">Implicit priority</div>
+      <div class="t-def">La position dans la liste est la priorité. Pas de badge P1/P2/P3 qui charge visuellement chaque ligne — l'ordre porte l'information.</div>
+    </div>
+    <div class="loop">Tout a failli rater à la mise en prod. La vrai histoire, scène 10.</div>
+  </section>
+
+  <!-- 10 · LE GRAIN DE SABLE -->
+  <section class="slide dark">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Le grain de sable
+      <span class="chap">· 10</span>
+    </div>
+    <h2 class="display">Le déploiement était en prod. L'app servait l'ancienne version.</h2>
+    <div class="vo">
+      <span class="vo-tag">Narration</span>
+      Après le commit e710c82 poussé sur GitHub, la page live ne contenait aucune des 3 nouvelles features. Git confirmait que le remote était à jour. Cloudflare n'avait pas redéclenché son build.
+    </div>
+    <div class="case-steps">
+      <div class="case-step">
+        <div class="case-num">1</div>
+        <div class="case-title">Diagnostic</div>
+        <div class="case-desc"><span class="mono">document.documentElement.innerHTML.length</span> → 49 444 octets. Fichier local → 57 101 octets. Cloudflare servait le build 5282cb3, pas e710c82.</div>
+      </div>
+      <div class="case-step">
+        <div class="case-num">2</div>
+        <div class="case-title">Cause</div>
+        <div class="case-desc">Webhook GitHub → Cloudflare silencieusement raté. Git push OK, build non déclenché. Aucune alerte côté Cloudflare.</div>
+      </div>
+      <div class="case-step resolved">
+        <div class="case-num">3</div>
+        <div class="case-title">Fix</div>
+        <div class="case-desc"><span class="mono">git commit --allow-empty -m "chore: trigger redeploy"</span> + push. Cloudflare rebuild déclenché. Confirmé via poll : <span class="mono">until curl -s URL | grep -q "research-icon-btn"; do sleep 10; done</span>.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 · LES CHIFFRES -->
+  <section class="slide light">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+      Les chiffres
+      <span class="chap">· 11</span>
+    </div>
+    <h2>Ce que cette session a produit. En faits mesurables.</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>Premier commit à 21h28, test navigateur validé à 23h00. Temps réel : 1h30 environ.</div>
+    <div class="stat-grid">
+      <div class="stat-card time">
+        <div class="stat-value good">~90 min</div>
+        <div class="stat-label">Prototype → app live avec 3 features nouvelles, testées navigateur</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">4</div>
+        <div class="stat-label">Commits pushés sur GitHub</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">1 235</div>
+        <div class="stat-label">Lignes dans index.html — toute la logique en un seul fichier</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">0</div>
+        <div class="stat-label">Dépendances npm · 0 node_modules · 0 bundler</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">3 / 3</div>
+        <div class="stat-label">Features validées navigateur : focus strict · research panel · reclasser</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value good">5</div>
+        <div class="stat-label">Erreurs rencontrées et résolues en cours de session</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 · QUI DÉCIDE QUOI -->
+  <section class="slide dark">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Qui décide quoi
+      <span class="chap">· 12</span>
+    </div>
+    <h2 class="display">15 % des décisions ont orienté 100 % du résultat.</h2>
+    <div class="vo"><span class="vo-tag">Narration</span>L'IA a écrit la totalité du code. L'humain a pris 4 décisions de fond et résolu les blocages d'infrastructure.</div>
+    <div class="control-split">
+      <div class="control-col">
+        <h3>
+          <svg class="icon" style="width:18px;height:18px" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>
+          Humain (~15 %)
+        </h3>
+        <ul>
+          <li>Choisir Cloudflare vs Netlify</li>
+          <li>Valider les 4 options du gate CADRAGE (A1+B1+C1+D1)</li>
+          <li>Débloquer l'accès GitHub dans Cloudflare</li>
+          <li>Rentrer les env vars dans le dashboard Cloudflare</li>
+          <li>Valider le test navigateur final</li>
+        </ul>
+      </div>
+      <div class="control-col">
+        <h3>
+          <svg class="icon" style="width:18px;height:18px" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          IA (~85 %)
+        </h3>
+        <ul>
+          <li>Architecture complète des 4 fichiers</li>
+          <li>Implémentation focus strict, research panel, reclasser</li>
+          <li>Diagnostic du webhook Cloudflare raté</li>
+          <li>Fix empty commit + poll de confirmation</li>
+          <li>Rédaction session log, CADRAGE.md, etat.md</li>
+        </ul>
+      </div>
+    </div>
+    <div class="ratio-bar" style="margin-top:18px;">
+      <div class="r-you" style="width:15%;"></div>
+      <div class="r-ia" style="width:85%;"></div>
+    </div>
+    <div class="ratio-legend"><span><b>15 %</b> humain</span><span><b>85 %</b> IA</span></div>
+  </section>
+
+  <!-- 13 · CHECKLIST DE SORTIE -->
+  <section class="slide dark">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+      Sortie de session
+      <span class="chap">· 13</span>
+    </div>
+    <h2>Ce qui est fait. Ce qui attend ta main.</h2>
+    <ul class="checklist">
+      <li>
+        <svg class="icon" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><circle cx="12" cy="12" r="9"/></svg>
+        App live sur dropit-dbx.pages.dev — persistance Supabase, clés sécurisées
+      </li>
+      <li>
+        <svg class="icon" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><circle cx="12" cy="12" r="9"/></svg>
+        Focus strict validé navigateur
+      </li>
+      <li>
+        <svg class="icon" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><circle cx="12" cy="12" r="9"/></svg>
+        Research panel IA validé navigateur (6 options contextuelles, checkboxes persistants)
+      </li>
+      <li>
+        <svg class="icon" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><circle cx="12" cy="12" r="9"/></svg>
+        Reclasser par priorité validé navigateur
+      </li>
+      <li>
+        <svg class="icon todo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+        Tester sur mobile (l'app est responsive mais pas testée sur écran tactile cette session)
+      </li>
+      <li>
+        <svg class="icon todo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+        Décider du nom final (le dossier s'appelle DROPIT, l'app est titrée "Dropit" — à confirmer avant domaine)
+      </li>
+      <li>
+        <svg class="icon todo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+        Onboarding premier lancement — aujourd'hui la page est vide si aucun projet n'existe
+      </li>
+    </ul>
+  </section>
+
+  <!-- 14 · LE TRUC QUE PERSONNE TE DIT -->
+  <section class="slide light">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 2l3 6 6 1-4.5 4 1 6L12 16l-5.5 3 1-6L3 9l6-1z"/></svg>
+      Le truc que personne te dit
+      <span class="chap">· 14</span>
+    </div>
+    <h2>Un webhook raté ne prévient pas. Et c'est le test qui détecte, pas git.</h2>
+    <div class="vo">
+      <span class="vo-tag">Narration</span>
+      <strong>Le piège Cloudflare :</strong> <span class="mono">git push</span> dit "Everything up-to-date" et GitHub montre le bon commit — mais Cloudflare n'a rien construit. Le seul signal fiable : comparer la taille du HTML servi au fichier local. 49 444 ≠ 57 101. Le reste est silence.
+    </div>
+    <p>Le réflexe à adopter : après tout déploiement, vérifier que la page live contient une string qui n'existe que dans la nouvelle version. Un <span class="mono">curl -s URL | grep -q "nom-de-classe-unique"</span> vaut mieux qu'un regard sur le dashboard.</p>
+    <div class="loop">Scène suivante : ce qu'on fait la prochaine fois.</div>
+  </section>
+
+  <!-- 15 · CLÔTURE -->
+  <section class="slide dark">
+    <div class="eyebrow">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      Clôture
+      <span class="chap">· 15</span>
+    </div>
+    <h1 class="display">Un fichier HTML. Une app en prod. Avec de l'IA dedans.</h1>
+    <div class="vo">
+      <span class="vo-tag">Narration</span>
+      On est parti d'un prototype en cage — en 90 minutes, c'est une app live avec persistance, clés sécurisées, et 3 features IA qui tournent en prod. La prochaine étape : tester sur mobile, décider du nom, construire l'onboarding.
+    </div>
+    <div class="loop">Prochain épisode : l'utilisateur ouvre l'app pour la première fois — qu'est-ce qui se passe ?</div>
+    <p class="ink-soft mono" style="margin-top:26px;font-size:.78rem;">dropit-dbx.pages.dev · commit a104630 · 2026-09-02</p>
+  </section>
+
+</div>
+
+<!-- Rail + Nav -->
+<div class="rail" id="rail"></div>
+<div class="nav-buttons">
+  <button class="nav-btn" id="prev" disabled>← Préc</button>
+  <button class="nav-btn" id="next">Suiv →</button>
+</div>
+<div class="counter" id="counter">1 / 15</div>
+
+<script>
+  (function(){
+    var slides = Array.from(document.querySelectorAll('.slide'));
+    var rail = document.getElementById('rail');
+    var prev = document.getElementById('prev');
+    var next = document.getElementById('next');
+    var counter = document.getElementById('counter');
+    var current = 0;
+    var total = slides.length;
+
+    slides.forEach(function(_, i){
+      var tick = document.createElement('div');
+      tick.className = 'tick' + (i === 0 ? ' active' : '');
+      tick.addEventListener('click', function(){ go(i); });
+      rail.appendChild(tick);
+    });
+
+    function go(n){
+      slides[current].classList.remove('active');
+      rail.children[current].classList.remove('active');
+      current = Math.max(0, Math.min(n, total - 1));
+      slides[current].classList.add('active');
+      rail.children[current].classList.add('active');
+      prev.disabled = current === 0;
+      next.disabled = current === total - 1;
+      counter.textContent = (current + 1) + ' / ' + total;
+    }
+
+    prev.addEventListener('click', function(){ go(current - 1); });
+    next.addEventListener('click', function(){ go(current + 1); });
+
+    document.addEventListener('keydown', function(e){
+      if(e.key === 'ArrowRight' || e.key === 'ArrowDown') go(current + 1);
+      if(e.key === 'ArrowLeft' || e.key === 'ArrowUp') go(current - 1);
+    });
+  })();
+</script>
+</body>
+</html>
