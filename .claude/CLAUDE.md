@@ -59,3 +59,13 @@ Landing page carrousel livrée (6 slides, mockups SVG, swipe tactile). Fermée.
 ## Branche active
 
 `feature/ux-navbar-liste-projet` existe sur le remote — vérifier si elle doit être mergée ou abandonnée avant de créer une nouvelle branche.
+
+## Playbook skill
+
+Disponible dans `.claude/skills/playbook/SKILL.md`.
+Invoquer en début et fin de session pour le logging automatique.
+
+## Convention SESSIONS/
+
+Chaque session (cloud ou CLI) crée un fichier SESSIONS/AAAA-MM-JJ-HHMM-[cloud|cli]-[slug].md.
+Commité en fin de session. Complémentaire aux MISSIONS/ (MISSIONS = cadrage, SESSIONS = exécution).
