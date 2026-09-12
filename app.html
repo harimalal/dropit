@@ -127,6 +127,9 @@
   }
   @media (prefers-reduced-motion:no-preference){.tile{transition:filter .12s ease;}}
   .tile:hover{filter:brightness(0.98);}
+  /* Projet accompli : rendu plus transparent que les autres pour signaler visuellement
+     qu'il est terminé, sans le retirer de la mosaïque. */
+  .tile.is-done{opacity:.55;}
   .tile-body{
     height:100%;width:100%;border-radius:16px;background:var(--tile-card-bg,var(--canvas-card));
     display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
@@ -848,6 +851,24 @@
   .ob-feature-icon{flex-shrink:0;width:26px;height:26px;border-radius:8px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:13px;}
   .ob-feature-text{font-size:12.5px;color:var(--ink);line-height:1.4;font-weight:600;padding-top:3px;}
 
+  /* --- Notice "projets d'exemple" (nouveaux comptes) : popup modal, une seule fois --- */
+  .sample-notice-screen{
+    position:fixed;inset:0;z-index:310;background:rgba(43,36,32,.55);
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  .sample-notice-modal{
+    width:100%;max-width:340px;background:var(--canvas);border-radius:22px;
+    padding:30px 26px calc(22px + env(safe-area-inset-bottom));text-align:center;
+    box-shadow:0 24px 60px rgba(0,0,0,.35);
+  }
+  .sample-notice-emoji{font-size:28px;letter-spacing:6px;margin-bottom:16px;}
+  .sample-notice-title{font-size:18px;font-weight:800;color:var(--ink);letter-spacing:-.01em;margin-bottom:10px;}
+  .sample-notice-body{font-size:13.5px;color:var(--ink-soft);line-height:1.55;margin-bottom:22px;}
+  .sample-notice-btn{
+    width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;
+    background:var(--accent);color:#fff;
+  }
+
   /* Bouton compte (accueil) */
   .account-btn{
     position:fixed;right:16px;top:16px;z-index:45;width:36px;height:36px;
@@ -1102,6 +1123,9 @@
     try{ localStorage.setItem(ONBOARDING_KEY, "1"); }catch(e){}
     var el = document.getElementById("onboarding-screen");
     if(el) el.remove();
+    // La notice "projets d'exemple" peut être arrivée pendant que l'onboarding
+    // était encore affiché : on la montre seulement une fois la voie libre.
+    if(sampleNoticePending){ sampleNoticePending = false; maybeShowSampleNotice(); }
   }
 
   function showOnboardingIfNeeded(){
@@ -1113,6 +1137,44 @@
     wrap.innerHTML = renderOnboarding();
     document.body.appendChild(wrap.firstChild);
     wireOnboarding();
+  }
+
+  /* --- Notice "projets d'exemple" : affichée une fois pour les nouveaux comptes,
+     dont les projets de départ sont les 3 exemples de defaultData(). --- */
+  var SAMPLE_NOTICE_KEY = "dropit_sample_notice_seen";
+  var sampleNoticePending = false;
+
+  function renderSampleNotice(){
+    return '<div class="sample-notice-screen" id="sample-notice-screen">'+
+      '<div class="sample-notice-modal">'+
+        '<div class="sample-notice-emoji">🌴 🎂 📦</div>'+
+        '<div class="sample-notice-title">Voici 3 exemples de projets</div>'+
+        '<div class="sample-notice-body">Pour t’inspirer sur comment organiser tes propres projets. Tu peux les supprimer dès que tu veux.</div>'+
+        '<button class="sample-notice-btn" id="sample-notice-btn">J’ai compris</button>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function dismissSampleNotice(){
+    try{ localStorage.setItem(SAMPLE_NOTICE_KEY, "1"); }catch(e){}
+    var el = document.getElementById("sample-notice-screen");
+    if(el) el.remove();
+  }
+
+  function maybeShowSampleNotice(){
+    var seen = false;
+    try{ seen = localStorage.getItem(SAMPLE_NOTICE_KEY) === "1"; }catch(e){}
+    if(seen) return;
+    // L'onboarding passe en premier s'il est encore à l'écran — éviter deux popups empilées.
+    if(document.getElementById("onboarding-screen")){
+      sampleNoticePending = true;
+      return;
+    }
+    var wrap = document.createElement("div");
+    wrap.innerHTML = renderSampleNotice();
+    document.body.appendChild(wrap.firstChild);
+    var btn = document.getElementById("sample-notice-btn");
+    if(btn) btn.addEventListener("click", dismissSampleNotice);
   }
 
   function loadSession(){
@@ -1642,6 +1704,7 @@
         } else {
           state = defaultData();
           persist();
+          maybeShowSampleNotice();
         }
         render();
         if(json.migrated) showToast("Tes projets ont été rattachés à ton compte");
@@ -2184,8 +2247,9 @@
       var status = activityStatus(p);
       var showMeta = sizeClass !== "size-tiny";
       var pc = projectColorVars(p.id);
+      var doneClass = status === "accompli" ? " is-done" : "";
       return ''+
-      '<div class="tile '+sizeClass+'" data-project-id="'+p.id+'" '+
+      '<div class="tile '+sizeClass+doneClass+'" data-project-id="'+p.id+'" '+
         'style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;--pct:'+pct+';--ring-color:'+pc.ring+';'+
           '--tile-card-bg:'+pc.card+';--tile-badge-glass:'+pc.glass+';" '+
         'role="button" tabindex="0">'+
@@ -2698,6 +2762,14 @@
             p.categories.map(function(cat){ return renderCategoryAccordionItem(p, cat, []); }).join("")+
           '</div>'
         : (p.categories[0]||{items:[]}).items.map(function(it){ return renderItemUnit(it, false); }).join("");
+      // Un projet accompli reste modifiable : la barre d'ajout ne doit pas disparaître
+      // (on peut rouvrir une catégorie ou en ajouter une nouvelle même une fois terminé).
+      if(multiCategory){
+        var openCat = expandedCategoryId ? findCategory(p, expandedCategoryId) : null;
+        detailBarHtml = openCat ? renderItemBar(openCat.id) : renderProjectBar(p);
+      } else {
+        detailBarHtml = renderItemBar(p.categories[0].id);
+      }
     }
 
     var pc = projectColorVars(p.id);
