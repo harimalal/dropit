@@ -1,0 +1,481 @@
+<title>Le prix de Dropit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,440;9..144,560;9..144,680&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#F8F8F9; --surface:#FFFFFF; --ink:#2B2420; --ink-soft:#7A7168; --ink-faint:#B4ABA1;
+    --line:#EFEBE6; --accent:#BF5B44; --accent-soft:#F7E9E4; --accent-ink:#8C4432;
+    --c-planners:#1D6FA5; --c-planners-soft:#E6F0F7;
+    --c-family:#3E8C63; --c-family-soft:#E7F3EC;
+    --good:#3E8C63; --absent:#B4544B;
+    --font-display:'Fraunces', Georgia, serif;
+    --font-body:'Public Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --canvas:#1A1817; --surface:#242120; --ink:#EFE9E3; --ink-soft:#AFA69D; --ink-faint:#6E655C;
+      --line:#37322F; --accent:#E0895F; --accent-soft:#3A2A22; --accent-ink:#F0A783;
+      --c-planners:#6FAEDD; --c-planners-soft:#1E2B36;
+      --c-family:#6BC393; --c-family-soft:#1B2E24;
+      --good:#6BC393; --absent:#E08F86;
+    }
+  }
+  :root[data-theme="dark"]{
+    --canvas:#1A1817; --surface:#242120; --ink:#EFE9E3; --ink-soft:#AFA69D; --ink-faint:#6E655C;
+    --line:#37322F; --accent:#E0895F; --accent-soft:#3A2A22; --accent-ink:#F0A783;
+    --c-planners:#6FAEDD; --c-planners-soft:#1E2B36;
+    --c-family:#6BC393; --c-family-soft:#1B2E24;
+    --good:#6BC393; --absent:#E08F86;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font-body);
+    font-size:16px;line-height:1.6;
+  }
+  .page{max-width:760px;margin:0 auto;padding:56px 20px 80px;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:680;text-wrap:balance;margin:0;color:var(--ink);}
+  p{margin:0 0 1em;max-width:65ch;}
+  a{color:var(--accent-ink);}
+  .eyebrow{
+    font-family:var(--font-mono);font-size:11.5px;font-weight:600;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px;
+  }
+  header.hero h1{font-size:clamp(2.2rem,6vw,3.1rem);line-height:1.06;letter-spacing:-.01em;}
+  .dek{font-size:1.15rem;color:var(--ink-soft);max-width:56ch;margin-top:18px;}
+
+  .thesis{
+    margin:40px 0 8px;padding:26px 28px;border-radius:4px;background:var(--accent-soft);
+    border-left:3px solid var(--accent);
+  }
+  .thesis p{font-family:var(--font-display);font-size:1.28rem;line-height:1.42;font-weight:560;
+    color:var(--ink);max-width:none;margin:0;font-style:normal;}
+  .thesis p em{font-style:normal;color:var(--accent-ink);}
+
+  section{margin-top:64px;}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:22px;}
+  .sec-num{font-family:var(--font-mono);font-size:13px;color:var(--ink-faint);flex-shrink:0;
+    padding-top:4px;}
+  .sec-head h2{font-size:1.55rem;}
+  .lede{color:var(--ink-soft);font-size:1.02rem;margin-bottom:26px;}
+
+  /* --- Fact grid (built / planned / out of scope) --- */
+  .facts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .facts .col{padding:20px 22px;}
+  .facts .col + .col{border-left:1px solid var(--line);}
+  .facts h3{font-size:.78rem;font-family:var(--font-mono);letter-spacing:.06em;text-transform:uppercase;
+    font-weight:600;margin-bottom:14px;}
+  .facts .col.built h3{color:var(--good);}
+  .facts .col.planned h3{color:var(--accent-ink);}
+  .facts .col.absent h3{color:var(--ink-faint);}
+  .facts ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:11px;}
+  .facts li{font-size:.92rem;line-height:1.5;padding-left:20px;position:relative;color:var(--ink);}
+  .facts .col.absent li{color:var(--ink-soft);}
+  .facts li::before{position:absolute;left:0;top:2px;font-family:var(--font-mono);font-size:12px;}
+  .facts .col.built li::before{content:"✓";color:var(--good);}
+  .facts .col.planned li::before{content:"→";color:var(--accent-ink);}
+  .facts .col.absent li::before{content:"–";color:var(--ink-faint);}
+  @media (max-width:640px){
+    .facts{grid-template-columns:1fr;}
+    .facts .col + .col{border-left:none;border-top:1px solid var(--line);}
+  }
+
+  /* --- Must-have list --- */
+  .musthave{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .musthave-item{display:flex;gap:16px;padding:16px 20px;background:var(--surface);}
+  .musthave-item + .musthave-item{border-top:1px solid var(--line);}
+  .musthave-item .status{flex-shrink:0;width:96px;font-family:var(--font-mono);font-size:10px;font-weight:600;
+    letter-spacing:.03em;text-transform:uppercase;padding-top:2px;}
+  .musthave-item .status.ok{color:var(--good);}
+  .musthave-item .status.watch{color:var(--accent-ink);}
+  .musthave-item .body strong{display:block;font-size:.94rem;margin-bottom:3px;}
+  .musthave-item .body span{font-size:.86rem;color:var(--ink-soft);line-height:1.5;}
+  @media (max-width:560px){
+    .musthave-item{flex-direction:column;gap:4px;}
+    .musthave-item .status{width:auto;}
+  }
+
+  /* --- Complaint cards --- */
+  .gripe{border:1px solid var(--line);border-radius:10px;padding:18px 20px;background:var(--surface);}
+  .gripe + .gripe{margin-top:10px;}
+  .gripe .head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
+  .gripe .head strong{font-size:.98rem;}
+  .gripe .seen{font-family:var(--font-mono);font-size:.72rem;color:var(--ink-faint);white-space:nowrap;}
+  .gripe p{font-size:.88rem;color:var(--ink-soft);margin:0;max-width:none;}
+
+  /* --- Competitor mini cards --- */
+  .cluster-label{display:flex;align-items:center;gap:9px;font-family:var(--font-mono);font-size:12px;
+    font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);margin:30px 0 14px;}
+  .cluster-label:first-child{margin-top:0;}
+  .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .dot.planners{background:var(--c-planners);}
+  .dot.family{background:var(--c-family);}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media (max-width:560px){.cards{grid-template-columns:1fr;}}
+  .card{border:1px solid var(--line);border-radius:9px;padding:14px 16px;background:var(--surface);}
+  .card .name{font-weight:700;font-size:.95rem;margin-bottom:4px;}
+  .card .note{font-size:.86rem;color:var(--ink-soft);line-height:1.45;}
+
+  /* --- Pricing table --- */
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;}
+  table{width:100%;border-collapse:collapse;font-size:.87rem;min-width:600px;}
+  thead th{
+    text-align:left;font-family:var(--font-mono);font-size:10.5px;font-weight:600;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--ink-soft);padding:12px 14px;border-bottom:1px solid var(--line);
+    background:var(--surface);
+  }
+  tbody td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top;background:var(--surface);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr.is-dropit td{background:var(--accent-soft);font-weight:600;}
+  td.tool{font-weight:600;white-space:nowrap;}
+  td.tool .cat-tag{display:block;font-weight:500;font-size:.72rem;color:var(--ink-faint);margin-top:1px;}
+  td.price{font-family:var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  td.free{font-family:var(--font-mono);font-size:.8rem;}
+  .yes{color:var(--good);} .no{color:var(--ink-faint);}
+  .table-note{font-size:.8rem;color:var(--ink-faint);margin-top:10px;}
+
+  /* --- Chart --- */
+  .chart-card{border:1px solid var(--line);border-radius:12px;padding:20px 16px 10px;background:var(--surface);}
+  .chart-card svg{width:100%;height:auto;display:block;}
+  .chart-legend{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;padding:8px 0 4px;
+    font-size:.82rem;color:var(--ink-soft);}
+  .chart-legend span{display:inline-flex;align-items:center;gap:7px;}
+  .chart-caption{font-size:.8rem;color:var(--ink-faint);margin-top:12px;line-height:1.55;}
+
+  /* --- Recommendation --- */
+  .reco{display:flex;gap:26px;align-items:center;border:1px solid var(--line);border-radius:12px;
+    padding:24px 26px;background:var(--surface);margin:22px 0 20px;flex-wrap:wrap;}
+  .reco .figure{font-family:var(--font-display);font-weight:680;font-size:2.6rem;color:var(--accent-ink);
+    font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .reco .figure small{font-family:var(--font-body);font-weight:600;font-size:1rem;color:var(--ink-soft);
+    display:block;margin-top:2px;}
+  .reco .detail{flex:1;min-width:220px;font-size:.9rem;color:var(--ink-soft);}
+  .reco .detail strong{color:var(--ink);}
+  .reco.tier2{background:var(--accent-soft);border-color:transparent;}
+  .reco-row{display:flex;flex-direction:column;gap:14px;}
+
+  /* --- Sources --- */
+  .sources{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);}
+  .sources h3{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--ink-faint);font-weight:600;margin-bottom:14px;}
+  .sources ol{margin:0;padding-left:20px;columns:2;column-gap:28px;font-size:.78rem;color:var(--ink-faint);}
+  .sources li{margin-bottom:7px;break-inside:avoid;}
+  .sources a{color:var(--ink-soft);text-decoration:underline;text-decoration-color:var(--line);}
+  @media (max-width:560px){.sources ol{columns:1;}}
+</style>
+
+<div class="page">
+
+  <header class="hero">
+    <div class="eyebrow">Étude interne — septembre 2026</div>
+    <h1>Le prix de Dropit</h1>
+    <p class="dek">Ce que Dropit fait que personne d'autre ne fait exactement, ce que le marché facture pour autre chose, et le prix où Dropit doit se poser — MVP actuel <em>et</em> palier collaboratif à venir.</p>
+  </header>
+
+  <div class="thesis">
+    <p>La capture reste sans décision et l'IA garde la mémoire de chaque projet — on ne réexplique jamais rien. En ouvrant l'invitation, les commentaires, les fichiers et le calendrier partagé, Dropit ne change pas de nature&nbsp;: <em>c'est le seul espace de projet partagé où l'IA connaît déjà tout, sans que personne n'ait à remettre les autres au courant.</em></p>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Où en est Dropit aujourd'hui</h2></div>
+    <p class="lede">Avant de comparer, un état des lieux honnête — ce qui est réellement construit, ce qui est prévu au palier premium, et ce qui reste hors périmètre.</p>
+    <div class="facts">
+      <div class="col built">
+        <h3>Construit (gratuit)</h3>
+        <ul>
+          <li>Drop Zone — capture libre en un geste, aucune catégorie à choisir en notant.</li>
+          <li>Une seule « Prochaine action » mise en avant par projet, pas de liste à trier.</li>
+          <li>Écran Aujourd'hui — rotation automatique entre les projets.</li>
+          <li>Chat IA par projet, contexte permanent — jamais de réexplication.</li>
+          <li>Génération d'un plan à partir d'une seule phrase.</li>
+          <li>Sauvegarde automatique.</li>
+        </ul>
+      </div>
+      <div class="col planned">
+        <h3>Prévu — premium</h3>
+        <ul>
+          <li>Inviter quelqu'un sur un projet (collaboration à plusieurs).</li>
+          <li>Commentaires et chat de projet partagé.</li>
+          <li>Import de fichiers / documents ressources dans un projet.</li>
+          <li>Calendrier partagé — perso, pro ou familial.</li>
+        </ul>
+      </div>
+      <div class="col absent">
+        <h3>Hors périmètre</h3>
+        <ul>
+          <li>Pas d'application native — une web app installable (PWA).</li>
+          <li>Aucune intégration tierce annoncée (email, Slack…) au-delà du calendrier partagé.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Le paysage concurrentiel</h2></div>
+    <p class="lede">Onze outils visent le même profil que Dropit — quelqu'un qui jongle avec plusieurs projets pro et perso à la fois — sans faire la même chose. Deux familles se dégagent.</p>
+
+    <div class="cluster-label"><span class="dot planners"></span>Planificateurs &amp; gestionnaires de tâches</div>
+    <div class="cards">
+      <div class="card"><div class="name">Motion</div><div class="note">Recalcule ton calendrier autour de tes tâches. Puissant, mais il faut lui confier tout ton agenda.</div></div>
+      <div class="card"><div class="name">Sunsama</div><div class="note">Un rituel guidé chaque matin pour planifier sa journée à la minute près.</div></div>
+      <div class="card"><div class="name">Akiflow</div><div class="note">Centralise tâches et calendriers dans un seul hub, pensé pour les power users solo.</div></div>
+      <div class="card"><div class="name">Reclaim.ai</div><div class="note">Protège des créneaux de « focus time » directement dans Google/Outlook Calendar.</div></div>
+      <div class="card"><div class="name">Todoist</div><div class="note">Des listes de tâches classiques — à organiser soi-même en projets et étiquettes.</div></div>
+      <div class="card"><div class="name">TickTick</div><div class="note">Todoist en moins cher, avec minuteur Pomodoro et calendrier intégré.</div></div>
+      <div class="card"><div class="name">Notion</div><div class="note">Une page blanche totale&nbsp;: tout est possible, mais tout est à construire soi-même.</div></div>
+      <div class="card"><div class="name">Structured</div><div class="note">Une timeline visuelle de la journée, glissée à la main.</div></div>
+      <div class="card"><div class="name">Tiimo</div><div class="note">Planificateur visuel pensé pour les cerveaux TDAH/autistes — icônes et minuteur circulaire.</div></div>
+    </div>
+
+    <div class="cluster-label"><span class="dot family"></span>Organisateurs familiaux</div>
+    <div class="cards">
+      <div class="card"><div class="name">Cozi</div><div class="note">Le calendrier familial partagé historique — agenda, liste de courses, planning repas.</div></div>
+      <div class="card"><div class="name">Ohai</div><div class="note">Une assistante IA qui lit les mails du foyer et tient le calendrier familial à jour.</div></div>
+    </div>
+
+    <p style="margin-top:26px;">Avec l'invitation, les commentaires et le calendrier partagé, Dropit sort de la seule case « outil solo ». Il devient directement comparable à <strong>Notion</strong> (collaboration + documents), <strong>Todoist Business</strong> (invitation sur un projet) et <strong>Cozi/Ohai</strong> (calendrier partagé familial) — sans reprendre leurs faiblesses les plus citées (voir section&nbsp;04).</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Fonctionnalités plébiscitées — les must-have</h2></div>
+    <p class="lede">D'après les tests, comparatifs et retours utilisateurs sur les deux familles d'outils, sept attentes reviennent sans cesse pour la gestion du quotidien et des projets pro/perso.</p>
+    <div class="musthave">
+      <div class="musthave-item">
+        <div class="status ok">✓ visé</div>
+        <div class="body"><strong>Un seul espace pour tout</strong><span>Calendrier, listes, documents au même endroit — au lieu de jongler entre plusieurs apps pour un même projet ou foyer.</span></div>
+      </div>
+      <div class="musthave-item">
+        <div class="status ok">✓ visé</div>
+        <div class="body"><strong>Visibilité partagée en un clic</strong><span>Inviter quelqu'un et qu'il voie immédiatement la même chose, sans ressaisie ni synchronisation manuelle.</span></div>
+      </div>
+      <div class="musthave-item">
+        <div class="status ok">✓ visé</div>
+        <div class="body"><strong>La conversation au bon endroit</strong><span>Commenter une tâche ou un projet directement là où il se trouve, plutôt que dans un fil WhatsApp séparé et vite perdu.</span></div>
+      </div>
+      <div class="musthave-item">
+        <div class="status ok">✓ acquis</div>
+        <div class="body"><strong>Mise en route immédiate</strong><span>Tirer de la valeur dès la première minute, sans avoir à construire son système avant de commencer — déjà l'ADN de la Drop Zone.</span></div>
+      </div>
+      <div class="musthave-item">
+        <div class="status watch">⚠ à surveiller</div>
+        <div class="body"><strong>Synchronisation fiable en temps réel</strong><span>Mobile et desktop toujours à jour, sans délai. C'est le point faible le plus cité, sur presque tous les outils comparés (section&nbsp;04).</span></div>
+      </div>
+      <div class="musthave-item">
+        <div class="status watch">⚠ à surveiller</div>
+        <div class="body"><strong>Une app mobile complète</strong><span>Pas une version dégradée du desktop — pouvoir vraiment planifier et commenter depuis son téléphone.</span></div>
+      </div>
+      <div class="musthave-item">
+        <div class="status watch">⚠ à surveiller</div>
+        <div class="body"><strong>Un prix stable, sans bascule brutale</strong><span>Rester gratuit ou payant sans faire basculer un usage habituel vers un paywall du jour au lendemain (voir Cozi, section&nbsp;04).</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Ce que les utilisateurs reprochent le plus</h2></div>
+    <p class="lede">Curation des avis (G2, Capterra, Trustpilot, Product Hunt, Reddit) sur les onze concurrents — sept points reviennent, tous azimuts.</p>
+
+    <div class="gripe">
+      <div class="head"><strong>1. Une app mobile en retrait</strong><span class="seen">Motion · Sunsama · Akiflow</span></div>
+      <p>Le desktop fait tout, le mobile fait semblant. Sur Sunsama, impossible de faire une revue de journée complète depuis le téléphone&nbsp;; sur Motion, les utilisateurs qui travaillent surtout au mobile sont prévenus que l'app « n'est probablement pas encore le bon outil ».</p>
+    </div>
+    <div class="gripe">
+      <div class="head"><strong>2. Des synchronisations qui lâchent</strong><span class="seen">Reclaim.ai · TickTick · Akiflow</span></div>
+      <p>Retards de synchronisation calendrier (jusqu'à une heure sur TickTick via CalDAV), échecs signalés en support sans réponse sous 48h chez Reclaim.ai, aucune synchronisation à double sens chez Akiflow.</p>
+    </div>
+    <div class="gripe">
+      <div class="head"><strong>3. Une mise en route trop longue avant la moindre valeur</strong><span class="seen">Notion · Motion · Akiflow</span></div>
+      <p>Notion démarre sur une page blanche totale&nbsp;: des heures à construire son système avant d'écrire le moindre contenu utile. Motion est décrit comme difficile à onboarder&nbsp;; Akiflow demande « quelques jours » avant de « cliquer ».</p>
+    </div>
+    <div class="gripe">
+      <div class="head"><strong>4. Un prix qui grimpe, des fonctions verrouillées plus haut</strong><span class="seen">Sunsama · Motion · Todoist</span></div>
+      <p>Sur Product Hunt, plusieurs avis jugent Sunsama « trois fois trop cher » pour ce qu'il apporte. Motion a augmenté ses tarifs à plusieurs reprises. Chez Todoist, la collaboration réelle (assigner une tâche à plusieurs personnes) reste bloquée derrière un palier payant.</p>
+    </div>
+    <div class="gripe">
+      <div class="head"><strong>5. Le gratuit qui bascule brutalement vers un paywall</strong><span class="seen">Cozi</span></div>
+      <p>Cozi a ajouté une limite de 30 jours sur le calendrier gratuit et de la publicité après des années d'usage sans contrainte — vécu comme un changement de règles a posteriori plutôt qu'une évolution attendue.</p>
+    </div>
+    <div class="gripe">
+      <div class="head"><strong>6. Un support injoignable, y compris pour résilier</strong><span class="seen">Ohai · Reclaim.ai · TickTick</span></div>
+      <p>Le cas le plus sévère&nbsp;: des utilisateurs d'Ohai rapportent avoir continué à être facturés après une demande d'annulation, sans réponse du support. Sur Reclaim.ai, des tickets restent sans suite plusieurs jours.</p>
+    </div>
+    <div class="gripe">
+      <div class="head"><strong>7. La dérive « usine à gaz »</strong><span class="seen">Motion</span></div>
+      <p>Le sentiment Reddit sur Motion s'est dégradé en glissant d'un scheduler ciblé vers une « SuperApp » (agents IA, notes de réunion, gestion de projet)&nbsp;: les utilisateurs de longue date trouvent l'interface devenue confuse.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Comparatif de prix</h2></div>
+    <p class="lede">Prix convertis en équivalent mensuel (tarif annuel divisé par 12 quand il existe, sinon le tarif mensuel affiché). Devises d'origine, majoritairement en dollars, non converties.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Outil</th><th>Gratuit</th><th>Payant (équiv. / mois)</th></tr></thead>
+        <tbody>
+          <tr class="is-dropit"><td class="tool">Dropit<span class="cat-tag">capture + mémoire IA</span></td><td class="free"><span class="yes">oui</span> — tout</td><td class="price">— (0&nbsp;$)</td></tr>
+          <tr><td class="tool">TickTick<span class="cat-tag">tâches légères</span></td><td class="free"><span class="yes">oui</span></td><td class="price">2,99&nbsp;$ → Premium</td></tr>
+          <tr><td class="tool">Cozi<span class="cat-tag">famille</span></td><td class="free"><span class="yes">oui, avec pub</span></td><td class="price">3,25&nbsp;$ → Gold · 6,67&nbsp;$ → Max</td></tr>
+          <tr><td class="tool">Todoist<span class="cat-tag">tâches légères</span></td><td class="free"><span class="yes">oui</span></td><td class="price">5,00&nbsp;$ → Pro · 8,00&nbsp;$ → Business</td></tr>
+          <tr><td class="tool">Tiimo<span class="cat-tag">planning visuel</span></td><td class="free"><span class="yes">oui</span></td><td class="price">≈6,67&nbsp;$ → Pro · ≈10,00&nbsp;$ → Famille (5p)</td></tr>
+          <tr><td class="tool">Structured<span class="cat-tag">timeline du jour</span></td><td class="free"><span class="no">essai 3&nbsp;j.</span></td><td class="price">99,99&nbsp;$ (achat unique)</td></tr>
+          <tr><td class="tool">Reclaim.ai<span class="cat-tag">calendrier IA</span></td><td class="free"><span class="yes">oui (Lite)</span></td><td class="price">10 → 15 → 22&nbsp;$ /siège</td></tr>
+          <tr><td class="tool">Notion<span class="cat-tag">page blanche</span></td><td class="free"><span class="yes">oui</span></td><td class="price">10,00&nbsp;$ → Plus · 20,00&nbsp;$ → Business</td></tr>
+          <tr><td class="tool">Ohai<span class="cat-tag">assistante famille</span></td><td class="free"><span class="no">essai seulement</span></td><td class="price">9,99 → 29,99&nbsp;$ (1 → groupe)</td></tr>
+          <tr><td class="tool">Sunsama<span class="cat-tag">rituel quotidien</span></td><td class="free"><span class="no">essai 14&nbsp;j.</span></td><td class="price">17,00&nbsp;$ (22&nbsp;$ mensuel)</td></tr>
+          <tr><td class="tool">Motion<span class="cat-tag">calendrier IA</span></td><td class="free"><span class="no">essai 7&nbsp;j.</span></td><td class="price">12,73&nbsp;$ → Pro · 19,43&nbsp;$ → Business</td></tr>
+          <tr><td class="tool">Akiflow<span class="cat-tag">hub tâches+cal.</span></td><td class="free"><span class="no">essai 7&nbsp;j.</span></td><td class="price">19,00&nbsp;$ (34&nbsp;$ mensuel)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">Tri croissant par prix payant équivalent. Sources détaillées en bas de page.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Prix × effort d'installation</h2></div>
+    <p class="lede">Alignés sur un même repère, l'écart saute aux yeux&nbsp;: Dropit est le seul point tout en bas à gauche — gratuit, et rien à configurer pour commencer. Le palier collaboratif prévu (contour pointillé) reste nettement en dessous des planificateurs IA lourds.</p>
+
+    <div class="chart-card">
+      <svg viewBox="0 0 680 430" role="img" aria-label="Nuage de points prix mensuel en dollars contre effort d'installation, Dropit isolé en bas à gauche">
+        <!-- gridlines -->
+        <g stroke="var(--line)" stroke-width="1">
+          <line x1="70" y1="40" x2="70" y2="400"/>
+          <line x1="70" y1="400" x2="650" y2="400"/>
+          <line x1="216" y1="40" x2="216" y2="400" stroke-dasharray="2 4"/>
+          <line x1="362" y1="40" x2="362" y2="400" stroke-dasharray="2 4"/>
+          <line x1="508" y1="40" x2="508" y2="400" stroke-dasharray="2 4"/>
+        </g>
+        <g font-family="var(--font-mono)" font-size="11" fill="var(--ink-faint)">
+          <text x="70" y="418" text-anchor="middle">0&nbsp;$</text>
+          <text x="216" y="418" text-anchor="middle">10&nbsp;$</text>
+          <text x="362" y="418" text-anchor="middle">20&nbsp;$</text>
+          <text x="508" y="418" text-anchor="middle">30&nbsp;$/mois</text>
+        </g>
+        <g font-family="var(--font-body)" font-size="11.5" fill="var(--ink-soft)">
+          <text x="64" y="392" text-anchor="end">Minimal</text>
+          <text x="64" y="222" text-anchor="end">Modéré</text>
+          <text x="64" y="52" text-anchor="end">Lourd</text>
+        </g>
+        <text x="18" y="220" font-family="var(--font-body)" font-size="10.5" fill="var(--ink-faint)"
+          transform="rotate(-90 18 220)" text-anchor="middle">Effort d'installation ↑</text>
+
+        <!-- points: cx,cy computed from price(0-36$) -> 70..650, setup(0-10) -> 400..40 -->
+        <!-- Dropit -->
+        <g>
+          <circle cx="70" cy="364" r="7" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>
+          <text x="82" y="360" font-family="var(--font-display)" font-weight="680" font-size="13.5" fill="var(--accent-ink)">Dropit</text>
+          <title>Dropit — 0 $/mois, aucune configuration</title>
+        </g>
+        <!-- Dropit, future collaborative tier -->
+        <g>
+          <circle cx="279" cy="292" r="7" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="3 2.5"/>
+          <text x="291" y="288" font-family="var(--font-display)" font-weight="680" font-size="12.5" fill="var(--accent-ink)">Dropit + collab</text>
+          <text x="291" y="301" font-family="var(--font-body)" font-size="9.5" fill="var(--ink-faint)">(prévu)</text>
+          <title>Dropit, palier collaboratif prévu — cible ≈13 $/mois</title>
+        </g>
+
+        <!-- planners cluster -->
+        <g fill="var(--c-planners)">
+          <circle cx="118" cy="256" r="5" stroke="var(--surface)" stroke-width="2"/>
+          <circle cx="151" cy="256" r="5" stroke="var(--surface)" stroke-width="2"/>
+          <circle cx="231" cy="184" r="5" stroke="var(--surface)" stroke-width="2"/>
+          <circle cx="183" cy="292" r="5" stroke="var(--surface)" stroke-width="2"/>
+          <circle cx="199" cy="256" r="5" stroke="var(--surface)" stroke-width="2"/>
+          <circle cx="231" cy="112" r="5" stroke="var(--surface)" stroke-width="2"/>
+          <circle cx="279" cy="76"  r="5" stroke="var(--surface)" stroke-width="2"/>
+          <circle cx="344" cy="112" r="5" stroke="var(--surface)" stroke-width="2"/>
+          <circle cx="376" cy="112" r="5" stroke="var(--surface)" stroke-width="2"/>
+        </g>
+        <g font-family="var(--font-body)" font-size="11.5" fill="var(--ink)">
+          <text x="128" y="252">TickTick</text>
+          <title>TickTick — ≈3 $/mois, effort minimal</title>
+          <text x="118" y="278">Todoist</text>
+          <text x="241" y="188">Notion</text>
+          <text x="193" y="316">Tiimo</text>
+          <text x="163" y="240">Structured</text>
+          <text x="241" y="116">Reclaim.ai</text>
+          <text x="245" y="72">Motion</text>
+          <text x="310" y="100">Sunsama</text>
+          <text x="386" y="116">Akiflow</text>
+        </g>
+
+        <!-- family cluster -->
+        <g fill="var(--c-family)">
+          <circle cx="122" cy="292" r="5" stroke="var(--surface)" stroke-width="2"/>
+          <circle cx="231" cy="148" r="5" stroke="var(--surface)" stroke-width="2"/>
+        </g>
+        <g font-family="var(--font-body)" font-size="11.5" fill="var(--ink)">
+          <text x="88" y="316">Cozi</text>
+          <text x="241" y="144">Ohai</text>
+        </g>
+      </svg>
+      <div class="chart-legend">
+        <span><span class="dot" style="background:var(--accent)"></span>Dropit</span>
+        <span><span class="dot" style="background:var(--surface);border:2px dashed var(--accent)"></span>Dropit + collab (prévu)</span>
+        <span><span class="dot planners"></span>Planificateurs &amp; gestionnaires de tâches</span>
+        <span><span class="dot family"></span>Organisateurs familiaux</span>
+      </div>
+    </div>
+    <p class="chart-caption">Axe horizontal&nbsp;: prix mensuel équivalent, sourcé (tableau ci-dessus). Axe vertical&nbsp;: effort d'installation requis pour tirer profit de l'outil (comptes à connecter, calendrier à synchroniser, système à construire) — jugement éditorial, pas une donnée mesurée.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Le prix à viser</h2></div>
+    <p>Deux paliers, parce que Dropit couvre maintenant deux profondeurs d'usage réelles.</p>
+
+    <div class="reco-row">
+      <div class="reco">
+        <div class="figure">6–9&nbsp;€<small>Solo / mois</small></div>
+        <div class="detail">
+          <strong>Palier actuel (MVP)</strong> — Drop Zone et IA illimitées, mono-utilisateur, sans partage. Positionné comme Todoist Pro, TickTick Premium ou Tiimo Pro (3 à 10&nbsp;$), pas comme les planificateurs IA lourds qui vendent une automatisation de calendrier que Dropit ne fait pas.
+        </div>
+      </div>
+      <div class="reco tier2">
+        <div class="figure">12–15&nbsp;€<small>Collab / mois</small></div>
+        <div class="detail">
+          <strong>Nouveau palier, à l'arrivée de l'invitation, des commentaires, des fichiers et du calendrier partagé</strong> — pour un binôme ou un foyer (jusqu'à 3-4 comptes inclus). Entre Cozi Max (6,67&nbsp;$) et Notion Business/Ohai groupe (20-30&nbsp;$)&nbsp;: en dessous des outils familiaux ou collaboratifs établis, justifié par la mémoire IA qu'aucun d'eux n'offre.
+        </div>
+      </div>
+    </div>
+    <p class="table-note">Point de vigilance (section 04, point 5)&nbsp;: introduire ce palier comme une <em>nouvelle offre</em> à l'arrivée de vraies fonctionnalités — jamais comme une restriction de ce qui est gratuit aujourd'hui, sous peine de reproduire l'effet Cozi.</p>
+  </section>
+
+  <div class="sources">
+    <h3>Sources</h3>
+    <ol>
+      <li><a href="https://www.lindy.ai/blog/motion-app-pricing">Lindy — Motion App Pricing 2026</a></li>
+      <li><a href="https://get-alfred.ai/blog/motion-pricing">alfred_ — Motion Pricing 2026</a></li>
+      <li><a href="https://www.sunsama.com/pricing">Sunsama — Pricing</a></li>
+      <li><a href="https://www.usecarly.com/blog/did-sunsama-raise-prices/">usecarly — Sunsama new pricing 2026</a></li>
+      <li><a href="https://www.morgen.so/blog-posts/akiflow-pricing">Morgen — Akiflow Pricing 2026</a></li>
+      <li><a href="https://get-alfred.ai/blog/akiflow-pricing">alfred_ — Akiflow Pricing 2026</a></li>
+      <li><a href="https://reclaim.ai/pricing">Reclaim.ai — Pricing</a></li>
+      <li><a href="https://get-alfred.ai/blog/reclaim-pricing">alfred_ — Reclaim.ai Pricing 2026</a></li>
+      <li><a href="https://www.usecarly.com/blog/todoist-pricing/">usecarly — Todoist Pricing 2026</a></li>
+      <li><a href="https://costbench.com/software/project-management/todoist/">costbench — Todoist Pricing 2026</a></li>
+      <li><a href="https://ellieplanner.com/productivity-copilot/ticktick-pricing">ellieplanner — TickTick Pricing 2026</a></li>
+      <li><a href="https://automationatlas.io/answers/notion-pricing-explained-2026/">Automation Atlas — Notion Pricing 2026</a></li>
+      <li><a href="https://get-alfred.ai/blog/notion-pricing">alfred_ — Notion Pricing 2026</a></li>
+      <li><a href="https://www.tiltaken.com/articles/structured-app-lifetime-price">TilTaken — Structured lifetime price</a></li>
+      <li><a href="https://lifestack.ai/blog/tiimo-pricing">Lifestack — Tiimo Pricing 2026</a></li>
+      <li><a href="https://www.usecalendara.com/blog/cozi-pricing-2026">usecalendara — Cozi Gold Pricing 2026</a></li>
+      <li><a href="https://getsense.ai/blog/posts/cozi-gold-worth-it-2026">getsense — Cozi Gold / Max 2026</a></li>
+      <li><a href="https://www.oreateai.com/blog/ohai-unpacking-the-cost-of-your-digital-household-manager/bb31979864b76c0b0fd707e58c8e395c">Oreate AI — Ohai pricing breakdown</a></li>
+      <li><a href="https://www.usecarly.com/blog/best-ai-tools-busy-parents/">usecarly — AI tools for busy parents 2026</a></li>
+      <li><a href="https://blog.saner.ai/motion-reviews/">Saner.AI — Motion Reviews 2026</a></li>
+      <li><a href="https://www.producthunt.com/products/sunsama/reviews">Product Hunt — Sunsama Reviews</a></li>
+      <li><a href="https://www.capterra.com/p/232035/Akiflow/reviews/">Capterra — Akiflow Reviews 2026</a></li>
+      <li><a href="https://www.producthunt.com/products/reclaim/reviews">Product Hunt — Reclaim Reviews</a></li>
+      <li><a href="https://www.capterra.com/p/149339/Todoist-for-Business/reviews/">Capterra — Todoist Reviews 2026</a></li>
+      <li><a href="https://www.eesel.ai/blog/notion-review">eesel AI — Notion Review 2026</a></li>
+      <li><a href="https://www.usecalendara.com/blog/cozi-review-2026">usecalendara — Cozi Review 2026</a></li>
+      <li><a href="https://uk.trustpilot.com/review/ohai.ai">Trustpilot — Ohai Reviews</a></li>
+      <li><a href="https://www.capterra.com/p/170641/TickTick/reviews/">Capterra — TickTick Reviews 2026</a></li>
+      <li><a href="https://gethomsy.com/blog/family-organization/family-calendar-app">Homsy — Must-have family calendar features 2026</a></li>
+      <li><a href="https://thedigitalprojectmanager.com/tools/best-collaboration-tools/">The Digital Project Manager — Best Collaboration Tools 2026</a></li>
+      <li><a href="https://www.usecarly.com/blog/tiimo-vs-structured/">usecarly — Tiimo vs Structured 2026</a></li>
+    </ol>
+  </div>
+
+</div>

@@ -1,0 +1,264 @@
+<title>Le sprint de lancement Dropit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,440;9..144,560;9..144,680&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#F8F8F9; --surface:#FFFFFF; --ink:#2B2420; --ink-soft:#7A7168; --ink-faint:#B4ABA1;
+    --line:#EFEBE6; --accent:#BF5B44; --accent-soft:#F7E9E4; --accent-ink:#8C4432;
+    --blue:#1D6FA5; --blue-soft:#E6F0F7;
+    --green:#3E8C63; --green-soft:#E7F3EC;
+    --font-display:'Fraunces', Georgia, serif;
+    --font-body:'Public Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --canvas:#1A1817; --surface:#242120; --ink:#EFE9E3; --ink-soft:#AFA69D; --ink-faint:#6E655C;
+      --line:#37322F; --accent:#E0895F; --accent-soft:#3A2A22; --accent-ink:#F0A783;
+      --blue:#6FAEDD; --blue-soft:#1E2B36;
+      --green:#6BC393; --green-soft:#1B2E24;
+    }
+  }
+  :root[data-theme="dark"]{
+    --canvas:#1A1817; --surface:#242120; --ink:#EFE9E3; --ink-soft:#AFA69D; --ink-faint:#6E655C;
+    --line:#37322F; --accent:#E0895F; --accent-soft:#3A2A22; --accent-ink:#F0A783;
+    --blue:#6FAEDD; --blue-soft:#1E2B36;
+    --green:#6BC393; --green-soft:#1B2E24;
+  }
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.6;}
+  .page{max-width:780px;margin:0 auto;padding:56px 20px 80px;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:680;text-wrap:balance;margin:0;color:var(--ink);}
+  p{margin:0 0 1em;max-width:66ch;}
+  a{color:var(--accent-ink);}
+  .eyebrow{font-family:var(--font-mono);font-size:11.5px;font-weight:600;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px;}
+  header.hero h1{font-size:clamp(2.1rem,5.6vw,2.9rem);line-height:1.08;letter-spacing:-.01em;}
+  .dek{font-size:1.12rem;color:var(--ink-soft);max-width:58ch;margin-top:16px;}
+
+  .thesis{margin:40px 0 8px;padding:26px 28px;border-radius:4px;background:var(--accent-soft);border-left:3px solid var(--accent);}
+  .thesis p{font-family:var(--font-display);font-size:1.22rem;line-height:1.42;font-weight:560;color:var(--ink);max-width:none;margin:0;}
+  .thesis p em{font-style:normal;color:var(--accent-ink);}
+
+  section{margin-top:60px;}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:20px;}
+  .sec-num{font-family:var(--font-mono);font-size:13px;color:var(--ink-faint);flex-shrink:0;padding-top:4px;}
+  .sec-head h2{font-size:1.5rem;}
+  .lede{color:var(--ink-soft);font-size:1.01rem;margin-bottom:24px;}
+
+  /* --- Channel table --- */
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;min-width:640px;}
+  thead th{text-align:left;font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--ink-soft);padding:11px 13px;border-bottom:1px solid var(--line);background:var(--surface);}
+  tbody td{padding:11px 13px;border-bottom:1px solid var(--line);vertical-align:top;background:var(--surface);}
+  tbody tr:last-child td{border-bottom:none;}
+  td.tool{font-weight:600;white-space:nowrap;}
+  td.tag{font-family:var(--font-mono);font-size:.74rem;}
+  .tag.fast{color:var(--green);} .tag.mid{color:var(--accent-ink);} .tag.slow{color:var(--ink-faint);}
+
+  /* --- Week cards --- */
+  .week{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:22px 24px;margin-bottom:14px;}
+  .week .whead{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+  .week .wnum{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--surface);background:var(--accent);
+    border-radius:5px;padding:3px 8px;flex-shrink:0;}
+  .week h3{font-size:1.08rem;}
+  .week .wdays{font-family:var(--font-mono);font-size:.74rem;color:var(--ink-faint);margin-bottom:14px;}
+  .week ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;}
+  .week li{font-size:.89rem;line-height:1.5;padding-left:18px;position:relative;color:var(--ink);}
+  .week li::before{content:"–";position:absolute;left:0;color:var(--ink-faint);}
+  .week li strong{color:var(--ink);}
+
+  /* --- Tactic cards --- */
+  .tactic{border:1px solid var(--line);border-radius:10px;padding:18px 20px;background:var(--surface);}
+  .tactic + .tactic{margin-top:10px;}
+  .tactic .head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
+  .tactic .head strong{font-size:.98rem;}
+  .tactic .badge{font-family:var(--font-mono);font-size:.7rem;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+  .tactic .badge.android{background:var(--green-soft);color:var(--green);}
+  .tactic .badge.ios{background:var(--accent-soft);color:var(--accent-ink);}
+  .tactic .badge.content{background:var(--blue-soft);color:var(--blue);}
+  .tactic p{font-size:.88rem;color:var(--ink-soft);margin:0;max-width:none;}
+
+  /* --- KPI row --- */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  @media (max-width:640px){.kpis{grid-template-columns:1fr 1fr;}}
+  .kpi{border:1px solid var(--line);border-radius:10px;padding:16px 14px;background:var(--surface);}
+  .kpi .n{font-family:var(--font-display);font-weight:680;font-size:1.5rem;color:var(--accent-ink);}
+  .kpi .l{font-size:.76rem;color:var(--ink-soft);line-height:1.4;margin-top:3px;}
+
+  /* --- Risk list --- */
+  .risks{border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .risk-row{display:flex;gap:14px;padding:14px 18px;background:var(--surface);align-items:baseline;}
+  .risk-row + .risk-row{border-top:1px solid var(--line);}
+  .risk-row .flag{font-family:var(--font-mono);font-size:10px;font-weight:600;color:var(--accent-ink);flex-shrink:0;width:18px;}
+  .risk-row p{margin:0;font-size:.88rem;color:var(--ink-soft);}
+  .risk-row strong{color:var(--ink);}
+
+  .sources{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);}
+  .sources h3{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--ink-faint);font-weight:600;margin-bottom:14px;}
+  .sources ol{margin:0;padding-left:20px;columns:2;column-gap:28px;font-size:.78rem;color:var(--ink-faint);}
+  .sources li{margin-bottom:7px;break-inside:avoid;}
+  .sources a{color:var(--ink-soft);text-decoration:underline;text-decoration-color:var(--line);}
+  @media (max-width:560px){.sources ol{columns:1;}}
+</style>
+
+<div class="page">
+
+  <header class="hero">
+    <div class="eyebrow">Plan d'action — 30 jours</div>
+    <h1>Le sprint de lancement Dropit</h1>
+    <p class="dek">Aucun budget présumé, pas encore d'app store, une équipe réduite. Le plan pour sortir Dropit de l'ombre en un mois — canaux, mécanique technique, et calendrier jour par jour.</p>
+  </header>
+
+  <div class="thesis">
+    <p>Un mois ne suffit pas à construire une audience — il suffit à <em>prouver qu'un canal marche</em>. L'objectif du sprint n'est pas le pic de téléchargements, c'est de sortir avec un canal identifié, un onboarding qui tient, et une poignée d'utilisateurs actifs à la semaine 30.</p>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Comparatif des canaux</h2></div>
+    <p class="lede">Neuf canaux évalués sur leur délai avant premier résultat et leur adéquation avec le profil Dropit (capture instantanée, IA qui garde le contexte, prix bas).</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Canal</th><th>Effort</th><th>Délai 1er résultat</th><th>Pourquoi ça colle à Dropit</th></tr></thead>
+        <tbody>
+          <tr><td class="tool">Landing + SEO comparatif</td><td class="tag fast">faible</td><td class="tag fast">rapide</td><td>Capte l'intention de recherche des déçus de Motion/Notion — déjà identifiés dans l'étude concurrentielle.</td></tr>
+          <tr><td class="tool">Reddit (niches)</td><td class="tag fast">faible</td><td class="tag fast">rapide</td><td>Trafic à forte intention, faible taux de rebond, communautés productivité/ADHD déjà sensibles au sujet.</td></tr>
+          <tr><td class="tool">TikTok / Reels</td><td class="tag mid">moyen</td><td class="tag mid">1–2 sem.</td><td>Le geste Drop Zone se filme en 10 secondes — format « je gère ma journée avec X » qui marche en 2026.</td></tr>
+          <tr><td class="tool">Product Hunt</td><td class="tag mid">moyen</td><td class="tag fast">1 jour (pic)</td><td>Capstone du sprint — sert de caisse de résonance à ce qui marche déjà, pas de premier canal de validation.</td></tr>
+          <tr><td class="tool">Micro-créateurs</td><td class="tag mid">moyen</td><td class="tag mid">1–2 sem.</td><td>Accès anticipé contre avis honnête — transfert de confiance sans budget pub.</td></tr>
+          <tr><td class="tool">Android (Play Store, TWA)</td><td class="tag mid">moyen</td><td class="tag mid">1–2 sem.</td><td>Faisable en un mois via PWABuilder/Bubblewrap — ouvre une découverte que le web seul n'a pas.</td></tr>
+          <tr><td class="tool">iOS (App Store)</td><td class="tag slow">élevé</td><td class="tag slow">incertain</td><td>Risque réel de rejet (site repackagé) sans fonctions natives ajoutées — à ne pas viser ce mois-ci.</td></tr>
+          <tr><td class="tool">Parrainage produit</td><td class="tag fast">faible</td><td class="tag mid">2–3 sem.</td><td>Chaque projet partagé devient un canal — mécanique naturelle une fois la collaboration livrée.</td></tr>
+          <tr><td class="tool">Publicité payante</td><td class="tag slow">élevé</td><td class="tag fast">immédiat</td><td>À écarter ce mois-ci — sans palier payant actif, aucun retour à mesurer sur l'acquisition.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Maîtrise de la distribution — les leviers</h2></div>
+    <p class="lede">Le détail de comment exécuter chaque canal retenu, pas seulement pourquoi le choisir.</p>
+
+    <div class="tactic">
+      <div class="head"><strong>TWA Android via PWABuilder/Bubblewrap</strong><span class="badge android">Android</span></div>
+      <p>Dropit est déjà une PWA installable (manifest + service worker) — PWABuilder génère un <code>.aab</code> signé à partir du site, sans réécrire l'app. Prérequis&nbsp;: score Lighthouse ≥&nbsp;80 et Digital Asset Links pour prouver la propriété du domaine. Délai réaliste&nbsp;: quelques jours de préparation + le temps de revue Google Play (généralement plus rapide et plus prévisible que celui d'Apple).</p>
+    </div>
+    <div class="tactic">
+      <div class="head"><strong>iOS&nbsp;: éviter le piège du rejet 4.2</strong><span class="badge ios">iOS</span></div>
+      <p>La règle 4.2 d'Apple («&nbsp;Minimum Functionality&nbsp;») rejette explicitement les «&nbsp;web clippings&nbsp;» — un site rhabillé en app. Passer la revue demande 2 à 3 fonctions natives réelles (notifications push, mode hors-ligne, widget, biométrie). Sans ces briques déjà prêtes, viser l'App Store ce mois-ci est un pari perdant d'avance&nbsp;: on documente plutôt «&nbsp;Ajouter à l'écran d'accueil&nbsp;» depuis Safari sur la landing, qui contourne entièrement la revue.</p>
+    </div>
+    <div class="tactic">
+      <div class="head"><strong>Product Hunt — la mécanique du jour J</strong><span class="badge content">Communauté</span></div>
+      <p>Publier 00h01 (heure du Pacifique), un mardi, mercredi ou jeudi — jamais lundi (faible engagement) ni vendredi (chute du week-end). La vélocité des 2 à 4 premières heures détermine le classement du reste de la journée&nbsp;: répondre à chaque commentaire en quelques minutes pendant ce créneau. Aucun groupe de votes ni service payant — les deux déclenchent les filtres anti-fraude de la plateforme. Product Hunt est le point d'orgue du sprint, pas le premier canal de validation&nbsp;: la landing doit déjà convertir avant ce jour-là.</p>
+    </div>
+    <div class="tactic">
+      <div class="head"><strong>Reddit — la valeur avant la promo</strong><span class="badge content">Communauté</span></div>
+      <p>Un post construit autour d'un problème réel (« comment je gère mes 4 projets sans y penser ») convertit largement mieux qu'une annonce de lancement. Cibler des communautés au persona proche&nbsp;: r/productivity, r/ADHD (si la simplicité radicale de la Drop Zone parle à ce public), r/WorkingMoms — jamais plusieurs à la fois le même jour.</p>
+    </div>
+    <div class="tactic">
+      <div class="head"><strong>TikTok / Reels — la routine, pas la démo</strong><span class="badge content">Contenu</span></div>
+      <p>Le format qui marche en 2026&nbsp;: intégrer l'app dans une routine filmée (« je vide ma tête avec X avant de dormir »), pas une liste de fonctionnalités. Le geste Drop Zone — déposer une idée sans réfléchir où la ranger — est un hook visuel de 10 secondes, prêt à filmer tel quel.</p>
+    </div>
+    <div class="tactic">
+      <div class="head"><strong>SEO comparatif — retourner les reproches du marché</strong><span class="badge content">Contenu</span></div>
+      <p>Des pages « Dropit vs Motion », « Dropit vs Notion » qui répondent directement aux frustrations déjà cataloguées (app mobile faible, mise en route trop longue, paywall qui bascule brutalement) captent une recherche déjà motivée à changer d'outil.</p>
+    </div>
+    <div class="tactic">
+      <div class="head"><strong>Micro-créateurs — l'accès contre l'avis</strong><span class="badge content">Communauté</span></div>
+      <p>5 à 10 créateurs productivité/ADHD/parentalité contactés individuellement, accès anticipé offert en échange d'un retour honnête — pas de cachet nécessaire à ce stade. Le transfert de confiance d'un créateur pèse plus qu'une pub, pour un coût nul.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Semaine par semaine</h2></div>
+    <p class="lede">Un canal principal, exécuté à fond, plutôt que neuf canaux à moitié.</p>
+
+    <div class="week">
+      <div class="whead"><span class="wnum">S1</span><h3>Fondations</h3></div>
+      <div class="wdays">Jours 1–7</div>
+      <ul>
+        <li>Verrouiller le message — <strong>capture sans décision + IA qui garde tout le contexte</strong> — sur la landing déjà en place.</li>
+        <li>Instrumenter l'activation&nbsp;: première capture Drop Zone + premier message IA, pas juste l'inscription.</li>
+        <li>Générer le paquet Android (PWABuilder/Bubblewrap), vérifier le score Lighthouse, configurer les Digital Asset Links.</li>
+        <li><strong>Soumettre à la revue Play Store dès que prêt</strong> — le délai de revue tourne pendant qu'on avance sur le reste, pas après.</li>
+        <li>Écrire 2 pages de comparaison SEO et 3 scripts courts pour la vidéo.</li>
+        <li>Choisir la communauté Reddit prioritaire selon le persona retenu et préparer un post de fond.</li>
+      </ul>
+    </div>
+
+    <div class="week">
+      <div class="whead"><span class="wnum">S2</span><h3>Lancement discret</h3></div>
+      <div class="wdays">Jours 8–14</div>
+      <ul>
+        <li>Ouvrir à un cercle restreint&nbsp;: réseau personnel, groupes Slack/Discord productivité, «&nbsp;Show IH&nbsp;» sur Indie Hackers.</li>
+        <li>Corriger en priorité toute friction avant la première valeur — c'est le reproche n°1 relevé chez les concurrents (Notion, Akiflow).</li>
+        <li>Publier les 2 pages SEO comparatives et démarrer le rythme de contenu (2–3 posts/semaine, 1 vidéo).</li>
+        <li>Suivre la revue Android, corriger si rejet.</li>
+      </ul>
+    </div>
+
+    <div class="week">
+      <div class="whead"><span class="wnum">S3</span><h3>Lancement public</h3></div>
+      <div class="wdays">Jours 15–21</div>
+      <ul>
+        <li><strong>Product Hunt</strong> — mardi à jeudi, 00h01 PT, présence active les 4 premières heures.</li>
+        <li>Poster sur Reddit le même jour ou le lendemain — un post, pas une salve.</li>
+        <li>Rythme vidéo quotidien pendant la semaine de lancement.</li>
+        <li>Contacter les micro-créateurs identifiés, leur donner l'accès avant le grand public.</li>
+        <li>Activer un lien de parrainage simple, même artisanal, pour transformer les premiers utilisateurs en canal.</li>
+      </ul>
+    </div>
+
+    <div class="week">
+      <div class="whead"><span class="wnum">S4</span><h3>Amplifier &amp; retenir</h3></div>
+      <div class="wdays">Jours 22–30</div>
+      <ul>
+        <li>Couper ce qui n'a rien donné, doubler sur le canal qui a le mieux converti — c'est lui qui devient le canal principal des 90 jours suivants.</li>
+        <li>Relancer par email les inscrits inactifs depuis S1–S2.</li>
+        <li>Préparer l'annonce du palier collaboratif (12–15&nbsp;€) comme une <strong>offre nouvelle</strong>, jamais comme une restriction du gratuit actuel.</li>
+        <li>Bilan chiffré&nbsp;: activation, rétention à J7, canal dominant — décision du canal principal pour la suite.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Indicateurs à suivre chaque semaine</h2></div>
+    <div class="kpis">
+      <div class="kpi"><div class="n">Inscriptions</div><div class="l">Par canal d'origine, pas seulement en cumulé.</div></div>
+      <div class="kpi"><div class="n">Activation</div><div class="l">1ère capture Drop Zone + 1er message IA — pas la simple création de compte.</div></div>
+      <div class="kpi"><div class="n">Rétention J7</div><div class="l">Revient utiliser l'app une semaine après l'inscription.</div></div>
+      <div class="kpi"><div class="n">Canal dominant</div><div class="l">Celui qui justifie de concentrer les 90 prochains jours dessus.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Ce qui peut faire dérailler le sprint</h2></div>
+    <div class="risks">
+      <div class="risk-row"><span class="flag">01</span><p><strong>Viser l'App Store en premier.</strong> Le risque de rejet 4.2 est réel et le délai de revue est imprévisible — ça peut consommer le mois entier pour rien.</p></div>
+      <div class="risk-row"><span class="flag">02</span><p><strong>Utiliser Product Hunt comme premier test.</strong> S'il sert à valider l'idée plutôt qu'à amplifier une traction déjà là, l'échec du jour J est quasi garanti.</p></div>
+      <div class="risk-row"><span class="flag">03</span><p><strong>Courir plusieurs canaux à moitié.</strong> Mieux vaut un canal exécuté à fond que quatre lancés sans suite.</p></div>
+      <div class="risk-row"><span class="flag">04</span><p><strong>Une friction avant la première valeur.</strong> Le reproche le plus cité chez les concurrents (Notion, Akiflow, Motion) — à corriger avant tout envoi de trafic, pas après.</p></div>
+      <div class="risk-row"><span class="flag">05</span><p><strong>Confondre pic de téléchargements et succès.</strong> L'objectif du mois est un canal identifié et des utilisateurs qui reviennent, pas un chiffre de lancement.</p></div>
+    </div>
+  </section>
+
+  <div class="sources">
+    <h3>Sources</h3>
+    <ol>
+      <li><a href="https://blog.innmind.com/how-to-launch-on-product-hunt-in-2026/">Innmind — Product Hunt Launch Playbook 2026</a></li>
+      <li><a href="https://siift.ai/blog/launching-on-product-hunt-your-2026-strategy-guide">Siift — Product Hunt Strategy 2026</a></li>
+      <li><a href="https://www.mobiloud.com/blog/publishing-pwa-app-store/">MobiLoud — Publier une PWA sur l'App Store et Google Play (2026)</a></li>
+      <li><a href="https://github.com/pwa-builder/pwabuilder-google-play">PWABuilder — Google Play packaging (Bubblewrap/TWA)</a></li>
+      <li><a href="https://www.technetexperts.com/guideline-4-2-minimum-functionality/">TechNetExperts — Apple Guideline 4.2 Minimum Functionality</a></li>
+      <li><a href="https://code2native.com/blog/fix-app-store-rejection-42-webview">Code2Native — Fixer un rejet 4.2 (webview)</a></li>
+      <li><a href="https://shippedsolo.com/blog/12-free-distribution-channels-for-indie-hackers/">ShippedSolo — 12 canaux de distribution gratuits (2026)</a></li>
+      <li><a href="https://screenfast.app/blog/indie-ios-app-marketing-strategy-2026">ScreenFast — Stratégie marketing iOS indie 2026</a></li>
+      <li><a href="https://semnexus.com/tiktok-organic-and-paid-a-2026-app-growth-playbook">SEM Nexus — TikTok App Growth Playbook 2026</a></li>
+    </ol>
+  </div>
+
+</div>
