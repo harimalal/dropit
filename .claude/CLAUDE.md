@@ -31,6 +31,11 @@ Chaque chantier de fond a son dossier `MISSIONS/AAAA-MM-JJ-nom/` avec :
 Avant de coder quoi que ce soit : lire le `CADRAGE.md` et `decisions.md` de la mission en cours.
 Après chaque livraison : mettre à jour `etat.md`.
 
+### Artefacts de session (règle non négociable)
+
+Tout artefact produit pendant une session (mockup HTML, analyse approfondie, page de test localhost, capture d'écran, script d'exploration...) doit être commité dans `MISSIONS/<mission>/livrables/` — jamais laissé uniquement dans le bac à sable cloud, un dossier temporaire, ou le disque local sans être versionné. C'est le dossier projet Git qui fait foi, pas l'environnement d'exécution.
+Ces livrables ne font jamais partie du code de l'application (`app.html`, `index.html`, `functions/`) : ils documentent/illustrent, ils ne sont pas déployés. Ne jamais les fusionner dans le code applicatif sauf demande explicite de le faire passer en fonctionnalité réelle.
+
 ## Avant de démarrer une session
 
 1. Lire ce fichier
@@ -58,4 +63,4 @@ Landing page carrousel livrée (6 slides, mockups SVG, swipe tactile). Fermée.
 
 ## Branche active
 
-`feature/ux-navbar-liste-projet` existe sur le remote — vérifier si elle doit être mergée ou abandonnée avant de créer une nouvelle branche.
+`feature/ux-navbar-liste-projet` : historique disjoint de `main` (aucun ancêtre commun, ancienne lignée du repo antérieure à la mission en cours). Archivée le 2026-09-12 sous `archive/feature-ux-navbar-liste-projet` (copie complète de l'historique) ; la branche d'origine reste à supprimer manuellement sur GitHub (aucun outil de suppression de branche distante disponible côté session cloud). Ne pas la merger.
