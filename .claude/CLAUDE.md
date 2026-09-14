@@ -21,6 +21,12 @@ Repo : https://github.com/harimalal/dropit
 - Commits en français, messages courts, jamais de `git add -A` (risque d'embarquer des fichiers non voulus)
 - Toujours tester dans un vrai navigateur (Playwright) avant de pousser — pas de "ça devrait marcher"
 
+## Workflow git : push direct vs PR
+
+- Modification mineure ou cosmétique (couleur, texte, petit ajustement CSS, petit fix) → push direct sur `main`, comme jusqu'ici.
+- Modification moyenne ou élevée (nouvelle fonctionnalité, refonte, changement de structure de données, chantier de mission) → passer par une branche dédiée + une PR, ne jamais pousser ça directement sur `main`.
+- Dans le doute sur le niveau d'impact, demander avant de choisir.
+
 ## Convention MISSIONS/
 
 Chaque chantier de fond a son dossier `MISSIONS/AAAA-MM-JJ-nom/` avec :
