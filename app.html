@@ -24,10 +24,6 @@
     --ia-accent:#3F8A5C;
     --ia-accent-soft:#E3EFE6;
 
-    /* Actions — boutons d'action secondaires (envoyer, ajouter, retirer) : fond blanc, icône teintée */
-    --action-blue:#4196D2;
-    --action-blue-soft:#E4F1FA;
-
     /* Statut — porte l'anneau du treemap, indépendant de la couleur de projet */
     --status-actif:#3F8A5C;
     --status-actif-soft:#E3EFE6;
@@ -296,7 +292,7 @@
     line-height:1.35;resize:none;overflow:hidden;white-space:pre-wrap;word-break:break-word;
   }
   .step-title-input:focus{outline:none;}
-  .step-remove{border:none;background:none;color:var(--action-blue);font-size:16px;line-height:1;padding:2px 4px;flex-shrink:0;}
+  .step-remove{border:none;background:none;color:var(--ink-faint);font-size:16px;line-height:1;padding:2px 4px;flex-shrink:0;}
   .step-remove:hover{color:#9C4632;}
 
   .add-step-row{display:flex;gap:8px;margin-top:6px;}
@@ -324,10 +320,10 @@
     background:transparent;color:var(--ink);min-width:0;
   }
   .compose-send-btn{
-    flex-shrink:0;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--action-blue);
-    display:flex;align-items:center;justify-content:center;box-shadow:none;
+    flex-shrink:0;width:38px;height:38px;border-radius:50%;border:none;background:var(--ia-accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 5px var(--ia-accent-soft);
   }
-  .compose-send-btn:hover{background:var(--action-blue-soft);border-color:var(--action-blue);}
+  .compose-send-btn:hover{background:#357A50;}
   .compose-send-btn:disabled{opacity:.45;box-shadow:none;}
   .compose-send-btn .icon{width:16px;height:16px;}
 
@@ -495,10 +491,9 @@
     color:var(--ink);background:var(--canvas);
   }
   .drop-sheet-send{
-    flex-shrink:0;height:38px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:#fff;
-    color:var(--action-blue);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;height:38px;padding:0 16px;border-radius:12px;border:none;background:var(--accent);
+    color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;
   }
-  .drop-sheet-send:hover{background:var(--action-blue-soft);border-color:var(--action-blue);}
   .drop-triage-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:30px 0;}
   .drop-badges{display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;}
   .drop-badge{
@@ -689,10 +684,10 @@
     flex-shrink:0;width:38px;height:38px;border-radius:50%;border:none;
     display:flex;align-items:center;justify-content:center;
   }
-  .dfb-btn.primary{background:#fff;border:1px solid var(--line);color:var(--action-blue);box-shadow:none;}
-  .dfb-btn.primary:hover{background:var(--action-blue-soft);border-color:var(--action-blue);}
-  .dfb-btn.secondary{background:var(--canvas-card);border:1px solid var(--line);color:var(--ink);}
-  .dfb-btn.secondary:hover{border-color:var(--ia-accent);color:var(--ia-accent);}
+  .dfb-btn.primary{background:var(--canvas-card);border:1px solid var(--line);color:var(--ink);}
+  .dfb-btn.primary:hover{border-color:var(--ia-accent);color:var(--ia-accent);}
+  .dfb-btn.secondary{background:var(--ia-accent);color:#fff;box-shadow:0 0 0 5px var(--ia-accent-soft);}
+  .dfb-btn.secondary:hover{background:#357A50;}
   .dfb-btn:disabled{opacity:.35;box-shadow:none;}
   .dfb-btn .icon{width:16px;height:16px;}
 
