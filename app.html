@@ -684,10 +684,10 @@
     flex-shrink:0;width:38px;height:38px;border-radius:50%;border:none;
     display:flex;align-items:center;justify-content:center;
   }
-  .dfb-btn.primary{background:var(--canvas-card);border:1px solid var(--line);color:var(--ink);}
-  .dfb-btn.primary:hover{border-color:var(--ia-accent);color:var(--ia-accent);}
-  .dfb-btn.secondary{background:var(--ia-accent);color:#fff;box-shadow:0 0 0 5px var(--ia-accent-soft);}
-  .dfb-btn.secondary:hover{background:#357A50;}
+  .dfb-btn.primary{background:var(--ia-accent);color:#fff;box-shadow:0 0 0 5px var(--ia-accent-soft);}
+  .dfb-btn.primary:hover{background:#357A50;}
+  .dfb-btn.secondary{background:var(--canvas-card);border:1px solid var(--line);color:var(--ink);}
+  .dfb-btn.secondary:hover{border-color:var(--ia-accent);color:var(--ia-accent);}
   .dfb-btn:disabled{opacity:.35;box-shadow:none;}
   .dfb-btn .icon{width:16px;height:16px;}
 
@@ -1821,6 +1821,7 @@
   function checkIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 10.5l3.5 3.5L16 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function sendIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M3 10l14-7-5 14-2.5-5.5L3 10z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/></svg>'; }
   function sparkleIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M10 3l1.3 4.2L15.5 8.5l-4.2 1.3L10 14l-1.3-4.2L4.5 8.5l4.2-1.3L10 3z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>'; }
+  function bulbIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M10 3.5a4.5 4.5 0 0 0-2.5 8.25c.4.3.6.75.6 1.25v.5h3.8v-.5c0-.5.2-.95.6-1.25A4.5 4.5 0 0 0 10 3.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8.3 16h3.4M8.7 17.5h2.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'; }
   function copyIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><rect x="5" y="3" width="8" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 5.5H2.5A1.5 1.5 0 001 7v6a1.5 1.5 0 001.5 1.5h5A1.5 1.5 0 009 13v-.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'; }
   function pencilIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><path d="M2 11.5l6-6 2.5 2.5-6 6-2.5.5.5-3z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M9.5 5l1-1a1.2 1.2 0 011.7 0l.3.3a1.2 1.2 0 010 1.7l-1 1L9.5 5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>'; }
   function bookmarkIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><path d="M3.5 2.5h9v11l-4.5-2.5L3.5 13.5V2.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>'; }
@@ -2659,8 +2660,8 @@
       '<div class="dfb-input-wrap"><span class="sparkle-prefix">✨</span>'+
         '<input class="dfb-input" id="dfb-input" type="text" data-dfb-cat="'+catId+'" placeholder="Ajouter une tâche…">'+
       '</div>'+
-      '<button class="dfb-btn secondary" id="dfb-suggest-btn" data-dfb-cat="'+catId+'" title="Suggérer la suite">'+sparkleIcon()+'</button>'+
       '<button class="dfb-btn primary" id="dfb-add-btn" data-dfb-cat="'+catId+'" title="Valider">'+checkIcon()+'</button>'+
+      '<button class="dfb-btn secondary" id="dfb-suggest-btn" data-dfb-cat="'+catId+'" title="Suggérer la suite">'+bulbIcon()+'</button>'+
     '</div>';
   }
 
@@ -2669,8 +2670,8 @@
       '<div class="dfb-input-wrap"><span class="sparkle-prefix">✨</span>'+
         '<input class="dfb-input" id="dfb-proj-input" type="text" placeholder="Nouvelle catégorie… (verbe + sujet, ex : Préparer le budget)">'+
       '</div>'+
-      '<button class="dfb-btn secondary" id="dfb-proj-suggest-btn" data-proj-id="'+p.id+'" title="Suggérer la suite">'+sparkleIcon()+'</button>'+
       '<button class="dfb-btn primary" id="dfb-proj-add-btn" data-proj-id="'+p.id+'" title="Ajouter">'+plusIcon()+'</button>'+
+      '<button class="dfb-btn secondary" id="dfb-proj-suggest-btn" data-proj-id="'+p.id+'" title="Suggérer la suite">'+bulbIcon()+'</button>'+
     '</div>';
   }
 
