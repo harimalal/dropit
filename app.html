@@ -376,6 +376,13 @@
     background:var(--canvas);padding:10px 12px;margin-top:-2px;margin-bottom:8px;
   }
   .note-entry{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px;}
+  /* Case blanche en tête de note : signal visuel qu'on peut la supprimer d'un tap,
+     avant même de repérer le bouton × en bout de ligne. */
+  .note-check{
+    flex-shrink:0;width:16px;height:16px;margin-top:1px;border-radius:5px;
+    border:1.5px solid var(--line);background:var(--canvas-card);padding:0;
+  }
+  .note-check:hover{border-color:var(--accent);}
   .note-entry-text{flex:1;font-size:13px;color:var(--ink);line-height:1.4;white-space:pre-wrap;word-break:break-word;}
   .note-delete-btn{border:none;background:none;color:var(--ink-faint);font-size:14px;padding:0 3px;flex-shrink:0;line-height:1;}
   .note-delete-btn:hover{color:var(--accent);}
@@ -3586,6 +3593,7 @@
     if(noteOpenId !== it.id) return '';
     var notesHtml = (it.notes||[]).map(function(n){
       return '<div class="note-entry">'+
+        '<button class="note-check" data-delete-note="'+n.id+'" data-delete-note-task="'+it.id+'" title="Supprimer"></button>'+
         '<span class="note-entry-text">'+escapeHtml(n.text)+'</span>'+
         '<button class="note-pencil-btn" data-note-modal-edit="'+n.id+'" data-note-modal-task="'+it.id+'" title="Modifier">'+pencilIcon()+'</button>'+
         '<button class="note-delete-btn" data-delete-note="'+n.id+'" data-delete-note-task="'+it.id+'">×</button>'+
