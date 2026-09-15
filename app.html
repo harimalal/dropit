@@ -869,6 +869,144 @@
     background:var(--ia-accent);color:#fff;
   }
 
+  /* --- Questionnaire de personnalisation (premier lancement d'un compte) ---
+     Univers visuel propre au questionnaire (bleu, fond dégradé), validé en
+     maquette avant implémentation : il encadre l'arrivée, pas l'app elle-même. */
+  .obq{
+    position:fixed;inset:0;z-index:320;display:flex;flex-direction:column;color:#16243F;
+    background:
+      radial-gradient(115% 62% at 0% 0%, #FDE9F0 0%, rgba(253,233,240,0) 58%),
+      radial-gradient(105% 55% at 100% 2%, #E4EEFC 0%, rgba(228,238,252,0) 52%),
+      radial-gradient(130% 55% at 50% 100%, #EEF3FB 0%, rgba(238,243,251,0) 62%),
+      #FFFFFF;
+  }
+  .obq-top{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:calc(18px + env(safe-area-inset-top)) 24px 0;}
+  .obq-back{
+    width:30px;height:30px;border-radius:50%;border:1px solid #E9EEF5;background:#FFFFFF;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;color:#64748B;padding:0;
+  }
+  .obq-count{font-size:11.5px;font-weight:600;color:#94A3B8;}
+  .obq-logo{margin-left:auto;display:inline-flex;align-items:center;font-size:13.5px;font-weight:800;letter-spacing:-.02em;}
+  .obq-logo i{width:6px;height:6px;border-radius:50%;background:#EF5D4E;margin:0 4px;font-style:normal;}
+  .obq-prog{flex-shrink:0;display:flex;align-items:center;gap:11px;margin:15px 24px 0;}
+  .obq-bar{flex:1;height:4px;border-radius:999px;background:#E8EEF6;overflow:hidden;}
+  .obq-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#3B82F6,#2563EB);
+            transition:width .5s cubic-bezier(.65,0,.35,1);}
+  .obq-mood{font-size:18px;line-height:1;flex-shrink:0;transform-origin:center;
+            transition:transform .34s cubic-bezier(.34,1.56,.64,1);}
+  .obq-quip{flex-shrink:0;margin:9px 26px 0;font-size:11.5px;font-weight:600;color:#94A3B8;
+            text-align:center;line-height:1.35;}
+  .obq-body{flex:1;min-height:0;overflow-y:auto;padding:20px 24px 4px;text-align:center;
+            display:flex;flex-direction:column;justify-content:center;}
+  .obq-title{font-size:23px;font-weight:800;letter-spacing:-.03em;line-height:1.2;margin:0;text-wrap:balance;}
+  .obq-sub{font-size:13px;font-weight:500;line-height:1.5;color:#64748B;margin:9px auto 0;max-width:30ch;}
+  .obq-hint{font-size:11.5px;font-weight:600;color:#94A3B8;margin:7px 0 0;}
+  .obq-list{display:flex;flex-direction:column;gap:8px;margin-top:20px;text-align:left;}
+  .obq-row{
+    display:flex;align-items:center;gap:12px;width:100%;background:#FFFFFF;border:1.5px solid #E9EEF5;
+    border-radius:14px;padding:0 14px;min-height:52px;color:#16243F;font-size:14px;font-weight:600;
+    text-align:left;box-shadow:0 1px 2px rgba(22,36,63,.04),0 6px 16px rgba(22,36,63,.05);
+  }
+  .obq-row.sel{background:#F3F8FF;border-color:#3B82F6;box-shadow:0 1px 2px rgba(37,99,235,.08),0 8px 20px rgba(37,99,235,.13);}
+  .obq-ic{
+    width:34px;height:34px;border-radius:11px;background:#F3F6FB;flex-shrink:0;line-height:1;font-size:16px;
+    display:flex;align-items:center;justify-content:center;transition:background .2s ease;
+  }
+  .obq-row.sel .obq-ic{background:#DBEAFE;}
+  .obq-lb{flex:1;min-width:0;line-height:1.3;}
+  .obq-box{
+    width:22px;height:22px;border-radius:7px;border:1.8px solid #CBD5E1;background:#FFFFFF;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;color:#FFFFFF;
+    transition:background .18s ease,border-color .18s ease,transform .24s cubic-bezier(.34,1.56,.64,1);
+  }
+  .obq-box.rnd{border-radius:50%;}
+  .obq-box.on{background:#3B82F6;border-color:#3B82F6;transform:scale(1.07);}
+  .obq-box .icon{width:12px;height:12px;opacity:0;transition:opacity .15s ease;}
+  .obq-box.on .icon{opacity:1;}
+  .obq-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:20px;}
+  .obq-card{
+    position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+    border:1.5px solid transparent;border-radius:16px;padding:15px 7px;min-height:96px;text-align:center;
+    font-size:10.5px;font-weight:700;line-height:1.25;color:#16243F;
+    box-shadow:0 1px 2px rgba(22,36,63,.04),0 6px 16px rgba(22,36,63,.05);
+  }
+  .obq-card.sel{border-color:#3B82F6;box-shadow:0 2px 4px rgba(37,99,235,.1),0 10px 22px rgba(37,99,235,.16);}
+  .obq-ce{font-size:21px;line-height:1;}
+  .obq-tick{
+    position:absolute;top:7px;right:7px;width:19px;height:19px;border-radius:50%;background:#3B82F6;
+    display:flex;align-items:center;justify-content:center;color:#FFFFFF;opacity:0;transform:scale(.5);
+    transition:opacity .18s ease,transform .26s cubic-bezier(.34,1.56,.64,1);
+  }
+  .obq-card.sel .obq-tick{opacity:1;transform:scale(1);}
+  .obq-tick .icon{width:11px;height:11px;}
+  .obq-field{
+    display:flex;align-items:center;gap:11px;background:#FFFFFF;border:1.5px solid #E9EEF5;border-radius:14px;
+    padding:15px 16px;margin-top:22px;text-align:left;box-shadow:0 1px 2px rgba(22,36,63,.04),0 6px 16px rgba(22,36,63,.05);
+    transition:border-color .2s ease;
+  }
+  .obq-field:focus-within{border-color:#3B82F6;}
+  .obq-field .icon{width:17px;height:17px;color:#94A3B8;flex-shrink:0;}
+  .obq-input{flex:1;min-width:0;border:none;outline:none;background:transparent;font-size:15px;font-weight:600;color:#16243F;}
+  .obq-input::placeholder{color:#B6C2D2;font-weight:500;}
+  .obq-area{
+    width:100%;margin-top:20px;background:#FFFFFF;border:1.5px solid #E9EEF5;border-radius:16px;padding:16px;
+    min-height:148px;font-size:14px;font-weight:500;color:#16243F;outline:none;resize:none;line-height:1.5;
+    box-shadow:0 1px 2px rgba(22,36,63,.04),0 6px 16px rgba(22,36,63,.05);transition:border-color .2s ease;
+  }
+  .obq-area::placeholder{color:#B6C2D2;}
+  .obq-area:focus{border-color:#3B82F6;}
+  .obq-other{
+    width:100%;margin-top:8px;background:#F7F9FC;border:1.5px solid #EDF1F7;border-radius:12px;padding:12px 14px;
+    font-size:13px;font-weight:500;color:#16243F;outline:none;transition:border-color .2s ease,background .2s ease;
+  }
+  .obq-other::placeholder{color:#B6C2D2;}
+  .obq-other:focus{border-color:#3B82F6;background:#FFFFFF;}
+  .obq-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin-top:26px;}
+  .obq-chip{
+    display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:10px 15px;font-size:12px;
+    font-weight:700;box-shadow:0 2px 8px rgba(22,36,63,.06);
+  }
+  .obq-ckl{display:flex;flex-direction:column;gap:11px;margin-top:26px;text-align:left;}
+  .obq-ck{
+    display:flex;align-items:center;gap:11px;font-size:13.5px;font-weight:600;background:#FFFFFF;
+    border:1.5px solid #E9EEF5;border-radius:13px;padding:13px 15px;
+    box-shadow:0 1px 2px rgba(22,36,63,.04),0 6px 16px rgba(22,36,63,.05);
+  }
+  .obq-ckd{
+    width:21px;height:21px;border-radius:50%;background:#22C55E;flex-shrink:0;color:#FFFFFF;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .obq-ckd .icon{width:11px;height:11px;}
+  .obq-foot{flex-shrink:0;padding:12px 24px calc(22px + env(safe-area-inset-bottom));
+            display:flex;flex-direction:column;align-items:center;gap:1px;}
+  .obq-cta{
+    width:100%;border-radius:15px;padding:16px;font-size:15px;font-weight:800;color:#16243F;background:#FFFFFF;
+    border:1.5px solid #E4EAF2;display:flex;align-items:center;justify-content:center;gap:9px;
+    box-shadow:0 1px 2px rgba(22,36,63,.05),0 10px 24px rgba(22,36,63,.09);
+    transition:transform .16s cubic-bezier(.34,1.56,.64,1),box-shadow .2s ease,border-color .2s ease;
+  }
+  .obq-cta:hover{border-color:#C9D6E8;}
+  .obq-cta:active{transform:scale(.976);}
+  .obq-cta .icon{width:15px;height:15px;}
+  .obq-skip{background:none;border:none;padding:12px;font-size:13px;font-weight:600;color:#94A3B8;}
+  .obq-skip:hover{color:#64748B;}
+
+  /* Profil : relecture et modification des réponses après coup */
+  .prof-row{
+    width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:13px 14px;background:none;border:none;border-radius:12px;text-align:left;
+  }
+  .prof-row:active{background:var(--accent-soft);}
+  .prof-sub{font-size:12px;color:var(--ink-soft);line-height:1.45;margin-top:4px;}
+  .prof-q{display:block;font-size:13px;color:var(--ink-faint);}
+  .prof-a{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-top:2px;line-height:1.35;}
+  .prof-a.empty{font-weight:500;color:var(--ink-faint);font-style:italic;}
+  .prof-list{max-height:52vh;overflow-y:auto;margin:6px -8px 0;}
+
+  @media (prefers-reduced-motion:reduce){
+    .obq *{transition-duration:.12s !important;}
+  }
+
   /* Bouton compte (accueil) */
   .account-btn{
     position:fixed;right:16px;top:16px;z-index:45;width:36px;height:36px;
@@ -1175,6 +1313,601 @@
     document.body.appendChild(wrap.firstChild);
     var btn = document.getElementById("sample-notice-btn");
     if(btn) btn.addEventListener("click", dismissSampleNotice);
+  }
+
+  /* ===================================================================
+     Questionnaire de personnalisation (onboarding)
+     ===================================================================
+     20 écrans posés au premier lancement d'un compte, puis modifiables
+     depuis le profil. Les réponses partent dans dropit_user_profile et
+     sont réinjectées côté serveur dans le prompt système de chaque appel
+     IA (functions/_lib/profile.js).
+
+     Deux règles qui expliquent le code ci-dessous :
+     - la base ne stocke que des identifiants stables ("25_34"), jamais
+       les libellés affichés — ceux-ci peuvent changer sans casser les
+       données ni les requêtes ;
+     - une sélection ne redessine pas l'écran (on bascule les classes à
+       la main) : sinon un champ de saisie perdrait son texte et le focus.
+  --------------------------------------------------------------------- */
+
+  var PROFILE_MOODS = ["🙂","🙂","🙂","😊","😊","😊","😃","😃","😃","😁",
+                       "😁","😁","🤩","🤩","🤩","🥳","🥳","🥳","😏","😎"];
+
+  var PROFILE_QUIPS = [
+    "Promis, c’est rapide.",
+    "On commence tranquille.",
+    "Ah oui, déjà deux. Ça roule.",
+    "OK OK, on avance bien.",
+    "Tu réponds vite, j’aime bien.",
+    "C’est top ça, continue.",
+    "Un quart de fait. Pas mal du tout.",
+    "Franchement, tu gères.",
+    "Là je commence à te cerner.",
+    "Pile la moitié. Respect.",
+    "Bon, on ne s’arrête pas là.",
+    "Ah, tes goûts. Ça m’intéresse.",
+    "Allez, encore quelques-unes.",
+    "Tu tiens le rythme, bravo.",
+    "Ça y est, je sais comment te parler.",
+    "Presque fini. Tiens bon.",
+    "Avant-dernière ligne droite.",
+    "Là c’est vraiment la fin.",
+    "Dernière. Et la plus libre.",
+    "Merci. Franchement, t’es une star."
+  ];
+
+  // Teintes pastel des cartes (écrans en grille).
+  var OBQ_T = ["#FDEBE3","#E3EEFD","#FBE4EE","#E4F6EA","#EDE8FD","#FEF2D9","#E2F3F6","#FCE8E4","#E9F0FD"];
+
+  // k : intro | field | one | many | cards | free | done
+  //   one   = choix unique      many  = choix multiple (lignes)
+  //   cards = choix multiple (grille)  box = pastille de sélection à gauche
+  var QUIZ = [
+    { k:"intro", title:"Personnalise ton espace et ton IA",
+      sub:"Quelques questions pour mieux te connaître et créer une expérience vraiment à ton image.",
+      cta:"Commencer",
+      chips:[ {e:"🎯",l:"Tes projets",t:OBQ_T[2]}, {e:"❤️",l:"Tes envies",t:OBQ_T[7]},
+              {e:"⭐",l:"Ta vie",t:OBQ_T[5]}, {e:"🧩",l:"Tes centres d’intérêt",t:OBQ_T[4]},
+              {e:"📊",l:"Tes habitudes",t:OBQ_T[1]}, {e:"🚀",l:"Tes objectifs",t:OBQ_T[2]} ] },
+
+    { k:"field", id:"prenom", title:"Comment tu t’appelles ?", sub:"Ravi(e) de te rencontrer !",
+      placeholder:"Ton prénom", cta:"Continuer" },
+
+    { k:"one", id:"age", title:"Quel âge as-tu ?", sub:"Cela nous aide à adapter l’expérience.", cta:"Continuer",
+      opts:[ {id:"-18",e:"🐣",l:"Moins de 18 ans"}, {id:"18_24",e:"🌱",l:"18 - 24 ans"},
+             {id:"25_34",e:"☀️",l:"25 - 34 ans"}, {id:"35_44",e:"💼",l:"35 - 44 ans"},
+             {id:"45_54",e:"❤️",l:"45 - 54 ans"}, {id:"55_64",e:"🌸",l:"55 - 64 ans"},
+             {id:"65",e:"⭐",l:"65 ans et +"} ] },
+
+    { k:"one", id:"genre", title:"Quel est ton genre ?",
+      sub:"Cette information nous permet d’adapter le ton et les conseils de ton IA.", cta:"Continuer",
+      opts:[ {id:"femme",e:"♀️",l:"Femme"}, {id:"homme",e:"♂️",l:"Homme"},
+             {id:"nsp",e:"🕶️",l:"Je préfère ne pas répondre"} ] },
+
+    { k:"one", id:"statut", title:"Quel est ton statut actuellement ?", cta:"Continuer",
+      opts:[ {id:"etudiant",e:"🎓",l:"Étudiant(e)"}, {id:"salarie",e:"💼",l:"Salarié(e)"},
+             {id:"freelance",e:"💻",l:"Indépendant(e) / Freelance"}, {id:"entrepreneur",e:"🚀",l:"Entrepreneur(e)"},
+             {id:"recherche",e:"🔍",l:"En recherche d’emploi"}, {id:"retraite",e:"🪙",l:"Retraité(e)"},
+             {id:"sans",e:"⏸️",l:"Sans activité pour le moment"} ] },
+
+    { k:"one", id:"situation", title:"Quelle est ta situation personnelle ?", cta:"Continuer",
+      opts:[ {id:"celibataire",e:"👤",l:"Célibataire"}, {id:"couple",e:"❤️",l:"En couple"},
+             {id:"marie",e:"💍",l:"Marié(e)"}, {id:"pacse",e:"🤝",l:"Pacsé(e)"},
+             {id:"separe",e:"💔",l:"Séparé(e)"}, {id:"divorce",e:"🏠",l:"Divorcé(e)"},
+             {id:"nsp",e:"🕶️",l:"Je préfère ne pas répondre"} ] },
+
+    { k:"one", id:"enfants", title:"As-tu des enfants ?", cta:"Continuer",
+      opts:[ {id:"oui",e:"👶",l:"Oui"}, {id:"non",e:"🚫",l:"Non"} ] },
+
+    { k:"many", id:"enfants_ages", title:"Quel âge ont tes enfants ?", hint:"(Plusieurs choix possibles)",
+      cta:"Continuer", box:true, onlyIf:{id:"enfants", value:"oui"},
+      opts:[ {id:"0_2",l:"0 - 2 ans"}, {id:"3_5",l:"3 - 5 ans"}, {id:"6_10",l:"6 - 10 ans"},
+             {id:"11_14",l:"11 - 14 ans"}, {id:"15_17",l:"15 - 17 ans"}, {id:"18_25",l:"18 - 25 ans"},
+             {id:"26",l:"26 ans et +"} ] },
+
+    { k:"one", id:"quotidien", title:"Ton quotidien est plutôt...", cta:"Continuer",
+      opts:[ {id:"tres",e:"⚡",l:"Très chargé"}, {id:"charge",e:"📊",l:"Chargé"},
+             {id:"equilibre",e:"⚖️",l:"Équilibré"}, {id:"tranquille",e:"🍃",l:"Plutôt tranquille"},
+             {id:"changement",e:"🔄",l:"En pleine période de changement"} ] },
+
+    { k:"cards", id:"projets", title:"Quels sont tes projets principaux en ce moment ?",
+      hint:"(Plusieurs choix possibles)", cta:"Continuer", other:true,
+      opts:[ {id:"immo",e:"🏠",l:"Achat immobilier",t:OBQ_T[0]}, {id:"voyage",e:"✈️",l:"Voyage",t:OBQ_T[1]},
+             {id:"business",e:"🚀",l:"Lancer un business",t:OBQ_T[2]}, {id:"travail",e:"💼",l:"Changement de travail",t:OBQ_T[0]},
+             {id:"sante",e:"❤️",l:"Améliorer ma santé",t:OBQ_T[2]}, {id:"perso",e:"🌱",l:"Projet personnel",t:OBQ_T[3]} ] },
+
+    { k:"cards", id:"reves", title:"Quels sont tes rêves dans les années à venir ?",
+      hint:"(Plusieurs choix possibles)", cta:"Continuer", other:true,
+      opts:[ {id:"voyager",e:"✈️",l:"Voyager",t:OBQ_T[1]}, {id:"proprio",e:"🏡",l:"Devenir propriétaire",t:OBQ_T[0]},
+             {id:"activite",e:"📊",l:"Créer ma propre activité",t:OBQ_T[4]}, {id:"temps",e:"🫖",l:"Plus de temps pour moi",t:OBQ_T[2]},
+             {id:"sante",e:"❤️",l:"Être en bonne santé",t:OBQ_T[2]}, {id:"liberte",e:"🪙",l:"Plus de liberté financière",t:OBQ_T[5]} ] },
+
+    { k:"cards", id:"adore", title:"Qu’est-ce que tu adores faire ?", hint:"(Plusieurs choix possibles)",
+      cta:"Continuer", other:true,
+      opts:[ {id:"voyager",e:"✈️",l:"Voyager",t:OBQ_T[1]}, {id:"resto",e:"🍴",l:"Aller au restaurant",t:OBQ_T[0]},
+             {id:"lire",e:"📘",l:"Lire",t:OBQ_T[1]}, {id:"series",e:"📺",l:"Regarder des séries / films",t:OBQ_T[4]},
+             {id:"jeux",e:"🎮",l:"Jouer à des jeux vidéo",t:OBQ_T[2]}, {id:"cuisiner",e:"👨‍🍳",l:"Cuisiner",t:OBQ_T[5]},
+             {id:"sport",e:"🏃",l:"Faire du sport",t:OBQ_T[3]}, {id:"shopping",e:"🛍️",l:"Faire du shopping",t:OBQ_T[2]},
+             {id:"creer",e:"🎨",l:"Créer / bricoler",t:OBQ_T[6]} ] },
+
+    { k:"cards", id:"motive", title:"Qu’est-ce qui te motive le plus ?", hint:"(Plusieurs choix possibles)",
+      cta:"Continuer", other:true,
+      opts:[ {id:"objectifs",e:"🎯",l:"Atteindre mes objectifs",t:OBQ_T[2]}, {id:"decouvrir",e:"💡",l:"Découvrir de nouvelles choses",t:OBQ_T[5]},
+             {id:"equilibre",e:"⚖️",l:"Avoir un bon équilibre de vie",t:OBQ_T[0]}, {id:"defis",e:"🏆",l:"Relever des défis",t:OBQ_T[1]},
+             {id:"apprendre",e:"🎓",l:"Apprendre",t:OBQ_T[3]}, {id:"concret",e:"🧩",l:"Créer quelque chose de concret",t:OBQ_T[4]} ] },
+
+    { k:"many", id:"fonctionne", title:"Comment fonctionnes-tu le mieux ?", hint:"(Plusieurs choix possibles)",
+      cta:"Continuer", box:true,
+      opts:[ {id:"plan",e:"🗺️",l:"Avec un plan précis"}, {id:"etape",e:"📊",l:"Étape par étape"},
+             {id:"priorites",e:"☰",l:"En voyant mes priorités"}, {id:"flexible",e:"🔄",l:"De façon flexible"},
+             {id:"guidance",e:"🕛",l:"Avec un peu de guidance"}, {id:"adapte",e:"⚙️",l:"Je m’adapte selon la situation"} ] },
+
+    { k:"many", id:"fil", title:"Qu’est-ce qui te fait le plus souvent perdre le fil ?",
+      hint:"(Plusieurs choix possibles)", cta:"Continuer", box:true, other:true,
+      opts:[ {id:"tete",l:"Trop de choses en tête"}, {id:"temps",l:"Je manque de temps"},
+             {id:"procrastine",l:"Je procrastine"}, {id:"disperse",l:"Je me disperse"},
+             {id:"commencer",l:"Je ne sais pas par où commencer"}, {id:"oublie",l:"J’oublie des choses"},
+             {id:"prioriser",l:"Je n’arrive pas à prioriser"} ] },
+
+    { k:"cards", id:"role", title:"Quel rôle veux-tu que Drop It joue pour toi ?",
+      hint:"(Plusieurs choix possibles)", cta:"Continuer", other:true,
+      opts:[ {id:"organiser",e:"✅",l:"M’aider à m’organiser",t:OBQ_T[3]}, {id:"action",e:"⚡",l:"M’aider à passer à l’action",t:OBQ_T[5]},
+             {id:"cerveau",e:"🧠",l:"Être mon second cerveau",t:OBQ_T[2]}, {id:"plan",e:"☰",l:"Me faire un plan",t:OBQ_T[1]},
+             {id:"motiver",e:"📊",l:"Me motiver",t:OBQ_T[1]}, {id:"oublier",e:"💭",l:"Ne plus rien oublier",t:OBQ_T[4]} ] },
+
+    { k:"one", id:"taches", title:"Comment préfères-tu voir tes tâches ?", cta:"Continuer", box:true,
+      opts:[ {id:"une",e:"🎯",l:"Une seule prochaine action"}, {id:"tout",e:"📋",l:"Tout voir pour ne rien oublier"},
+             {id:"projet",e:"📁",l:"Par projet"}, {id:"priorite",e:"🔺",l:"Par priorité"},
+             {id:"melange",e:"🔄",l:"Un mélange des deux"} ] },
+
+    { k:"many", id:"temps", title:"Si tu pouvais récupérer du temps, tu voudrais surtout...",
+      hint:"(Plusieurs choix possibles)", cta:"Continuer", box:true,
+      opts:[ {id:"projets",e:"🚀",l:"Faire avancer mes projets"}, {id:"moi",e:"🌱",l:"Prendre soin de moi"},
+             {id:"sport",e:"🏃",l:"Faire plus de sport"}, {id:"argent",e:"💰",l:"Gagner plus d’argent"},
+             {id:"apprendre",e:"🎓",l:"Apprendre"}, {id:"profiter",e:"🕛",l:"Profiter davantage"},
+             {id:"rien",e:"🛋️",l:"Ne rien faire"} ] },
+
+    { k:"free", id:"mot", title:"Un dernier mot ?",
+      sub:"Qu’est-ce qui est important pour toi que l’on sache ? (optionnel)",
+      placeholder:"Écris quelques mots...", cta:"Continuer" },
+
+    { k:"done", title:"✨ C’est parti !",
+      sub:"Ton espace est prêt à être personnalisé. Tu vas pouvoir créer ton premier projet et laisser ton IA t’accompagner.",
+      cta:"Commencer maintenant", last:true,
+      bullets:["Un espace adapté à tes besoins","Des suggestions personnalisées",
+               "Une IA qui te comprend","Des conseils en lien avec ta vie"] }
+  ];
+
+  var profile = null;        // {answers, completedAt} tel que renvoyé par /api/profile
+  var obqAnswers = {};
+  var obqIndex = 0;
+  var obqDir = 1;
+  var obqAfter = null;       // ce qu'on enchaîne une fois le questionnaire fermé
+  var obqSaveTimer = null;
+
+  // L'écran "âge des enfants" n'a de sens que si la réponse précédente est oui :
+  // il disparaît du parcours (et du compteur) sinon.
+  function obqScreens(){
+    return QUIZ.filter(function(sc){
+      if(!sc.onlyIf) return true;
+      return obqAnswers[sc.onlyIf.id] === sc.onlyIf.value;
+    });
+  }
+
+  function obqMoodIndex(i, total){
+    if(total <= 1) return PROFILE_MOODS.length - 1;
+    return Math.round(i * (PROFILE_MOODS.length - 1) / (total - 1));
+  }
+
+  /* ---------- API profil ---------- */
+
+  function loadProfile(){
+    return apiFetch("/api/profile")
+      .then(function(res){ return res.json(); })
+      .then(function(json){ profile = json.profile || null; return profile; })
+      .catch(function(){ profile = null; return null; });
+  }
+
+  function saveProfileAnswers(completed){
+    var payload = {answers: obqAnswers};
+    if(completed) payload.completed = true;
+    return apiFetch("/api/profile", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    }).then(function(){
+      profile = {answers: obqAnswers, completedAt: completed ? nowIso() : (profile && profile.completedAt) || null};
+    }).catch(function(){ /* le questionnaire ne doit jamais bloquer sur le réseau */ });
+  }
+
+  // Sauvegarde intermédiaire : si l'utilisateur abandonne en cours de route,
+  // ses réponses déjà données sont conservées (sans completed_at).
+  function obqPersist(){
+    clearTimeout(obqSaveTimer);
+    obqSaveTimer = setTimeout(function(){ saveProfileAnswers(false); }, 600);
+  }
+
+  /* ---------- rendu ---------- */
+
+  function obqUserIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.6" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M3.8 16.6c0-3 2.8-4.6 6.2-4.6s6.2 1.6 6.2 4.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'; }
+  function obqArrowIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 10h11M11 5l5 5-5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+  function obqChevronIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none" style="width:16px;height:16px;flex-shrink:0;color:var(--ink-faint);"><path d="M8 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+
+
+  function obqOptionHtml(sc, o, idx){
+    var isCards = sc.k === "cards";
+    var sel = obqIsPicked(sc, o.id);
+    var base = "opacity:0;transform:translateY(13px);";
+    if(isCards){
+      return '<button class="obq-card'+(sel?" sel":"")+'" data-opt="'+escapeHtml(o.id)+'" data-enter '+
+        'style="'+base+'background:'+(o.t||"#FFFFFF")+';">'+
+        '<span class="obq-tick">'+checkIcon()+'</span>'+
+        '<span class="obq-ce">'+o.e+'</span>'+
+        '<span>'+escapeHtml(o.l)+'</span>'+
+      '</button>';
+    }
+    // Lignes : pastille à gauche pour les écrans "box", emoji sinon.
+    var showBox = sc.box ? (sc.k === "many" || sel || !o.e) : false;
+    var showIcon = !!o.e && (sc.box && sc.k === "one" ? !sel : true);
+    var boxCls = "obq-box" + (sc.k === "one" ? " rnd" : "") + (sel ? " on" : "");
+    return '<button class="obq-row'+(sel?" sel":"")+'" data-opt="'+escapeHtml(o.id)+'" data-enter style="'+base+'">'+
+      (showBox ? '<span class="'+boxCls+'">'+checkIcon()+'</span>' : '')+
+      (showIcon ? '<span class="obq-ic">'+o.e+'</span>' : '')+
+      '<span class="obq-lb">'+escapeHtml(o.l)+'</span>'+
+    '</button>';
+  }
+
+  function obqBodyHtml(sc){
+    var base = "opacity:0;transform:translateY(13px);";
+    var html = '<h1 class="obq-title">'+escapeHtml(sc.title)+'</h1>';
+    if(sc.sub)  html += '<p class="obq-sub">'+escapeHtml(sc.sub)+'</p>';
+    if(sc.hint) html += '<p class="obq-hint">'+escapeHtml(sc.hint)+'</p>';
+
+    if(sc.k === "intro"){
+      html += '<div class="obq-chips">'+ sc.chips.map(function(c){
+        return '<div class="obq-chip" data-enter style="'+base+'background:'+c.t+';"><span>'+c.e+'</span>'+escapeHtml(c.l)+'</div>';
+      }).join("") +'</div>';
+    } else if(sc.k === "cards"){
+      html += '<div class="obq-grid">'+ sc.opts.map(function(o, i){ return obqOptionHtml(sc, o, i); }).join("") +'</div>';
+      if(sc.other) html += obqOtherHtml(sc);
+    } else if(sc.k === "one" || sc.k === "many"){
+      html += '<div class="obq-list">'+ sc.opts.map(function(o, i){ return obqOptionHtml(sc, o, i); }).join("");
+      if(sc.other) html += obqOtherHtml(sc);
+      html += '</div>';
+    } else if(sc.k === "field"){
+      html += '<div class="obq-field" data-enter style="'+base+'">'+ obqUserIcon() +
+        '<input class="obq-input" id="obq-input" placeholder="'+escapeHtml(sc.placeholder)+'" '+
+        'value="'+escapeHtml(obqAnswers[sc.id] || "")+'" autocomplete="given-name"></div>';
+    } else if(sc.k === "free"){
+      html += '<textarea class="obq-area" id="obq-area" data-enter style="'+base+'" '+
+        'placeholder="'+escapeHtml(sc.placeholder)+'">'+escapeHtml(obqAnswers[sc.id] || "")+'</textarea>';
+    } else if(sc.k === "done"){
+      html += '<div class="obq-ckl">'+ sc.bullets.map(function(b){
+        return '<div class="obq-ck" data-enter style="'+base+'"><span class="obq-ckd">'+checkIcon()+'</span>'+escapeHtml(b)+'</div>';
+      }).join("") +'</div>';
+    }
+    return html;
+  }
+
+  function obqOtherHtml(sc){
+    return '<input class="obq-other" id="obq-other" data-enter style="opacity:0;transform:translateY(13px);" '+
+      'placeholder="Autre..." value="'+escapeHtml(obqAnswers[sc.id + "_autre"] || "")+'">';
+  }
+
+  function obqFootHtml(sc){
+    // Sur le premier écran, "Passer" voudrait dire deux choses : on tranche
+    // pour la seule utile, quitter le questionnaire entier.
+    var second = sc.last ? ''
+      : sc.k === "intro" ? '<button class="obq-skip" id="obq-later">Plus tard</button>'
+      : '<button class="obq-skip" id="obq-skip">Passer</button>';
+    return '<button class="obq-cta" id="obq-next">'+escapeHtml(sc.cta)+ obqArrowIcon() +'</button>' + second;
+  }
+
+  function obqPaint(){
+    var list = obqScreens();
+    var sc = list[obqIndex];
+    if(!sc) return;
+    var total = list.length;
+
+    var count = document.getElementById("obq-count");
+    var fill  = document.getElementById("obq-fill");
+    var mood  = document.getElementById("obq-mood");
+    var quip  = document.getElementById("obq-quip");
+    var back  = document.getElementById("obq-back");
+    var body  = document.getElementById("obq-body");
+    var foot  = document.getElementById("obq-foot");
+    if(!body || !foot) return;
+
+    if(count) count.textContent = (obqIndex + 1) + " / " + total;
+    if(fill)  fill.style.width = Math.round(((obqIndex + 1) / total) * 100) + "%";
+    var mi = obqMoodIndex(obqIndex, total);
+    if(mood){ mood.textContent = PROFILE_MOODS[mi]; mood.style.transform = "scale(.78)"; }
+    if(quip) quip.textContent = PROFILE_QUIPS[mi];
+    if(back) back.style.visibility = obqIndex === 0 ? "hidden" : "visible";
+
+    body.innerHTML = obqBodyHtml(sc);
+    foot.innerHTML = obqFootHtml(sc);
+    body.scrollTop = 0;
+    obqEnter();
+  }
+
+  // Entrée : l'écran glisse dans le sens de la navigation, puis les options
+  // montent une à une (55ms d'amorce, 30ms d'écart).
+  function obqEnter(){
+    var body = document.getElementById("obq-body");
+    var mood = document.getElementById("obq-mood");
+    if(!body) return;
+    var E = "cubic-bezier(.16,1,.3,1)";
+    var els = body.querySelectorAll("[data-enter]");
+    body.style.transition = "none";
+    body.style.opacity = "0";
+    body.style.transform = "translateX(" + (26 * obqDir) + "px)";
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        body.style.transition = "opacity .36s " + E + ", transform .36s " + E;
+        body.style.opacity = "1";
+        body.style.transform = "none";
+        if(mood) mood.style.transform = "scale(1)";
+        for(var i = 0; i < els.length; i++){
+          var d = 55 + i * 30;
+          els[i].style.transition =
+            "opacity .36s " + E + " " + d + "ms, transform .36s " + E + " " + d + "ms," +
+            "border-color .2s ease, background .2s ease, box-shadow .2s ease";
+          els[i].style.opacity = "1";
+          els[i].style.transform = "none";
+        }
+      });
+    });
+  }
+
+  /* ---------- sélection et navigation ---------- */
+
+  function obqIsPicked(sc, id){
+    var v = obqAnswers[sc.id];
+    if(sc.k === "one") return v === id;
+    return Array.isArray(v) && v.indexOf(id) >= 0;
+  }
+
+  function obqToggle(sc, id, el){
+    if(sc.k === "one"){
+      obqAnswers[sc.id] = id;
+    } else {
+      var cur = Array.isArray(obqAnswers[sc.id]) ? obqAnswers[sc.id].slice() : [];
+      var at = cur.indexOf(id);
+      if(at >= 0) cur.splice(at, 1); else cur.push(id);
+      obqAnswers[sc.id] = cur;
+    }
+    obqPersist();
+    obqRefreshSelection(sc, el);
+  }
+
+  // On ne redessine pas : un champ "Autre..." en cours de saisie perdrait
+  // son texte et son focus. Les classes suffisent, les transitions CSS font
+  // le reste.
+  function obqRefreshSelection(sc, clicked){
+    var body = document.getElementById("obq-body");
+    if(!body) return;
+    var nodes = body.querySelectorAll("[data-opt]");
+    for(var i = 0; i < nodes.length; i++){
+      var node = nodes[i];
+      var sel = obqIsPicked(sc, node.getAttribute("data-opt"));
+      node.classList.toggle("sel", sel);
+      var box = node.querySelector(".obq-box");
+      if(box) box.classList.toggle("on", sel);
+    }
+    // Écran à choix unique avec pastille : l'emoji laisse la place à la coche.
+    if(sc.box && sc.k === "one") obqRepaintRows(sc);
+  }
+
+  function obqRepaintRows(sc){
+    var body = document.getElementById("obq-body");
+    var list = body && body.querySelector(".obq-list");
+    if(!list) return;
+    var nodes = list.querySelectorAll("[data-opt]");
+    for(var i = 0; i < nodes.length && i < sc.opts.length; i++){
+      var o = sc.opts[i];
+      var sel = obqIsPicked(sc, o.id);
+      var showBox = sc.k === "many" || sel || !o.e;
+      var showIcon = !!o.e && !sel;
+      var boxCls = "obq-box rnd" + (sel ? " on" : "");
+      nodes[i].innerHTML =
+        (showBox ? '<span class="'+boxCls+'">'+checkIcon()+'</span>' : '')+
+        (showIcon ? '<span class="obq-ic">'+o.e+'</span>' : '')+
+        '<span class="obq-lb">'+escapeHtml(o.l)+'</span>';
+    }
+  }
+
+  // Les champs libres ne sont lus qu'au moment de quitter l'écran.
+  function obqCapture(){
+    var list = obqScreens();
+    var sc = list[obqIndex];
+    if(!sc) return;
+    var input = document.getElementById("obq-input");
+    var area  = document.getElementById("obq-area");
+    var other = document.getElementById("obq-other");
+    if(input) obqAnswers[sc.id] = input.value.trim().slice(0, 60);
+    if(area)  obqAnswers[sc.id] = area.value.trim().slice(0, 300);
+    if(other){
+      var v = other.value.trim().slice(0, 120);
+      if(v) obqAnswers[sc.id + "_autre"] = v;
+      else delete obqAnswers[sc.id + "_autre"];
+    }
+  }
+
+  function obqGo(d){
+    var total = obqScreens().length;
+    var target = obqIndex + d;
+    if(target < 0) return;
+    if(target > total - 1) return;
+    obqDir = d > 0 ? 1 : -1;
+    var body = document.getElementById("obq-body");
+    if(body){
+      body.style.transition = "opacity .19s ease-in, transform .19s ease-in";
+      body.style.opacity = "0";
+      body.style.transform = "translateX(" + (-26 * obqDir) + "px)";
+    }
+    setTimeout(function(){
+      // La liste peut avoir changé de longueur (écran conditionnel) : on
+      // recalcule l'index cible à partir de l'écran effectivement demandé.
+      var list = obqScreens();
+      obqIndex = Math.max(0, Math.min(target, list.length - 1));
+      obqPaint();
+    }, 190);
+  }
+
+  function obqNext(){
+    obqCapture();
+    obqPersist();
+    var list = obqScreens();
+    if(obqIndex >= list.length - 1){ obqFinish(); return; }
+    obqGo(1);
+  }
+
+  function obqSkip(){
+    var list = obqScreens();
+    var sc = list[obqIndex];
+    if(sc && sc.id){ delete obqAnswers[sc.id]; delete obqAnswers[sc.id + "_autre"]; }
+    obqPersist();
+    if(obqIndex >= list.length - 1){ obqFinish(); return; }
+    obqGo(1);
+  }
+
+  function obqFinish(){
+    clearTimeout(obqSaveTimer);
+    saveProfileAnswers(true);
+    obqClose();
+  }
+
+  function obqClose(){
+    var el = document.getElementById("obq");
+    if(el) el.remove();
+    var after = obqAfter;
+    obqAfter = null;
+    if(after) after();
+  }
+
+  /* ---------- ouverture ---------- */
+
+  function openQuestionnaire(startIndex, after){
+    obqAnswers = (profile && profile.answers) ? JSON.parse(JSON.stringify(profile.answers)) : {};
+    obqAfter = after || null;
+    obqDir = 1;
+    var list = obqScreens();
+    obqIndex = Math.max(0, Math.min(startIndex || 0, list.length - 1));
+
+    var el = document.createElement("div");
+    el.className = "obq";
+    el.id = "obq";
+    el.innerHTML =
+      '<div class="obq-top">'+
+        '<button class="obq-back" id="obq-back">'+backIcon()+'</button>'+
+        '<div class="obq-count" id="obq-count"></div>'+
+        '<div class="obq-logo">DROP<i></i>IT</div>'+
+      '</div>'+
+      '<div class="obq-prog">'+
+        '<div class="obq-bar"><div class="obq-fill" id="obq-fill" style="width:0%"></div></div>'+
+        '<div class="obq-mood" id="obq-mood"></div>'+
+      '</div>'+
+      '<div class="obq-quip" id="obq-quip"></div>'+
+      '<div class="obq-body" id="obq-body"></div>'+
+      '<div class="obq-foot" id="obq-foot"></div>';
+    document.body.appendChild(el);
+
+    el.addEventListener("click", function(e){
+      var opt = e.target.closest ? e.target.closest("[data-opt]") : null;
+      if(opt && el.contains(opt)){
+        var sc = obqScreens()[obqIndex];
+        if(sc) obqToggle(sc, opt.getAttribute("data-opt"), opt);
+        return;
+      }
+      if(e.target.closest("#obq-next")){ obqNext(); return; }
+      if(e.target.closest("#obq-skip")){ obqSkip(); return; }
+      if(e.target.closest("#obq-later")){ obqClose(); return; }
+      if(e.target.closest("#obq-back")){ obqCapture(); obqGo(-1); return; }
+    });
+    el.addEventListener("keydown", function(e){
+      if(e.key === "Enter" && e.target.id === "obq-input"){ e.preventDefault(); obqNext(); }
+    });
+
+    obqPaint();
+  }
+
+  // Premier lancement d'un compte : questionnaire → visite guidée →
+  // notice "projets d'exemple". Chaque étape appelle la suivante, jamais
+  // deux fenêtres empilées.
+  function startFreshAccount(){
+    loadProfile().then(function(p){
+      if(p && p.completedAt){
+        showOnboardingIfNeeded();
+        maybeShowSampleNotice();
+        return;
+      }
+      openQuestionnaire(0, function(){
+        showOnboardingIfNeeded();
+        maybeShowSampleNotice();
+      });
+    });
+  }
+
+  /* ---------- profil : relecture et modification ---------- */
+
+  function obqAnswerLabel(sc){
+    var v = obqAnswers[sc.id];
+    var extra = obqAnswers[sc.id + "_autre"];
+    var text = "";
+    if(sc.k === "field" || sc.k === "free"){
+      text = typeof v === "string" ? v : "";
+    } else if(sc.k === "one"){
+      var hit = (sc.opts || []).filter(function(o){ return o.id === v; })[0];
+      text = hit ? hit.l : "";
+    } else {
+      var ids = Array.isArray(v) ? v : [];
+      text = (sc.opts || []).filter(function(o){ return ids.indexOf(o.id) >= 0; })
+        .map(function(o){ return o.l; }).join(", ");
+    }
+    if(extra) text = text ? text + ", " + extra : extra;
+    return text;
+  }
+
+  function openProfileSheet(){
+    obqAnswers = (profile && profile.answers) ? JSON.parse(JSON.stringify(profile.answers)) : {};
+    var list = obqScreens();
+    var rows = list.map(function(sc, i){
+      if(!sc.id) return "";
+      var answer = obqAnswerLabel(sc);
+      return '<button class="prof-row" data-screen="'+i+'">'+
+        '<span><span class="prof-q">'+escapeHtml(sc.title)+'</span>'+
+        '<span class="prof-a'+(answer ? "" : " empty")+'">'+escapeHtml(answer || "Pas encore répondu")+'</span></span>'+
+        obqChevronIcon()+
+      '</button>';
+    }).join("");
+
+    var el = document.createElement("div");
+    el.className = "account-sheet";
+    el.id = "profile-sheet";
+    el.innerHTML = '<div class="account-sheet-box">'+
+      '<div class="account-email">Mon profil</div>'+
+      '<div class="prof-sub">Ce que ton IA sait de toi. Touche une réponse pour la modifier.</div>'+
+      '<div class="prof-list">'+rows+'</div>'+
+      '<div class="account-actions">'+
+        '<button class="btn" id="profile-redo-btn">Refaire le questionnaire</button>'+
+        '<button class="btn" id="profile-close-btn">Fermer</button>'+
+      '</div>'+
+    '</div>';
+    document.body.appendChild(el);
+
+    el.addEventListener("click", function(e){
+      if(e.target === el){ el.remove(); return; }
+      if(e.target.closest("#profile-close-btn")){ el.remove(); return; }
+      if(e.target.closest("#profile-redo-btn")){ el.remove(); openQuestionnaire(0, openProfileSheet); return; }
+      var row = e.target.closest("[data-screen]");
+      if(row){
+        var idx = parseInt(row.getAttribute("data-screen"), 10) || 0;
+        el.remove();
+        openQuestionnaire(idx, openProfileSheet);
+      }
+    });
   }
 
   function loadSession(){
@@ -1699,20 +2432,24 @@
       .then(function(json){
         var parsed = json.data || {};
         var dropZone = Array.isArray(parsed.dropZone) ? parsed.dropZone.map(normalizeDropItem) : [];
-        if(parsed.projects && parsed.projects.length > 0){
-          state = {projects: parsed.projects.map(normalizeProject), dropZone: dropZone};
-        } else {
+        var fresh = !(parsed.projects && parsed.projects.length > 0);
+        if(fresh){
           state = defaultData();
           persist();
-          maybeShowSampleNotice();
+        } else {
+          state = {projects: parsed.projects.map(normalizeProject), dropZone: dropZone};
         }
         render();
         if(json.migrated) showToast("Tes projets ont été rattachés à ton compte");
+        // Le parcours d'arrivée ne peut démarrer qu'ici : il faut savoir si le
+        // compte est neuf, et l'appel est asynchrone.
+        if(fresh) startFreshAccount(); else showOnboardingIfNeeded();
       })
       .catch(function(err){
         if(err && err.message === "unauthorized") return; // signOut a déjà pris la main
         state = defaultData();
         render();
+        showOnboardingIfNeeded();
         showToast("Chargement impossible — données locales affichées");
       });
   }
@@ -2102,6 +2839,7 @@
         '<div class="account-email">'+escapeHtml(email)+'</div>'+
         '<div class="account-meta">'+providerLabel+' · '+count+' projet'+(count>1?'s':'')+' synchronisé'+(count>1?'s':'')+'</div>'+
         '<div class="account-actions">'+
+          '<button class="btn" id="account-profile-btn">Mon profil · personnaliser mon IA</button>'+
           '<button class="btn" id="account-close-btn">Fermer</button>'+
           '<button class="btn btn-danger" id="account-signout-btn">Se déconnecter</button>'+
         '</div>'+
@@ -3767,6 +4505,13 @@
     if(accountBtn) accountBtn.addEventListener("click", function(){
       accountSheetOpen = true; render();
     });
+    var accountProfileBtn = document.getElementById("account-profile-btn");
+    if(accountProfileBtn) accountProfileBtn.addEventListener("click", function(){
+      accountSheetOpen = false; render();
+      // Le profil n'a pas forcément été chargé (compte déjà existant).
+      if(profile) openProfileSheet();
+      else loadProfile().then(openProfileSheet);
+    });
     var accountCloseBtn = document.getElementById("account-close-btn");
     if(accountCloseBtn) accountCloseBtn.addEventListener("click", function(){
       accountSheetOpen = false; render();
@@ -4178,8 +4923,7 @@
   function bootAfterAuth(){
     authBusy = false; authError = ""; authInfo = "";
     render();
-    load();
-    showOnboardingIfNeeded();
+    load(); // enchaîne lui-même questionnaire / visite guidée / notice
     // Rafraîchit le profil en arrière-plan : après un OAuth, le fragment
     // d'URL ne contient pas l'email, seulement les jetons.
     if(!session || !session.user){

@@ -1,4 +1,5 @@
 import { json, requireUser } from "../_lib/auth.js";
+import { fetchProfileAnswers, profileContext } from "../_lib/profile.js";
 
 // Seuls les modèles réellement utilisés par l'app sont autorisés à passer
 // par ce proxy. Sans ça, un appel direct à /api/ai (n'importe quel compte
@@ -15,7 +16,7 @@ export async function onRequestPost(context) {
 
   // Endpoint authentifié : sans cela n'importe qui pourrait consommer
   // le quota Anthropic en appelant /api/ai directement.
-  const { error } = await requireUser(context);
+  const { user, error } = await requireUser(context);
   if (error) return error;
 
   if (!env.ANTHROPIC_API_KEY) {
@@ -34,6 +35,13 @@ export async function onRequestPost(context) {
   }
   if (typeof body.max_tokens !== "number" || body.max_tokens <= 0 || body.max_tokens > MAX_TOKENS_CAP) {
     return json({ error: "max_tokens invalide" }, 400);
+  }
+
+  // Personnalisation : le profil est injecté ici plutôt qu'à chacun des sept
+  // points d'appel côté client — un seul endroit, impossible à contourner.
+  const profileBlock = profileContext(await fetchProfileAnswers(env, user.id));
+  if (profileBlock) {
+    body.system = body.system ? profileBlock + "\n\n" + body.system : profileBlock;
   }
 
   const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
