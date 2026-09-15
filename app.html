@@ -888,16 +888,28 @@
   .obq-count{font-size:11.5px;font-weight:600;color:#94A3B8;}
   .obq-logo{margin-left:auto;display:inline-flex;align-items:center;font-size:13.5px;font-weight:800;letter-spacing:-.02em;}
   .obq-logo i{width:6px;height:6px;border-radius:50%;background:#EF5D4E;margin:0 4px;font-style:normal;}
-  .obq-prog{flex-shrink:0;display:flex;align-items:center;gap:11px;margin:15px 24px 0;}
-  .obq-bar{flex:1;height:4px;border-radius:999px;background:#E8EEF6;overflow:hidden;}
-  .obq-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#3B82F6,#2563EB);
-            transition:width .5s cubic-bezier(.65,0,.35,1);}
-  .obq-mood{font-size:18px;line-height:1;flex-shrink:0;transform-origin:center;
-            transition:transform .34s cubic-bezier(.34,1.56,.64,1);}
-  .obq-quip{flex-shrink:0;margin:9px 26px 0;font-size:11.5px;font-weight:600;color:#94A3B8;
+  /* La phrase passe avant la barre : sur un écran bas, barre + emoji
+     grignotaient la place du titre juste en dessous, au point de le rogner
+     (bug remonté). La faire passer au-dessus libère cette place, jamais en
+     dessous d'un titre. */
+  .obq-quip{flex-shrink:0;margin:14px 26px 0;font-size:11.5px;font-weight:600;color:#94A3B8;
             text-align:center;line-height:1.35;}
+  .obq-prog{flex-shrink:0;margin:12px 24px 0;}
+  .obq-bar{position:relative;height:4px;border-radius:999px;background:#E8EEF6;}
+  .obq-fill{position:relative;height:100%;border-radius:999px;background:linear-gradient(90deg,#3B82F6,#2563EB);
+            transition:width .5s cubic-bezier(.65,0,.35,1);}
+  /* L'emoji chevauche la pointe de la barre remplie : ancré en % de la
+     largeur du fill, il glisse avec elle pendant la même transition, sans
+     JS dédié à son déplacement. */
+  .obq-mood{position:absolute;top:50%;left:100%;font-size:18px;line-height:1;transform-origin:center;
+            transition:transform .34s cubic-bezier(.34,1.56,.64,1);}
   .obq-body{flex:1;min-height:0;overflow-y:auto;padding:20px 24px 4px;text-align:center;
-            display:flex;flex-direction:column;justify-content:center;}
+            display:flex;flex-direction:column;
+            /* "safe" évite qu'un écran chargé (beaucoup d'options) rogne le
+               haut du contenu de façon inatteignable au scroll — la vraie
+               cause du bug, pas la position de la phrase. Navigateur qui
+               ignore "safe" : replie sur le haut, jamais pire qu'avant. */
+            justify-content:flex-start;justify-content:safe center;}
   .obq-title{font-size:23px;font-weight:800;letter-spacing:-.03em;line-height:1.2;margin:0;text-wrap:balance;}
   .obq-sub{font-size:13px;font-weight:500;line-height:1.5;color:#64748B;margin:9px auto 0;max-width:30ch;}
   .obq-hint{font-size:11.5px;font-weight:600;color:#94A3B8;margin:7px 0 0;}
@@ -1622,7 +1634,7 @@
     if(count) count.textContent = (obqIndex + 1) + " / " + total;
     if(fill)  fill.style.width = Math.round(((obqIndex + 1) / total) * 100) + "%";
     var mi = obqMoodIndex(obqIndex, total);
-    if(mood){ mood.textContent = PROFILE_MOODS[mi]; mood.style.transform = "scale(.78)"; }
+    if(mood){ mood.textContent = PROFILE_MOODS[mi]; mood.style.transform = "translate(-50%,-50%) scale(.78)"; }
     if(quip) quip.textContent = PROFILE_QUIPS[mi];
     if(back) back.style.visibility = obqIndex === 0 ? "hidden" : "visible";
 
@@ -1648,7 +1660,7 @@
         body.style.transition = "opacity .36s " + E + ", transform .36s " + E;
         body.style.opacity = "1";
         body.style.transform = "none";
-        if(mood) mood.style.transform = "scale(1)";
+        if(mood) mood.style.transform = "translate(-50%,-50%) scale(1)";
         for(var i = 0; i < els.length; i++){
           var d = 55 + i * 30;
           els[i].style.transition =
@@ -1805,11 +1817,12 @@
         '<div class="obq-count" id="obq-count"></div>'+
         '<div class="obq-logo">DROP<i></i>IT</div>'+
       '</div>'+
-      '<div class="obq-prog">'+
-        '<div class="obq-bar"><div class="obq-fill" id="obq-fill" style="width:0%"></div></div>'+
-        '<div class="obq-mood" id="obq-mood"></div>'+
-      '</div>'+
       '<div class="obq-quip" id="obq-quip"></div>'+
+      '<div class="obq-prog">'+
+        '<div class="obq-bar"><div class="obq-fill" id="obq-fill" style="width:0%">'+
+          '<span class="obq-mood" id="obq-mood"></span>'+
+        '</div></div>'+
+      '</div>'+
       '<div class="obq-body" id="obq-body"></div>'+
       '<div class="obq-foot" id="obq-foot"></div>';
     document.body.appendChild(el);
