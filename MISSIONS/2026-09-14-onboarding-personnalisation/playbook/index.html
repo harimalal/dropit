@@ -1,0 +1,445 @@
+<title>Le questionnaire d'arrivée</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,480;9..144,560;9..144,650&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root{
+    --paper:#F4F3F9;
+    --panel:#FFFFFF;
+    --panel-tint:#FAF9FE;
+    --ink:#1E212B;
+    --ink-soft:#5A5D71;
+    --ink-faint:#9396AA;
+    --line:#E3E2EF;
+    --line-soft:#ECEBF4;
+    --accent:#3B82F6;
+    --accent-deep:#2657C9;
+    --accent-soft:#E9F1FE;
+    --before:#C24B3B;
+    --before-soft:#FBEAE6;
+    --after:#1E9E6B;
+    --after-soft:#E5F6EE;
+    --shadow-sm: 0 1px 2px rgba(30,33,43,.06), 0 6px 16px -8px rgba(30,33,43,.16);
+    --shadow-md: 0 2px 4px rgba(30,33,43,.07), 0 20px 44px -18px rgba(30,33,43,.26);
+    height:100%;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#131319; --panel:#1B1C25; --panel-tint:#212230; --ink:#ECEDF4; --ink-soft:#A6A9C0;
+      --ink-faint:#6E7189; --line:#2B2C39; --line-soft:#24252F; --accent:#5C9BFF; --accent-deep:#8CB8FF;
+      --accent-soft:#1E2A44; --before:#E38271; --before-soft:#3A2320; --after:#4FCB93; --after-soft:#173327;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.35), 0 6px 16px -8px rgba(0,0,0,.5);
+      --shadow-md: 0 2px 4px rgba(0,0,0,.4), 0 20px 44px -18px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#131319; --panel:#1B1C25; --panel-tint:#212230; --ink:#ECEDF4; --ink-soft:#A6A9C0;
+    --ink-faint:#6E7189; --line:#2B2C39; --line-soft:#24252F; --accent:#5C9BFF; --accent-deep:#8CB8FF;
+    --accent-soft:#1E2A44; --before:#E38271; --before-soft:#3A2320; --after:#4FCB93; --after-soft:#173327;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,.35), 0 6px 16px -8px rgba(0,0,0,.5);
+    --shadow-md: 0 2px 4px rgba(0,0,0,.4), 0 20px 44px -18px rgba(0,0,0,.7);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;overflow:hidden;background:var(--paper);color:var(--ink);
+    font-family:"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion:reduce){ * { scroll-behavior:auto !important; } }
+
+  /* --- Barre de progression du diaporama (écho direct à la barre du questionnaire) --- */
+  .deck-progress{position:fixed;top:0;left:0;right:0;height:3px;background:var(--line-soft);z-index:40;}
+  .deck-progress i{display:block;height:100%;width:20%;background:linear-gradient(90deg,var(--accent),var(--accent-deep));
+    transition:width .45s cubic-bezier(.65,0,.35,1);font-style:normal;}
+
+  /* --- Le diaporama --- */
+  .deck{height:100%;overflow-y:auto;scroll-snap-type:y mandatory;scroll-behavior:smooth;}
+  .slide{
+    position:relative;min-height:100%;scroll-snap-align:start;scroll-snap-stop:always;
+    display:flex;padding:52px 22px 92px;
+  }
+  .slide-inner{width:100%;max-width:840px;margin:auto;}
+  @media (max-width:560px){ .slide{padding:40px 16px 100px;} }
+
+  .eyebrow{
+    font-family:"IBM Plex Mono", monospace;font-size:12px;font-weight:600;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--accent-deep);display:flex;align-items:center;gap:8px;margin-bottom:12px;
+  }
+  .eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+
+  h1{
+    font-family:"Fraunces", Georgia, serif;font-weight:600;font-optical-sizing:auto;
+    font-size:clamp(34px,6vw,54px);line-height:1.05;letter-spacing:-.015em;margin:0;text-wrap:balance;
+  }
+  h2{
+    font-family:"Fraunces", Georgia, serif;font-weight:560;font-size:clamp(25px,4vw,34px);
+    letter-spacing:-.01em;margin:0;text-wrap:balance;line-height:1.14;
+  }
+  .dek{font-size:16.5px;line-height:1.62;color:var(--ink-soft);max-width:52ch;margin:16px 0 0;}
+  .lede{font-size:14.5px;line-height:1.55;color:var(--ink-soft);max-width:56ch;margin:10px 0 0;}
+
+  /* --- Slide 1 : couverture --- */
+  .cover-mood{font-size:15px;font-weight:600;color:var(--ink-faint);letter-spacing:.02em;margin-top:26px;
+    display:flex;align-items:center;gap:9px;}
+  .cover-mood span{font-size:20px;}
+  .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px;}
+  .pill{
+    background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:9px 16px 9px 14px;
+    display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink);box-shadow:var(--shadow-sm);
+  }
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+  .scrollcue{
+    position:absolute;left:50%;bottom:96px;transform:translateX(-50%);display:flex;flex-direction:column;
+    align-items:center;gap:6px;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
+    letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);animation:bob 2.2s ease-in-out infinite;
+    z-index:5;
+  }
+  @keyframes bob{0%,100%{transform:translate(-50%,0);}50%{transform:translate(-50%,6px);}}
+
+  /* --- Cadre téléphone --- */
+  .phone{background:var(--panel);border:1px solid var(--line);border-radius:20px;overflow:hidden;
+    box-shadow:var(--shadow-sm);}
+  .phone img{display:block;width:100%;height:auto;}
+  .tag{display:inline-flex;align-items:center;gap:6px;font-family:"IBM Plex Mono",monospace;font-size:10.5px;
+    font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:999px;}
+  .tag.before{background:var(--before-soft);color:var(--before);}
+  .tag.after{background:var(--after-soft);color:var(--after);}
+
+  /* --- Avant / Après --- */
+  .compare{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;margin-top:22px;}
+  @media (max-width:680px){ .compare{grid-template-columns:1fr;gap:10px;} .compare .arrow{transform:rotate(90deg);margin:0 auto;} }
+  .compare .col{max-width:172px;justify-self:center;}
+  .compare .col .phone{max-width:172px;margin:0 auto;}
+  @media (max-width:680px){ .compare .col{max-width:150px;} .compare .col .phone{max-width:150px;} }
+  .compare .col-head{display:flex;justify-content:center;margin-bottom:8px;}
+  .compare .cap{text-align:center;margin-top:8px;font-size:12.5px;color:var(--ink-soft);line-height:1.4;}
+  .arrow{color:var(--ink-faint);flex-shrink:0;}
+  .note{font-size:13.5px;color:var(--ink-soft);max-width:50ch;margin:16px auto 0;line-height:1.55;text-align:center;}
+  .note b{color:var(--ink);}
+
+  /* --- Le parcours (bande défilante) --- */
+  .tour-scroller{overflow-x:auto;margin:26px -22px 0;padding:6px 22px 8px;}
+  @media (max-width:560px){ .tour-scroller{margin:26px -16px 0;padding:6px 16px 8px;} }
+  .tour-grid{display:grid;grid-auto-flow:column;grid-auto-columns:140px;gap:14px;}
+  .tour-grid .phone{max-width:140px;border-radius:15px;}
+  .tour-cap{text-align:center;margin-top:8px;font-size:12px;line-height:1.35;}
+  .tour-cap b{display:block;font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--accent-deep);
+    font-variant-numeric:tabular-nums;margin-bottom:2px;}
+  .tour-cap span{color:var(--ink-soft);}
+  .tour-foot{font-size:14px;color:var(--ink-soft);max-width:52ch;margin:22px auto 0;text-align:center;line-height:1.6;}
+
+  /* --- Vulgarisation : icônes/étapes --- */
+  .steps{display:flex;align-items:flex-start;gap:6px;margin-top:30px;}
+  @media (max-width:680px){ .steps{flex-direction:column;gap:18px;} .steps .step-arrow{transform:rotate(90deg);align-self:center;margin:-6px 0;} }
+  .step{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;}
+  .step-ic{width:52px;height:52px;border-radius:16px;background:var(--accent-soft);color:var(--accent-deep);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .step-ic svg{width:24px;height:24px;}
+  .step p{margin:0;font-size:13.5px;line-height:1.45;color:var(--ink-soft);max-width:20ch;}
+  .step-arrow{color:var(--ink-faint);flex-shrink:0;margin-top:16px;}
+
+  /* --- Comparatif du correctif, version imagée --- */
+  .fix{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px;}
+  @media (max-width:600px){ .fix{grid-template-columns:1fr;gap:22px;} }
+  .fix > div{max-width:230px;margin:0 auto;}
+  .fix .phone{border-radius:15px;}
+  .fix-eye{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;font-size:13px;
+    font-weight:600;color:var(--ink-soft);}
+  .fix-eye svg{width:16px;height:16px;flex-shrink:0;}
+  .fix .cap{text-align:center;margin-top:8px;font-size:12.5px;color:var(--ink-soft);line-height:1.45;}
+
+  /* --- En-cas technique --- */
+  details.snack{
+    margin-top:26px;background:var(--panel-tint);border:1px solid var(--line-soft);border-radius:14px;
+    padding:4px 18px;
+  }
+  details.snack summary{
+    list-style:none;cursor:pointer;padding:14px 0;display:flex;align-items:center;gap:10px;
+    font-size:13px;font-weight:600;color:var(--ink-soft);
+  }
+  details.snack summary::-webkit-details-marker{display:none;}
+  details.snack summary .chev{margin-left:auto;color:var(--ink-faint);transition:transform .2s ease;flex-shrink:0;}
+  details.snack summary .chev svg{width:15px;height:15px;display:block;}
+  details.snack[open] summary .chev{transform:rotate(90deg);}
+  .snack-body{padding:2px 0 16px;border-top:1px solid var(--line-soft);margin-top:2px;}
+  .snack-row{padding:12px 0;border-bottom:1px solid var(--line-soft);}
+  .snack-row:last-child{border-bottom:none;padding-bottom:0;}
+  .snack-row:first-child{padding-top:14px;}
+  .snack-label{font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:600;color:var(--accent-deep);
+    letter-spacing:.04em;text-transform:uppercase;margin-bottom:5px;}
+  .snack-row p{margin:0;font-size:13px;line-height:1.6;color:var(--ink-soft);}
+  .snack-row p b{color:var(--ink);font-weight:600;}
+  .snack-row code{font-family:"IBM Plex Mono",monospace;font-size:12px;background:var(--panel);
+    border:1px solid var(--line);color:var(--ink);padding:1.5px 6px;border-radius:5px;}
+
+  /* --- Clôture --- */
+  .closing{text-align:center;}
+  .closing .spark{font-size:38px;margin-bottom:6px;display:block;}
+  .closing footer{
+    margin-top:44px;padding-top:18px;border-top:1px solid var(--line);
+    display:flex;flex-wrap:wrap;gap:6px 20px;align-items:baseline;justify-content:center;
+    font-size:12px;color:var(--ink-faint);font-family:"IBM Plex Mono",monospace;
+  }
+
+  /* --- Navigation du diaporama --- */
+  .navdock{
+    position:fixed;left:50%;transform:translateX(-50%);z-index:40;
+    bottom:calc(20px + env(safe-area-inset-bottom,0px));
+    display:flex;align-items:center;gap:4px;background:var(--panel);border:1px solid var(--line);
+    border-radius:999px;padding:6px;box-shadow:var(--shadow-md);
+  }
+  .navbtn{
+    width:38px;height:38px;border-radius:50%;border:none;background:transparent;color:var(--ink);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .navbtn:disabled{color:var(--ink-faint);opacity:.4;}
+  .navbtn svg{width:18px;height:18px;}
+  .navcount{
+    font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--ink-soft);
+    padding:0 10px;font-variant-numeric:tabular-nums;min-width:52px;text-align:center;
+  }
+  .dots{
+    position:fixed;right:22px;top:50%;transform:translateY(-50%);z-index:40;
+    display:flex;flex-direction:column;gap:9px;
+  }
+  @media (max-width:760px){ .dots{display:none;} }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--line);border:none;padding:0;flex-shrink:0;}
+  .dot.active{background:var(--accent);width:8px;height:22px;border-radius:5px;}
+</style>
+
+<div class="deck-progress"><i id="pbar"></i></div>
+
+<div class="deck" id="deck">
+
+  <section class="slide" id="s0">
+    <div class="slide-inner">
+      <div class="eyebrow">Dropit · Nouveauté</div>
+      <h1>Le questionnaire d'arrivée</h1>
+      <p class="dek">Vingt petites questions pour que Dropit te connaisse un peu,
+        avant même de te laisser entrer dans l'app.</p>
+      <div class="cover-mood"><span>🙂</span> vers <span>😎</span> — l'humeur suit ta progression, du début à la fin.</div>
+      <div class="pills">
+        <div class="pill"><span class="dot"></span>20 questions</div>
+        <div class="pill"><span class="dot"></span>Jamais un mur — tout est passable</div>
+        <div class="pill"><span class="dot"></span>Modifiable quand tu veux</div>
+      </div>
+    </div>
+    <div class="scrollcue">Découvrir<svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  </section>
+
+  <section class="slide" id="s1">
+    <div class="slide-inner">
+      <div class="eyebrow">Ce qui change</div>
+      <h2>Avant de retrouver ses projets, on apprend à te connaître</h2>
+      <div class="compare">
+        <div class="col">
+          <div class="col-head"><span class="tag before">Avant</span></div>
+          <div class="phone"><img src="assets/avant-accueil.png" alt="Accueil affiché immédiatement à la création d'un compte, avec trois projets d'exemple."></div>
+          <div class="cap">On atterrissait tout de suite ici, avec trois projets déjà tout faits.</div>
+        </div>
+        <svg class="arrow" width="26" height="26" viewBox="0 0 20 20" fill="none"><path d="M4 10h11M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="col">
+          <div class="col-head"><span class="tag after">Après</span></div>
+          <div class="phone"><img src="assets/ecran-01-intro.png" alt="Premier écran du nouveau questionnaire de personnalisation."></div>
+          <div class="cap">On commence maintenant par quelques questions, pour un espace qui te ressemble.</div>
+        </div>
+      </div>
+      <p class="note">Rien ne change dans tes projets — seule la façon dont ton assistant
+        <b>te parle</b> s'ajuste, doucement, à mesure qu'il te connaît.</p>
+    </div>
+  </section>
+
+  <section class="slide" id="s2">
+    <div class="slide-inner">
+      <div class="eyebrow">Le parcours</div>
+      <h2>Des questions simples, à ton rythme</h2>
+      <p class="lede">Un univers visuel à part — bleu, tout en douceur — pour bien
+        marquer que c'est un moment à part, avant d'entrer dans l'app.</p>
+      <div class="tour-scroller">
+        <div class="tour-grid">
+          <div><div class="phone"><img src="assets/ecran-01-intro.png" alt="Écran d'introduction."></div><div class="tour-cap"><b>1/20</b><span>On commence en douceur</span></div></div>
+          <div><div class="phone"><img src="assets/ecran-02-prenom.png" alt="Écran demandant le prénom."></div><div class="tour-cap"><b>2/20</b><span>Comment tu t'appelles</span></div></div>
+          <div><div class="phone"><img src="assets/ecran-03-age.png" alt="Écran de choix de la tranche d'âge."></div><div class="tour-cap"><b>3/20</b><span>Ton âge</span></div></div>
+          <div><div class="phone"><img src="assets/ecran-07-enfants.png" alt="Écran demandant si l'utilisateur a des enfants."></div><div class="tour-cap"><b>7/20</b><span>As-tu des enfants</span></div></div>
+          <div><div class="phone"><img src="assets/ecran-08-enfants-ages.png" alt="Écran qui n'apparaît que si la réponse précédente est oui."></div><div class="tour-cap"><b>8/20</b><span>S'adapte à ta réponse</span></div></div>
+          <div><div class="phone"><img src="assets/ecran-10-projets.png" alt="Écran des projets en cours."></div><div class="tour-cap"><b>10/20</b><span>Tes projets du moment</span></div></div>
+          <div><div class="phone"><img src="assets/ecran-19-mot.png" alt="Écran de mot libre final."></div><div class="tour-cap"><b>19/20</b><span>Un mot pour la fin</span></div></div>
+          <div><div class="phone"><img src="assets/ecran-20-fin.png" alt="Écran final."></div><div class="tour-cap"><b>20/20</b><span>C'est parti !</span></div></div>
+        </div>
+      </div>
+      <p class="tour-foot">Une question t'ennuie ? Tu la passes. Tu n'as pas le temps ?
+        Tu reviens plus tard, depuis ton profil — jamais obligé d'aller au bout.</p>
+    </div>
+  </section>
+
+  <section class="slide" id="s3">
+    <div class="slide-inner">
+      <div class="eyebrow">Repéré aujourd'hui</div>
+      <h2>Une question restait invisible sur certains téléphones</h2>
+      <p class="lede">Sur un écran un peu petit, le début d'une question disparaissait —
+        et rien ne permettait de le faire réapparaître en faisant défiler. C'est réparé.</p>
+      <div class="fix">
+        <div>
+          <div class="fix-eye"><svg viewBox="0 0 20 20" fill="none"><path d="M2 10c2-4 5-6 8-6s6 2 8 6c-2 4-5 6-8 6s-6-2-8-6z" stroke="currentColor" stroke-width="1.5"/><path d="M3 3l14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Manquait</div>
+          <div class="phone"><img src="assets/bugfix-avant.png" alt="Avant correction : le début du titre de la question est coupé et invisible."></div>
+          <div class="cap"><b style="color:var(--ink);">« Quel est ton statut »</b> avait disparu — seule la fin de la phrase restait.</div>
+        </div>
+        <div>
+          <div class="fix-eye"><svg viewBox="0 0 20 20" fill="none"><path d="M2 10c2-4 5-6 8-6s6 2 8 6c-2 4-5 6-8 6s-6-2-8-6z" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.6" stroke="currentColor" stroke-width="1.5"/></svg>Visible</div>
+          <div class="phone"><img src="assets/bugfix-apres.png" alt="Après correction : le titre complet est visible en entier."></div>
+          <div class="cap">La question s'affiche <b style="color:var(--ink);">en entier</b>, quelle que soit la taille de l'écran.</div>
+        </div>
+      </div>
+
+      <details class="snack">
+        <summary>🔧 Le détail technique, pour les curieux<span class="chev"><svg viewBox="0 0 20 20" fill="none"><path d="M7 4l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+        <div class="snack-body">
+          <div class="snack-row"><p>L'écran centrait son contenu verticalement pour bien faire respirer les
+            questions courtes. Mais sur une question chargée (titre long, beaucoup d'options) qui dépassait
+            la hauteur disponible, ce centrage rognait le <b>haut</b> du contenu — et cette zone restait
+            hors de portée du défilement.</p></div>
+          <div class="snack-row"><p>Corrigé avec <code>justify-content:safe center</code> : centré tant que
+            le contenu tient dans l'écran, aligné en haut sinon. Plus rien n'est jamais perdu, sur aucune taille d'écran.</p></div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="slide" id="s4">
+    <div class="slide-inner">
+      <div class="eyebrow">Comment ça marche</div>
+      <h2>Tes réponses, pour un assistant qui te parle mieux</h2>
+      <p class="lede">Pas de magie compliquée : tes réponses suivent un chemin très court,
+        entre le moment où tu les donnes et celui où ton assistant s'en sert.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-ic"><svg viewBox="0 0 20 20" fill="none"><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h9A2.5 2.5 0 0 1 17 5.5v5A2.5 2.5 0 0 1 14.5 13H9l-4 3.5V13H5.5A2.5 2.5 0 0 1 3 10.5v-5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+          <p>Tu réponds à quelques questions, à ton rythme</p>
+        </div>
+        <svg class="step-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10h11M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="step">
+          <div class="step-ic"><svg viewBox="0 0 20 20" fill="none"><rect x="4.5" y="9" width="11" height="8" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6.5 9V6.5a3.5 3.5 0 0 1 7 0V9" stroke="currentColor" stroke-width="1.5"/></svg></div>
+          <p>Elles restent privées, gardées pour toi seul</p>
+        </div>
+        <svg class="step-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10h11M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="step">
+          <div class="step-ic"><svg viewBox="0 0 20 20" fill="none"><path d="M10 2.5l1.6 4.2 4.4.4-3.4 2.9 1.1 4.3L10 12l-3.7 2.3 1.1-4.3-3.4-2.9 4.4-.4L10 2.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
+          <p>Ton assistant les relit avant chaque échange</p>
+        </div>
+        <svg class="step-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 10h11M11 5l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="step">
+          <div class="step-ic"><svg viewBox="0 0 20 20" fill="none"><path d="M12.5 3.5l4 4L6 18H2v-4l10.5-10.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+          <p>Tu peux tout revoir ou recommencer, à tout moment</p>
+        </div>
+      </div>
+
+      <details class="snack">
+        <summary>🔧 Le détail technique, pour les curieux<span class="chev"><svg viewBox="0 0 20 20" fill="none"><path d="M7 4l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></summary>
+        <div class="snack-body">
+          <div class="snack-row">
+            <div class="snack-label">Base</div>
+            <p>Une table dédiée, <code>dropit_user_profile</code>, une ligne par compte — séparée des
+              projets, qui eux sont réécrits en entier à chaque sauvegarde et n'ont pas à porter ce poids en plus.</p>
+          </div>
+          <div class="snack-row">
+            <div class="snack-label">API</div>
+            <p><code>functions/api/profile.js</code> lit et écrit les réponses. La date de fin n'est posée
+              qu'au tout dernier écran, jamais effacée par une sauvegarde en cours de route.</p>
+          </div>
+          <div class="snack-row">
+            <div class="snack-label">Injection</div>
+            <p><code>functions/api/ai.js</code> ajoute le profil au message envoyé à l'IA, côté serveur —
+              un seul point de passage, impossible à contourner depuis l'app.</p>
+          </div>
+          <div class="snack-row">
+            <div class="snack-label">Démarrage</div>
+            <p>Un compte neuf enchaîne questionnaire → visite guidée → notice des exemples, sans jamais
+              empiler deux fenêtres à l'écran.</p>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="slide" id="s5">
+    <div class="slide-inner closing">
+      <span class="spark">✨</span>
+      <h2>C'est en ligne</h2>
+      <p class="dek" style="margin-left:auto;margin-right:auto;">Vingt questions, un correctif en plus,
+        et un assistant qui commence chaque conversation en te connaissant un peu mieux.</p>
+      <footer>
+        <span>dropit · feature/onboarding-personnalisation · PR #1 mergée</span>
+        <span>15 septembre 2026</span>
+      </footer>
+    </div>
+  </section>
+
+</div>
+
+<div class="navdock">
+  <button class="navbtn" id="navPrev" aria-label="Diapositive précédente"><svg viewBox="0 0 20 20" fill="none"><path d="M12.5 4l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <span class="navcount" id="navCount">1 / 6</span>
+  <button class="navbtn" id="navNext" aria-label="Diapositive suivante"><svg viewBox="0 0 20 20" fill="none"><path d="M7.5 4l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
+<div class="dots" id="dots"></div>
+
+<script>
+(function(){
+  var deck = document.getElementById("deck");
+  var slides = Array.prototype.slice.call(deck.querySelectorAll(".slide"));
+  var total = slides.length;
+  var current = 0;
+
+  var dotsEl = document.getElementById("dots");
+  slides.forEach(function(_, i){
+    var b = document.createElement("button");
+    b.className = "dot" + (i === 0 ? " active" : "");
+    b.setAttribute("aria-label", "Aller à la diapositive " + (i + 1));
+    b.addEventListener("click", function(){ goTo(i); });
+    dotsEl.appendChild(b);
+  });
+  var dotEls = Array.prototype.slice.call(dotsEl.children);
+
+  var countEl = document.getElementById("navCount");
+  var prevBtn = document.getElementById("navPrev");
+  var nextBtn = document.getElementById("navNext");
+  var pbar = document.getElementById("pbar");
+
+  function paint(){
+    countEl.textContent = (current + 1) + " / " + total;
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+    dotEls.forEach(function(d, i){ d.classList.toggle("active", i === current); });
+    pbar.style.width = Math.round(((current + 1) / total) * 100) + "%";
+  }
+
+  function goTo(i){
+    i = Math.max(0, Math.min(i, total - 1));
+    slides[i].scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  prevBtn.addEventListener("click", function(){ goTo(current - 1); });
+  nextBtn.addEventListener("click", function(){ goTo(current + 1); });
+
+  document.addEventListener("keydown", function(e){
+    if(e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+    if(e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "PageDown"){ e.preventDefault(); goTo(current + 1); }
+    if(e.key === "ArrowUp" || e.key === "ArrowLeft" || e.key === "PageUp"){ e.preventDefault(); goTo(current - 1); }
+  });
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting && entry.intersectionRatio > 0.5){
+        current = slides.indexOf(entry.target);
+        paint();
+      }
+    });
+  }, { root: deck, threshold: [0, 0.5, 1] });
+  slides.forEach(function(s){ io.observe(s); });
+
+  paint();
+})();
+</script>
