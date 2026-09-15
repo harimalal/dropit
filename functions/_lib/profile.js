@@ -85,9 +85,11 @@ export function profileContext(answers) {
   if (!answers || typeof answers !== "object") return "";
 
   const lines = [];
+  // Les écrans à choix multiple acceptent un "Autre..." libre, stocké sous
+  // "<clé>_autre" : il complète la liste des libellés au lieu de se perdre.
   const add = function (prefix, key) {
-    const text = labelOf(key, answers[key]);
-    if (text) lines.push("- " + prefix + " : " + text);
+    const parts = [labelOf(key, answers[key]), freeText(answers[key + "_autre"])].filter(Boolean);
+    if (parts.length) lines.push("- " + prefix + " : " + parts.join(", "));
   };
 
   const prenom = freeText(answers.prenom);
