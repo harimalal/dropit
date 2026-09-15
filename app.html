@@ -497,9 +497,16 @@
   .drop-triage-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:30px 0;}
   .drop-badges{display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;}
   .drop-badge{
-    border:none;border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:600;
-    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    display:inline-flex;align-items:center;gap:7px;min-width:0;max-width:100%;
+    border:none;border-radius:999px;padding:6px 12px 6px 8px;font-size:12.5px;font-weight:600;
   }
+  /* Petite case blanche en tête de badge : signal visuel que le tap coche/retire
+     l'entrée de la Drop Zone — le texte suit toujours la charte du projet
+     (--proj-*-solid), jamais de blanc là ; seule cette case l'est. */
+  .drop-badge-check{
+    flex-shrink:0;width:14px;height:14px;border-radius:5px;background:#fff;opacity:.85;
+  }
+  .drop-badge-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   /* "Jeté" dans la Drop Zone : apparition rapide avec un léger rebond et une rotation,
      jouée automatiquement puisque le badge est un nouveau nœud DOM inséré à la volée
      (pas de render() complet — voir performDropCapture). */
@@ -3614,7 +3621,10 @@
     // (--proj-*-badge) + la teinte pleine (--proj-*-solid) pour le texte, jamais du blanc.
     var c = projectColorVars(d.id);
     return '<button class="drop-badge'+(toss?' toss':'')+'" data-drop-check="'+d.id+'" '+
-      'style="background:'+c.badge+';color:'+c.solid+';" title="Fait">'+escapeHtml(d.title)+'</button>';
+      'style="background:'+c.badge+';color:'+c.solid+';" title="Fait">'+
+      '<span class="drop-badge-check"></span>'+
+      '<span class="drop-badge-label">'+escapeHtml(d.title)+'</span>'+
+    '</button>';
   }
 
   function renderDropTriageList(){
