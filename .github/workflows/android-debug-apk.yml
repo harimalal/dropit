@@ -27,7 +27,12 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - uses: android-actions/setup-android@v3
+      # Le SDK Android est déjà préinstallé sur les runners Ubuntu de GitHub —
+      # inutile d'installer quoi que ce soit en plus. Seules les licences
+      # doivent être acceptées pour que Gradle puisse télécharger tout seul
+      # la plateforme/les build-tools que le projet demande (variables.gradle).
+      - name: Accepter les licences du SDK Android
+        run: yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
 
       - name: Rendre gradlew exécutable
         run: chmod +x android/gradlew
