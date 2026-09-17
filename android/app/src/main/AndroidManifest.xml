@@ -18,6 +18,17 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- Retour de la connexion Google/Apple : Google interdit la
+                 connexion dans une WebView embarquée, on ouvre donc le
+                 navigateur externe (Browser.open) puis on récupère la main
+                 ici via ce schéma dédié, une fois l'authentification faite. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.dropit.app" android:host="auth-callback" />
+            </intent-filter>
         </activity>
 
         <provider
