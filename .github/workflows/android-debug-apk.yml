@@ -104,9 +104,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Renommé avant l'upload : le nom du fichier téléchargé (donc l'URL
+          # de l'asset) vient de ce nom, pas d'une option gh release séparée.
+          cp android/app/build/outputs/apk/debug/app-debug.apk /tmp/dropitapp.apk
           gh release delete android-debug-latest --yes --cleanup-tag -R "$GITHUB_REPOSITORY" || true
           gh release create android-debug-latest \
-            android/app/build/outputs/apk/debug/app-debug.apk \
+            /tmp/dropitapp.apk \
             -R "$GITHUB_REPOSITORY" \
             --title "Dropit Android (debug)" \
             --notes "Build automatique depuis feature/capacitor-android — commit ${{ github.sha }}. APK de debug, non signé pour le Play Store : à installer directement (sideload)." \
