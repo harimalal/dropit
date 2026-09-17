@@ -74,6 +74,18 @@
   }
   .cta-btn:hover{background:var(--cta-hover);transform:translateY(-2px);}
   .cta-secondary{font-size:13px;font-weight:700;color:var(--ink-soft);text-decoration:underline;padding:4px;}
+
+  /* ---------- Boutons de téléchargement app (Android dispo, Apple à venir) ---------- */
+  .dl-row{display:flex;gap:10px;width:100%;max-width:340px;margin-top:2px;}
+  .dl-btn{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
+    border:none;border-radius:12px;padding:11px 10px;font-size:13px;font-weight:800;
+    text-decoration:none;white-space:nowrap;transition:transform .15s ease, background .15s ease;
+  }
+  .dl-btn .dl-icon{width:16px;height:16px;flex-shrink:0;}
+  .dl-btn.android{background:#161616;color:#fff;box-shadow:0 10px 22px rgba(43,36,32,.22);}
+  .dl-btn.android:hover{background:#000;transform:translateY(-2px);}
+  .dl-btn.apple{background:var(--line);color:var(--ink-faint,#A79E93);cursor:default;pointer-events:none;}
 </style>
 </head>
 <body>
@@ -100,10 +112,24 @@
     <div class="dots" id="dots"></div>
     <a class="cta-btn" href="app.html">Essayer Drop●It</a>
     <a class="cta-secondary" href="app.html">Se connecter</a>
-    <!-- Lien direct vers l'asset de la release GitHub (pas un artifact de run,
-         qui exige un compte GitHub) : le navigateur télécharge le .apk tout
-         seul, sans page intermédiaire. URL stable, remplacée à chaque build. -->
-    <a class="cta-secondary" href="https://github.com/harimalal/dropit/releases/download/android-debug-latest/dropitapp.apk">📱 Télécharger pour Android (bêta)</a>
+    <div class="dl-row">
+      <!-- Lien direct vers l'asset de la release GitHub (pas un artifact de
+           run, qui exige un compte GitHub) : le navigateur télécharge le
+           .apk tout seul, sans page intermédiaire. URL stable, remplacée à
+           chaque build. -->
+      <a class="dl-btn android" href="https://github.com/harimalal/dropit/releases/download/android-debug-latest/dropitapp.apk">
+        <svg class="dl-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M17.6 9.48l1.84-3.18a.5.5 0 10-.87-.5l-1.86 3.22a9.44 9.44 0 00-7.42 0L7.43 5.8a.5.5 0 10-.87.5L8.4 9.48A8.9 8.9 0 004 17h16a8.9 8.9 0 00-2.4-7.52zM9 14a1 1 0 110-2 1 1 0 010 2zm6 0a1 1 0 110-2 1 1 0 010 2z"/>
+        </svg>
+        Android
+      </a>
+      <span class="dl-btn apple" aria-disabled="true">
+        <svg class="dl-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M16.365 1.43c0 1.14-.44 2.06-1.31 2.78-.87.72-1.9 1.1-2.96 1.02-.02-1.1.44-2.08 1.28-2.8.85-.75 1.94-1.16 2.99-1zM20.5 17.2c-.5 1.16-1.1 2.28-1.9 3.35-1.05 1.4-2.15 2.8-3.85 2.83-1.65.03-2.2-.98-4.1-.98-1.9 0-2.5.95-4.05.99-1.7.04-3-1.5-4.05-2.9C.5 17.6-.6 12.7 1.65 9.35c1.1-1.65 3-2.7 5.05-2.73 1.65-.03 3.2 1.1 4.2 1.1s2.7-1.36 4.55-1.16c.8.03 3.05.32 4.5 2.45-1.2.7-2.75 2.35-2.9 4.85-.2 2.75 2.4 3.7 2.45 3.35z"/>
+        </svg>
+        Apple (bientôt)
+      </span>
+    </div>
   </div>
 </div>
 
