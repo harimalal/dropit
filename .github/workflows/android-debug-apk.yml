@@ -16,6 +16,9 @@ on:
       - "package.json"
       - ".github/workflows/android-debug-apk.yml"
 
+permissions:
+  contents: write  # nécessaire pour publier/mettre à jour la release ci-dessous
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -86,9 +89,25 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
-      - name: Publier l'APK
+      - name: Publier l'APK (artifact du run, pratique pour debug)
         uses: actions/upload-artifact@v4
         with:
           name: dropit-debug.apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      # Un artifact de run GitHub Actions exige d'être connecté à GitHub pour
+      # le télécharger — inutilisable pour un bouton public sur le site. Une
+      # release, elle, donne un lien stable et public : toujours la même URL,
+      # écrasée à chaque build réussi.
+      - name: Publier/mettre à jour la release publique (lien stable pour le site)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete android-debug-latest --yes --cleanup-tag -R "$GITHUB_REPOSITORY" || true
+          gh release create android-debug-latest \
+            android/app/build/outputs/apk/debug/app-debug.apk \
+            -R "$GITHUB_REPOSITORY" \
+            --title "Dropit Android (debug)" \
+            --notes "Build automatique depuis feature/capacitor-android — commit ${{ github.sha }}. APK de debug, non signé pour le Play Store : à installer directement (sideload)." \
+            --prerelease
