@@ -44,7 +44,15 @@ jobs:
             echo "::error::La page ne contient pas <title>Dropit</title> — contenu inattendu."
             exit 1
           fi
-          echo "OK : le site répond 200 et sert bien app.html (WebView Android suit les redirections comme un navigateur normal)."
+          # Vérifie spécifiquement que le correctif OAuth natif (com.dropit.app://
+          # auth-callback) est bien déployé sur le site en ligne — un push sur une
+          # branche ne suffit pas, il faut qu'il soit passé par main pour que
+          # Cloudflare Pages le serve réellement à l'app installée.
+          if ! echo "$content" | grep -q "auth-callback"; then
+            echo "::error::Le correctif OAuth natif (auth-callback) n'est pas présent sur le site en ligne."
+            exit 1
+          fi
+          echo "OK : le site répond 200, sert bien app.html, et contient le correctif OAuth natif (WebView Android suit les redirections comme un navigateur normal)."
 
       - uses: actions/setup-java@v4
         with:
