@@ -1286,14 +1286,10 @@
   }
 
   function showOnboardingIfNeeded(){
-    var seen = false;
-    try{ seen = localStorage.getItem(ONBOARDING_KEY) === "1"; }catch(e){}
-    if(seen) return;
-    onboardingSlideIndex = 0;
-    var wrap = document.createElement("div");
-    wrap.innerHTML = renderOnboarding();
-    document.body.appendChild(wrap.firstChild);
-    wireOnboarding();
+    // Fonctionnalité mise de côté (pas supprimée) : le tuto de 1ère connexion
+    // ne s'affiche plus du tout, ni pour les nouveaux ni pour les anciens
+    // comptes, en attendant une reprise avec une autre approche.
+    return;
   }
 
   /* --- Notice "projets d'exemple" : affichée une fois pour les nouveaux comptes,
