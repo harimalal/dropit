@@ -22,6 +22,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Vérifie que l'URL chargée par le WebView (capacitor.config.json)
+      # répond bien avant de passer du temps à compiler. Fait ici plutôt
+      # qu'en local : cet environnement de dev n'a lui-même pas accès à
+      # ce domaine (proxy sortant restrictif), les runners GitHub si.
+      - name: Vérifier que le site en ligne répond
+        run: |
+          url=$(node -p "require('./capacitor.config.json').server.url")
+          echo "URL testée : $url/app.html"
+          body=$(curl -sS -w "\n%{http_code}" "$url/app.html")
+          code=$(echo "$body" | tail -1)
+          content=$(echo "$body" | head -n -1)
+          echo "Code HTTP : $code"
+          if [ "$code" != "200" ]; then
+            echo "::error::Le site répond $code, pas 200."
+            exit 1
+          fi
+          if ! echo "$content" | grep -q "<title>Dropit</title>"; then
+            echo "::error::La page ne contient pas <title>Dropit</title> — contenu inattendu."
+            exit 1
+          fi
+          echo "OK : le site répond 200 et sert bien app.html."
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
