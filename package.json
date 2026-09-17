@@ -1,0 +1,18 @@
+{
+  "name": "dropit-mobile",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Coquille mobile Capacitor pour Dropit — charge l'app en ligne, ne l'embarque pas.",
+  "scripts": {
+    "cap:sync": "cap sync",
+    "cap:android": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
+  }
+}

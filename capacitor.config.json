@@ -1,0 +1,12 @@
+{
+  "appId": "com.dropit.app",
+  "appName": "Dropit",
+  "webDir": "www",
+  "server": {
+    "url": "https://dropit-dbx.pages.dev",
+    "cleartext": false
+  },
+  "android": {
+    "backgroundColor": "#F8F8F9"
+  }
+}

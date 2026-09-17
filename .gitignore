@@ -1,1 +1,4 @@
 .wrangler/
+
+# Coquille mobile Capacitor
+node_modules/
