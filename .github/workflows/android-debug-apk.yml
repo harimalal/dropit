@@ -27,6 +27,19 @@ jobs:
           distribution: temurin
           java-version: "21"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Installer les dépendances Capacitor
+        run: npm ci
+
+      # `android/capacitor-cordova-android-plugins/` est volontairement hors
+      # suivi git (généré, pas du code) : sans cette étape, Gradle échoue en
+      # cherchant un fichier qui n'existe que localement, jamais commité.
+      - name: Synchroniser le projet natif (cap sync)
+        run: npx cap sync android
+
       # Le SDK Android est déjà préinstallé sur les runners Ubuntu de GitHub —
       # inutile d'installer quoi que ce soit en plus. Seules les licences
       # doivent être acceptées pour que Gradle puisse télécharger tout seul
