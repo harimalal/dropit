@@ -87,6 +87,11 @@
     --font-mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
   }
   *{box-sizing:border-box;}
+  /* Dans une WebView Android standalone (app installée / PWA), le "font boosting"
+     du navigateur grossit automatiquement les textes (et tout ce qui suit, en
+     cascade) au-delà des tailles réellement demandées en CSS — absent d'un
+     onglet Chrome classique, d'où l'écart avec la version web. */
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
   html,body{margin:0;padding:0;height:100%;overflow:hidden;}
   body{
     font-family:var(--font-display);color:var(--ink);background-color:var(--canvas);
