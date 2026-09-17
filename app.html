@@ -2055,11 +2055,46 @@
       });
   }
 
+  // Vrai uniquement dans la coquille Capacitor (Android/iOS) — jamais sur le web.
+  function isNativePlatform(){
+    return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  }
+
   function performOAuth(provider){
     if(!supa.url) return;
-    var redirect = window.location.origin + window.location.pathname;
-    window.location.href = supa.url + "/auth/v1/authorize?provider=" + provider +
+    // Google (et Apple) refusent de s'authentifier dans une WebView embarquée :
+    // dans l'app native, on ouvre donc le navigateur externe (onglet, pas la
+    // WebView de l'app) et on récupère la main via le schéma dédié
+    // com.dropit.app://auth-callback une fois connecté — voir setupNativeAuthCallback().
+    var redirect = isNativePlatform()
+      ? "com.dropit.app://auth-callback"
+      : window.location.origin + window.location.pathname;
+    var url = supa.url + "/auth/v1/authorize?provider=" + provider +
       "&redirect_to=" + encodeURIComponent(redirect);
+    if(isNativePlatform() && window.Capacitor.Plugins.Browser){
+      window.Capacitor.Plugins.Browser.open({url: url});
+    } else {
+      window.location.href = url;
+    }
+  }
+
+  // Le retour du navigateur externe arrive ici (voir l'intent-filter du schéma
+  // com.dropit.app dans AndroidManifest.xml), jamais via window.location.hash
+  // comme sur le web — d'où ce point d'entrée séparé.
+  function setupNativeAuthCallback(){
+    if(!isNativePlatform() || !window.Capacitor.Plugins.App) return;
+    window.Capacitor.Plugins.App.addListener("appUrlOpen", function(data){
+      var url = (data && data.url) || "";
+      var hashIdx = url.indexOf("#");
+      var hash = hashIdx >= 0 ? url.slice(hashIdx) : "";
+      if(window.Capacitor.Plugins.Browser){
+        window.Capacitor.Plugins.Browser.close().catch(function(){});
+      }
+      var result = consumeOAuthHash(hash);
+      if(result === "recovery"){ renderAuth(); return; }
+      if(result === true){ bootAfterAuth(); return; }
+      renderAuth();
+    });
   }
 
   function performPasswordReset(email){
@@ -2099,18 +2134,17 @@
 
   var recoverySession = null; // session tirée du lien "mot de passe oublié", en attente du nouveau mot de passe
 
-  // Récupère les jetons renvoyés dans le fragment d'URL (#access_token=...)
-  // puis nettoie la barre d'adresse. Le lien de réinitialisation renvoie
-  // type=recovery : dans ce cas il ne faut PAS connecter directement
-  // l'utilisateur (bug précédent), mais lui faire choisir un nouveau mot
-  // de passe avant d'entrer dans l'app.
-  function consumeOAuthRedirect(){
-    var hash = window.location.hash || "";
+  // Lit un fragment "#access_token=..." (peu importe sa provenance — barre
+  // d'adresse web ou URL de retour du schéma natif com.dropit.app) et pose
+  // la session. Le lien de réinitialisation renvoie type=recovery : dans ce
+  // cas il ne faut PAS connecter directement l'utilisateur (bug précédent),
+  // mais lui faire choisir un nouveau mot de passe avant d'entrer dans l'app.
+  function consumeOAuthHash(hash){
     if(hash.indexOf("access_token=") < 0){
       if(hash.indexOf("error=") >= 0){
         var ep = new URLSearchParams(hash.slice(1));
         authError = ep.get("error_description") || "Connexion annulée.";
-        history.replaceState(null, "", window.location.pathname);
+        return "error";
       }
       return false;
     }
@@ -2121,7 +2155,6 @@
       refresh_token: params.get("refresh_token"),
       expires_in: parseInt(params.get("expires_in") || "3600", 10)
     });
-    history.replaceState(null, "", window.location.pathname);
     if(!s) return false;
     if(isRecovery){
       recoverySession = s;
@@ -2130,6 +2163,18 @@
     }
     saveSession(s);
     return true;
+  }
+
+  // Chemin web : lit le fragment dans la barre d'adresse elle-même, puis la
+  // nettoie. Le chemin natif (voir setupNativeAuthCallback) appelle
+  // consumeOAuthHash() directement, sans barre d'adresse à nettoyer.
+  function consumeOAuthRedirect(){
+    var hash = window.location.hash || "";
+    var result = consumeOAuthHash(hash);
+    if(hash.indexOf("access_token=") >= 0 || hash.indexOf("error=") >= 0){
+      history.replaceState(null, "", window.location.pathname);
+    }
+    return result === "error" ? false : result;
   }
 
   function performSetNewPassword(newPassword){
@@ -4957,6 +5002,7 @@
   }
 
   function boot(){
+    setupNativeAuthCallback(); // no-op sur le web ; nécessaire une seule fois avant toute connexion Google/Apple
     document.getElementById("app").innerHTML =
       '<div class="auth-boot"><div class="loading-spinner"></div></div>';
 
