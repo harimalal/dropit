@@ -30,19 +30,21 @@ jobs:
         run: |
           url=$(node -p "require('./capacitor.config.json').server.url")
           echo "URL testée : $url/app.html"
-          body=$(curl -sS -w "\n%{http_code}" "$url/app.html")
+          final_url=$(curl -sS -o /dev/null -w "%{url_effective}" -L "$url/app.html")
+          echo "URL finale après redirections éventuelles : $final_url"
+          body=$(curl -sS -L -w "\n%{http_code}" "$url/app.html")
           code=$(echo "$body" | tail -1)
           content=$(echo "$body" | head -n -1)
-          echo "Code HTTP : $code"
+          echo "Code HTTP final : $code"
           if [ "$code" != "200" ]; then
-            echo "::error::Le site répond $code, pas 200."
+            echo "::error::Le site répond $code, pas 200, même après avoir suivi les redirections."
             exit 1
           fi
           if ! echo "$content" | grep -q "<title>Dropit</title>"; then
             echo "::error::La page ne contient pas <title>Dropit</title> — contenu inattendu."
             exit 1
           fi
-          echo "OK : le site répond 200 et sert bien app.html."
+          echo "OK : le site répond 200 et sert bien app.html (WebView Android suit les redirections comme un navigateur normal)."
 
       - uses: actions/setup-java@v4
         with:
