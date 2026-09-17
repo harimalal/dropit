@@ -9,7 +9,7 @@ const ALLOWED_MODELS = new Set([
   "claude-haiku-4-5-20251001",
   "claude-sonnet-4-6"
 ]);
-const MAX_TOKENS_CAP = 1024; // le plus haut usage réel de l'app est 800
+const MAX_TOKENS_CAP = 2200; // le plus haut usage réel de l'app est le chat (2100, triplé depuis 700)
 
 export async function onRequestPost(context) {
   const { env, request } = context;
