@@ -113,11 +113,12 @@
     <a class="cta-btn" href="app.html">Essayer Drop●It</a>
     <a class="cta-secondary" href="app.html">Se connecter</a>
     <div class="dl-row">
-      <!-- Lien direct vers l'asset de la release GitHub (pas un artifact de
-           run, qui exige un compte GitHub) : le navigateur télécharge le
-           .apk tout seul, sans page intermédiaire. URL stable, remplacée à
-           chaque build. -->
-      <a class="dl-btn android" href="https://github.com/harimalal/dropit/releases/download/android-debug-latest/dropitapp.apk">
+      <!-- Passe par notre propre page plutôt que le lien GitHub direct : un
+           clic vers github.com faisait clignoter la page (sombre) de GitHub
+           le temps de la redirection vers le stockage — pas rassurant. Cette
+           page reste sur notre domaine et déclenche le téléchargement dans
+           un iframe caché, avec notre propre barre de progression. -->
+      <a class="dl-btn android" href="telechargement-android.html">
         <svg class="dl-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <path d="M17.6 9.48l1.84-3.18a.5.5 0 10-.87-.5l-1.86 3.22a9.44 9.44 0 00-7.42 0L7.43 5.8a.5.5 0 10-.87.5L8.4 9.48A8.9 8.9 0 004 17h16a8.9 8.9 0 00-2.4-7.52zM9 14a1 1 0 110-2 1 1 0 010 2zm6 0a1 1 0 110-2 1 1 0 010 2z"/>
         </svg>
