@@ -481,16 +481,17 @@
     display:flex;align-items:stretch;padding-bottom:var(--safe-area-inset-bottom, env(safe-area-inset-bottom));
     box-shadow:0 -2px 12px rgba(43,36,32,0.06);
   }
-  /* Dans .detail-screen/.calendar-screen, la barre est posée à l'intérieur de
+  /* Dans .detail-screen/.calendar-screen/.tasklist-screen, la barre est posée à l'intérieur de
      l'écran plein écran plutôt qu'à côté de .home-container — position:fixed
      y perd le suivi de la vraie fenêtre visible pendant un scroll mobile (la
      barre d'adresse qui se rétracte redimensionne la fenêtre, et un fixed
      imbriqué ne suit alors plus que la boîte de son ancêtre, pas la fenêtre
      réelle) : elle semble alors se décrocher/disparaître pendant le scroll.
-     .detail-screen/.calendar-screen restent eux-mêmes position:fixed sans
+     Ces écrans restent eux-mêmes position:fixed sans
      transform, donc un repère stable pour un position:absolute ici. */
   .detail-screen .bottom-tabbar,
-  .calendar-screen .bottom-tabbar{ position:absolute; }
+  .calendar-screen .bottom-tabbar,
+  .tasklist-screen .bottom-tabbar{ position:absolute; }
   /* Même raison : .chat-modal et .account-sheet sont partagées entre un usage
      à l'accueil (fixed, correct) et un usage imbriqué dans .detail-screen
      (chat du projet, menu du projet) — seul ce second cas doit passer en
@@ -512,7 +513,13 @@
      reste position:fixed, pas dans un écran plein écran) et celui du détail
      projet (id chat-modal, imbriqué dans .detail-screen : voir l'override
      ".detail-screen .chat-modal" plus bas, même raison que .top-bar). */
-  .chat-modal{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
+  /* bottom borné à --tabbar-h (au lieu de inset:0) : la barre de navigation fixe
+     (accueil/liste/chat/calendrier) reste visible ET cliquable pendant que le chat
+     est ouvert, plutôt que d'être recouverte par le fond assombri de la modale.
+     z-index 63 (> 60) : #chat-modal-home (chat depuis l'accueil, pas imbriqué dans un
+     écran plein écran) doit rester au-dessus de .tasklist-screen/.calendar-screen quand
+     il est ouvert depuis leur tabbar — sinon la modale s'affiche sous ces écrans, invisible. */
+  .chat-modal{position:fixed;left:0;right:0;top:0;bottom:calc(var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));z-index:63;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
   .chat-modal-box{width:100%;max-width:620px;height:72vh;background:var(--canvas-card);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 32px rgba(43,36,32,0.18);}
   .chat-modal-header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
   .chat-modal-title{font-size:13.5px;font-weight:700;color:var(--ink);}
@@ -551,7 +558,7 @@
   .drop-sheet-title{font-size:19px;font-weight:800;color:var(--ink);text-align:center;}
   .drop-sheet-header .chat-close-btn{position:absolute;right:18px;top:50%;transform:translateY(-50%);}
   .drop-sheet-body{flex:1;overflow-y:auto;padding:14px 18px;}
-  .drop-sheet-compose{flex-shrink:0;padding:12px 18px;border-top:1px solid var(--line);}
+  .drop-sheet-compose{flex-shrink:0;padding:12px 18px calc(12px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));border-top:1px solid var(--line);}
   .drop-sheet-input-row{display:flex;align-items:center;gap:8px;}
   .drop-sheet-input{
     flex:1;border:1.4px solid var(--line);border-radius:12px;padding:11px 14px;font-size:14px;
@@ -660,7 +667,7 @@
   .tl-text-chip.active{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
   .tl-filter-sep{flex-shrink:0;width:1px;align-self:stretch;background:var(--line);margin:0 2px;}
   /* Scroll liste */
-  .tasklist-scroll{flex:1;overflow-y:auto;padding-bottom:30px;}
+  .tasklist-scroll{flex:1;overflow-y:auto;padding-bottom:calc(30px + 59px + var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));}
   /* Ligne tâche */
   .tl-row{
     display:flex;align-items:center;gap:12px;padding:13px 16px;
@@ -744,10 +751,13 @@
   }
   .cal-list{flex:1;overflow-y:auto;padding-bottom:calc(16px + var(--tabbar-h));}
   .cal-empty{padding:40px 24px;text-align:center;color:var(--ink-soft);font-size:14px;line-height:1.6;}
-  /* Barre de saisie dans la task list */
+  /* Barre de saisie dans la task list — même gabarit que .detail-fixed-bar : position:absolute
+     posée juste au-dessus de la bottom-tabbar (ajoutée sous cette barre pour que le tab "Liste"
+     reste accessible), plutôt qu'un enfant flex en bas d'écran sans barre de nav en dessous. */
   .tl-compose-bar{
-    flex-shrink:0;background:var(--canvas-card);border-top:1px solid var(--line);
-    padding:10px 12px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
+    position:absolute;left:0;right:0;bottom:calc(var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));z-index:42;
+    background:var(--canvas-card);border-top:1px solid var(--line);
+    padding:10px 12px;
     display:flex;align-items:center;gap:8px;box-shadow:0 -4px 16px rgba(43,36,32,0.10);
   }
   .tl-target-label{
@@ -3104,7 +3114,10 @@
     renderTaskList()+
     '<button class="account-btn" id="account-btn" title="Mon compte">'+accountInitial()+'</button>'+
     renderAccountSheet()+
-    (hasProjects ? renderBottomTabBar() : '')+
+    // Quand la liste est ouverte, elle embarque déjà sa propre bottom-tabbar (voir
+    // renderTaskList) : ne pas en émettre une seconde ici, sous peine d'un doublon
+    // d'id dont seule la copie masquée de l'accueil recevrait les clics.
+    (hasProjects && !taskListOpen ? renderBottomTabBar() : '')+
     '<div class="toast" id="toast"></div>';
   }
 
@@ -3462,6 +3475,11 @@
       filterRowHtml+
       '<div class="tasklist-scroll" id="tl-scroll">'+rows+'</div>'+
       renderTaskListBar()+
+      // .tasklist-screen reste dans le DOM (hors écran, left:100%) même fermé, pour
+      // l'animation de glissement — ne pas y ajouter la tabbar en permanence, seulement
+      // pendant que cet écran est réellement affiché, sous peine d'un second jeu de
+      // boutons #tabbar-* hors-champ mais bien présent (doublon d'id + tabulation clavier).
+      (taskListOpen ? renderBottomTabBar() : '')+
     '</div>';
   }
 
@@ -4539,11 +4557,22 @@
 
   /* ---------- global events ---------- */
 
+  // Le détail projet et l'agenda embarquent chacun leur propre copie de la bottom-tabbar
+  // (voir le commentaire CSS ".detail-screen .bottom-tabbar" plus haut) pendant que celle de
+  // l'accueil reste dans le DOM en dessous. getElementById renverrait alors la copie de
+  // l'accueil (masquée, la première dans l'ordre du document) au lieu de celle réellement
+  // affichée — les taps sur la barre visible ne faisaient donc rien. On prend la dernière
+  // occurrence de l'id, qui est toujours celle de l'écran actuellement au premier plan.
+  function lastById(id){
+    var els = document.querySelectorAll('#'+id);
+    return els.length ? els[els.length-1] : null;
+  }
+
   function bindTabBarEvents(){
-    var homeBtn = document.getElementById('tabbar-home');
-    var listBtn = document.getElementById('tabbar-list');
-    var chatBtn = document.getElementById('tabbar-chat');
-    var calBtn = document.getElementById('tabbar-cal');
+    var homeBtn = lastById('tabbar-home');
+    var listBtn = lastById('tabbar-list');
+    var chatBtn = lastById('tabbar-chat');
+    var calBtn = lastById('tabbar-cal');
 
     if(homeBtn) homeBtn.addEventListener('click', function(){
       currentProjectId = null;
