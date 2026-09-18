@@ -2069,14 +2069,14 @@
     if(!supa.url) return;
     // Google (et Apple) refusent de s'authentifier dans une WebView embarquée :
     // dans l'app native, on ouvre donc le navigateur externe (onglet, pas la
-    // WebView de l'app) et on récupère la main une fois connecté via ce lien
-    // App Link https (vérifié par .well-known/assetlinks.json — voir
-    // AndroidManifest.xml), jamais via un schéma personnalisé (com.dropit.app://) :
-    // un schéma personnalisé n'est pas réservé à une app, une autre app installée
-    // pourrait intercepter le retour d'authentification (jeton inclus) en
-    // déclarant le même schéma. Voir setupNativeAuthCallback().
+    // WebView de l'app) et on récupère la main via le schéma dédié
+    // com.dropit.app://auth-callback une fois connecté — voir setupNativeAuthCallback().
+    // (Migration prévue vers un App Link https vérifié — voir AUDIT.md 2.1 —
+    // mise de côté pour l'instant : elle exige un keystore Android stable et
+    // une mise à jour de la liste blanche des redirect URLs Supabase, pas
+    // encore faites. Ne pas changer cette valeur sans les deux à la fois.)
     var redirect = isNativePlatform()
-      ? "https://dropit-dbx.pages.dev/auth-callback"
+      ? "com.dropit.app://auth-callback"
       : window.location.origin + window.location.pathname;
     var url = supa.url + "/auth/v1/authorize?provider=" + provider +
       "&redirect_to=" + encodeURIComponent(redirect);
@@ -2087,9 +2087,9 @@
     }
   }
 
-  // Le retour du navigateur externe arrive ici (voir l'intent-filter App Link
-  // dans AndroidManifest.xml), jamais via window.location.hash comme sur le
-  // web — d'où ce point d'entrée séparé.
+  // Le retour du navigateur externe arrive ici (voir l'intent-filter du schéma
+  // com.dropit.app dans AndroidManifest.xml), jamais via window.location.hash
+  // comme sur le web — d'où ce point d'entrée séparé.
   function setupNativeAuthCallback(){
     if(!isNativePlatform() || !window.Capacitor.Plugins.App) return;
     window.Capacitor.Plugins.App.addListener("appUrlOpen", function(data){
@@ -2144,8 +2144,8 @@
   var recoverySession = null; // session tirée du lien "mot de passe oublié", en attente du nouveau mot de passe
 
   // Lit un fragment "#access_token=..." (peu importe sa provenance — barre
-  // d'adresse web ou retour de l'App Link natif) et pose la session. Le lien
-  // de réinitialisation renvoie type=recovery : dans ce
+  // d'adresse web ou URL de retour du schéma natif com.dropit.app) et pose
+  // la session. Le lien de réinitialisation renvoie type=recovery : dans ce
   // cas il ne faut PAS connecter directement l'utilisateur (bug précédent),
   // mais lui faire choisir un nouveau mot de passe avant d'entrer dans l'app.
   function consumeOAuthHash(hash){
