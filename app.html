@@ -236,6 +236,15 @@
     font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;
     color:var(--ink-faint);margin:20px 0 10px;
   }
+  /* Libellés de section repris en badge : fond blanc, texte dans la couleur du
+     projet (--current-proj-solid, posée sur .detail-scroll par renderDetail) —
+     utilisé pour "Catégories" (.section-label) et "Notes" (.proj-notes-label). */
+  .proj-badge-label{
+    display:inline-flex;align-items:center;
+    background:#fff;color:var(--current-proj-solid, var(--ink-faint));
+    padding:5px 11px;border-radius:20px;
+    box-shadow:0 1px 3px rgba(43,36,32,.08);
+  }
   /* Accordéon des catégories — une seule fenêtre pour parcourir un projet : la carte
      de catégorie prend toute la largeur, un clic déplie ses tâches juste en dessous. */
   .category-accordion{display:flex;flex-direction:column;gap:10px;}
@@ -415,7 +424,16 @@
   .note-edit-modal-actions{border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));}
   /* NOTES LIBRES PROJET */
   .project-notes-section{margin-top:14px;}
-  .proj-notes-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;display:block;padding-top:12px;border-top:1px solid var(--line);}
+  .proj-notes-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-top:12px;border-top:1px solid var(--line);}
+  .proj-notes-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.05em;text-transform:uppercase;}
+  .proj-notes-add-btn{
+    border:none;cursor:pointer;flex-shrink:0;
+    width:22px;height:22px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:var(--current-proj-solid, var(--accent));color:#fff;
+  }
+  .proj-notes-add-btn .icon{width:12px;height:12px;}
+  .proj-notes-empty{font-size:13px;color:var(--ink-faint);padding:2px 2px 4px;}
   .proj-note-row{background:var(--canvas-card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;}
   .proj-note-top{display:flex;align-items:center;gap:6px;}
   .proj-note-icon{color:var(--ink-faint);flex-shrink:0;display:flex;align-items:center;}
@@ -3620,7 +3638,7 @@
       detailBarHtml = renderItemBar(cat.id);
     } else if(!accompli && multiCategory){
       bodyHtml = ''+
-        '<div class="section-label">Catégories</div>'+
+        '<div class="section-label proj-badge-label">Catégories</div>'+
         '<div class="category-accordion">'+
           p.categories.map(function(cat){ return renderCategoryAccordionItem(p, cat, priorityIds); }).join("")+
         '</div>'+
@@ -3631,7 +3649,7 @@
       detailBarHtml = openCat ? renderItemBar(openCat.id) : renderProjectBar(p);
     } else if(accompli && p.categories.length){
       bodyHtml = multiCategory
-        ? '<div class="section-label">Catégories</div><div class="category-accordion">'+
+        ? '<div class="section-label proj-badge-label">Catégories</div><div class="category-accordion">'+
             p.categories.map(function(cat){ return renderCategoryAccordionItem(p, cat, []); }).join("")+
           '</div>'
         : (p.categories[0]||{items:[]}).items.map(function(it){ return renderItemUnit(it, false); }).join("");
@@ -3849,7 +3867,6 @@
 
   function renderProjectNotes(p){
     var notes = p.projectNotes||[];
-    if(!notes.length) return '';
     var notesHtml = notes.map(function(n){
       var isOpen = projectNoteOpenId === n.id || projectNoteEditId === n.id;
       var chevron = isOpen
@@ -3882,8 +3899,11 @@
       '</div>';
     }).join('');
     return '<div class="project-notes-section">'+
-      '<span class="proj-notes-label">Notes</span>'+
-      notesHtml+
+      '<div class="proj-notes-header">'+
+        '<span class="proj-notes-label proj-badge-label">Notes</span>'+
+        '<button class="proj-notes-add-btn" data-add-project-note="'+p.id+'" title="Ajouter une note">'+plusIcon()+'</button>'+
+      '</div>'+
+      (notes.length ? notesHtml : '<div class="proj-notes-empty">Aucune note pour l\'instant.</div>')+
     '</div>';
   }
 
@@ -4249,6 +4269,26 @@
     p.updatedAt = nowIso();
     persist(); render();
     showToast("Note enregistrée");
+  }
+
+  // Note créée à la main (bouton + à côté du badge "Notes") : même structure
+  // qu'une note enregistrée depuis le chat IA (performSaveChatAsNote), mais
+  // vide et ouverte directement en édition puisqu'il n'y a pas de texte de
+  // départ à partir duquel déduire un titre.
+  function performCreateManualNote(projectId){
+    var p = findProject(projectId);
+    if(!p) return;
+    if(!p.projectNotes) p.projectNotes = [];
+    var newNote = {id:uid(), title:'', body:'', catId:null, createdAt:nowIso()};
+    p.projectNotes.push(newNote);
+    projectNoteOpenId = newNote.id;
+    projectNoteEditId = newNote.id;
+    p.updatedAt = nowIso();
+    persist(); render();
+    setTimeout(function(){
+      var ta = document.querySelector('[data-pn-edit-ta="'+newNote.id+'"]');
+      if(ta) ta.focus();
+    }, 30);
   }
 
   function generateHomeChatResponse(messages){
@@ -4940,6 +4980,10 @@
       el.addEventListener("click", function(){
         performDeleteNote(currentProjectId, el.dataset.deleteNoteTask, el.dataset.deleteNote);
       });
+    });
+    // Notes projet libres — créer manuellement (bouton + à côté du badge)
+    document.querySelectorAll("[data-add-project-note]").forEach(function(el){
+      el.addEventListener("click", function(){ performCreateManualNote(el.dataset.addProjectNote); });
     });
     // Notes projet libres — titre (blur)
     document.querySelectorAll("[data-pn-title]").forEach(function(el){
