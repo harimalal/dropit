@@ -124,7 +124,7 @@
   /* HOME TREEMAP — design system v5 */
   .home-container{position:fixed;inset:0;background:var(--canvas);overflow:hidden;display:flex;flex-direction:column;}
   .home-greeting{
-    flex-shrink:0;padding:calc(16px + env(safe-area-inset-top)) 20px 8px;
+    flex-shrink:0;padding:calc(16px + var(--safe-area-inset-top, env(safe-area-inset-top))) 20px 8px;
     font-size:20px;font-weight:800;letter-spacing:-.01em;color:var(--ink);
   }
   #home-treemap-zone{flex:1;position:relative;min-height:0;overflow:hidden;}
@@ -194,7 +194,7 @@
   /* PROJECT DETAIL
      position:absolute (voir .top-bar juste au-dessus pour le pourquoi). */
   .detail-scroll{position:absolute;inset:0;background:var(--canvas);overflow-y:auto;}
-  .detail-inner{max-width:600px;margin:0 auto;padding:50px 20px calc(90px + var(--tabbar-h) + env(safe-area-inset-bottom));}
+  .detail-inner{max-width:600px;margin:0 auto;padding:50px 20px calc(90px + var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));}
   .detail-header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;margin-bottom:12px;}
   .detail-emoji{font-size:32px;line-height:1;}
   .detail-title{font-size:19px;font-weight:800;letter-spacing:-0.01em;}
@@ -329,12 +329,12 @@
   .suggest-more-btn{width:100%;margin-top:16px;}
 
   /* COMPOSE BAR — barre IA (accueil), accent vert dédié + sparkle dans le champ (design system v5)
-     bottom ajoute env(safe-area-inset-bottom) : .bottom-tabbar juste en dessous
+     bottom ajoute var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) : .bottom-tabbar juste en dessous
      grandit de ce même montant (voir plus bas), donc sans ça un vide apparaît
      entre les deux barres, large exactement de la zone de gestes système.
      Padding remis à plat (10px) : le décalage de position suffit déjà. */
   .compose-bar{
-    position:fixed;left:0;right:0;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom));z-index:42;
+    position:fixed;left:0;right:0;bottom:calc(var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));z-index:42;
     background:var(--canvas-card);border-top:1px solid var(--line);
     padding:10px 12px;
     display:flex;align-items:center;gap:8px;box-shadow:0 -4px 16px rgba(43,36,32,0.08);
@@ -439,7 +439,7 @@
     flex:1;width:100%;box-sizing:border-box;border:none;background:transparent;
     padding:18px;font-size:16px;color:var(--ink);outline:none;resize:none;font-family:inherit;line-height:1.6;
   }
-  .note-edit-modal-actions{border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));}
+  .note-edit-modal-actions{border-top:1px solid var(--line);padding:10px 14px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));}
   /* NOTES LIBRES PROJET */
   .project-notes-section{margin-top:14px;}
   .proj-notes-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-top:12px;border-top:1px solid var(--line);}
@@ -470,15 +470,15 @@
   /* BARRE DE NAVIGATION FIXE — accueil / liste / chat IA / calendrier.
      Remplace l'ancien bouton flottant (FAB) qui se superposait par-dessus les cartes
      projet lors du scroll : ici la zone de tap est dédiée et jamais partagée avec le contenu. */
-  /* *{box-sizing:border-box} : la hauteur grandit de env(safe-area-inset-bottom)
+  /* *{box-sizing:border-box} : la hauteur grandit de var(--safe-area-inset-bottom, env(safe-area-inset-bottom))
      mais le padding-bottom du même montant préserve --tabbar-h de contenu
      réel — les icônes gardent leur place normale, simplement remontée
      au-dessus de la barre de gestes système. */
   .bottom-tabbar{
     position:fixed;left:0;right:0;bottom:0;z-index:46;
-    height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    height:calc(var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
     background:var(--canvas-card);border-top:1px solid var(--line);
-    display:flex;align-items:stretch;padding-bottom:env(safe-area-inset-bottom);
+    display:flex;align-items:stretch;padding-bottom:var(--safe-area-inset-bottom, env(safe-area-inset-bottom));
     box-shadow:0 -2px 12px rgba(43,36,32,0.06);
   }
   /* Dans .detail-screen/.calendar-screen, la barre est posée à l'intérieur de
@@ -527,7 +527,7 @@
     /* 59px = hauteur des barres de saisie fixes (.compose-bar/.tl-compose-bar/.detail-fixed-bar),
        toutes ancrées sur --tabbar-h — sans cette marge le bouton flottant se superpose
        à leur contenu au lieu de flotter au-dessus. */
-    bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 59px + 14px);
+    bottom:calc(var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) + 59px + 14px);
     /* 61 : au-dessus de .tasklist-screen (60, l'écran Liste plein écran) pour rester
        visible sur les 4 écrans de nav, mais sous les vraies fenêtres modales
        (chat 50, notes 55, menu projet/compte 70) où il n'a rien à faire. */
@@ -698,7 +698,7 @@
   }
   .calendar-screen.open{left:0;}
   .cal-top-bar{
-    flex-shrink:0;padding:calc(12px + env(safe-area-inset-top)) 16px 4px;
+    flex-shrink:0;padding:calc(12px + var(--safe-area-inset-top, env(safe-area-inset-top))) 16px 4px;
     display:flex;align-items:center;gap:10px;
   }
   .cal-top-title{flex:1;font-size:15px;font-weight:800;letter-spacing:-.01em;color:var(--ink);}
@@ -747,7 +747,7 @@
   /* Barre de saisie dans la task list */
   .tl-compose-bar{
     flex-shrink:0;background:var(--canvas-card);border-top:1px solid var(--line);
-    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    padding:10px 12px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
     display:flex;align-items:center;gap:8px;box-shadow:0 -4px 16px rgba(43,36,32,0.10);
   }
   .tl-target-label{
@@ -757,10 +757,10 @@
 
   /* BARRE FIXE DÉTAIL (catégorie/tâches & projet) — barre IA, accent vert dédié (design system v5) */
   /* position:absolute (voir .top-bar plus haut pour le pourquoi).
-     bottom + env(safe-area-inset-bottom) et padding remis à plat : même
+     bottom + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) et padding remis à plat : même
      raison que .compose-bar plus haut. */
   .detail-fixed-bar{
-    position:absolute;left:0;right:0;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom));z-index:42;
+    position:absolute;left:0;right:0;bottom:calc(var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));z-index:42;
     background:var(--canvas-card);border-top:1px solid var(--line);
     padding:10px 12px;
     display:flex;align-items:center;gap:8px;box-shadow:0 -4px 16px rgba(43,36,32,0.08);
@@ -930,7 +930,7 @@
     white-space:nowrap;z-index:3;transform:rotate(-3deg);
   }
   .ob-body{font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin:14px auto 24px;text-align:center;padding:0 4px;max-width:320px;}
-  .ob-footer{flex-shrink:0;padding:14px 24px calc(14px + env(safe-area-inset-bottom));max-width:420px;width:100%;margin:0 auto;box-sizing:border-box;}
+  .ob-footer{flex-shrink:0;padding:14px 24px calc(14px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));max-width:420px;width:100%;margin:0 auto;box-sizing:border-box;}
   .ob-dots{display:flex;justify-content:center;gap:6px;margin-bottom:14px;}
   .ob-dot{width:7px;height:7px;border-radius:50%;background:var(--line);transition:background .2s,width .2s;}
   .ob-dot.active{background:var(--ob-color, var(--accent));width:20px;border-radius:4px;}
@@ -953,7 +953,7 @@
   }
   .sample-notice-modal{
     width:100%;max-width:340px;background:var(--canvas);border-radius:22px;
-    padding:30px 26px calc(22px + env(safe-area-inset-bottom));text-align:center;
+    padding:30px 26px calc(22px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));text-align:center;
     box-shadow:0 24px 60px rgba(0,0,0,.35);
   }
   .sample-notice-emoji{font-size:28px;letter-spacing:6px;margin-bottom:16px;}
@@ -975,7 +975,7 @@
       radial-gradient(130% 55% at 50% 100%, #EEF3FB 0%, rgba(238,243,251,0) 62%),
       #FFFFFF;
   }
-  .obq-top{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:calc(18px + env(safe-area-inset-top)) 24px 0;}
+  .obq-top{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:calc(18px + var(--safe-area-inset-top, env(safe-area-inset-top))) 24px 0;}
   .obq-back{
     width:30px;height:30px;border-radius:50%;border:1px solid #E9EEF5;background:#FFFFFF;flex-shrink:0;
     display:flex;align-items:center;justify-content:center;color:#64748B;padding:0;
@@ -1084,7 +1084,7 @@
     display:flex;align-items:center;justify-content:center;
   }
   .obq-ckd .icon{width:11px;height:11px;}
-  .obq-foot{flex-shrink:0;padding:12px 24px calc(22px + env(safe-area-inset-bottom));
+  .obq-foot{flex-shrink:0;padding:12px 24px calc(22px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
             display:flex;flex-direction:column;align-items:center;gap:1px;}
   .obq-cta{
     width:100%;border-radius:15px;padding:16px;font-size:15px;font-weight:800;color:#16243F;background:#FFFFFF;
@@ -1128,7 +1128,7 @@
   }
   .account-sheet-box{
     width:100%;max-width:620px;background:var(--canvas-card);
-    border-radius:20px 20px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+    border-radius:20px 20px 0 0;padding:20px 20px calc(20px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
     box-shadow:0 -8px 32px rgba(43,36,32,0.18);
   }
   .account-email{font-size:14.5px;font-weight:700;color:var(--ink);word-break:break-all;}
@@ -1138,7 +1138,7 @@
   /* MENU PROJET (renommer / objectif / échéance / supprimer) */
   .project-menu-box{
     width:100%;max-width:620px;background:var(--canvas-card);
-    border-radius:20px 20px 0 0;padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+    border-radius:20px 20px 0 0;padding:8px 8px calc(8px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
     box-shadow:0 -8px 32px rgba(43,36,32,0.18);
   }
   .pmenu-row{
