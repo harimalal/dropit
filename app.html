@@ -2,7 +2,11 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- viewport-fit=cover : sans lui, env(safe-area-inset-*) vaut toujours 0 —
+     nécessaire ici car l'app Android cible le SDK 36 (rendu edge-to-edge
+     imposé par le système à partir d'Android 15/API 35), donc la WebView
+     dessine réellement sous la barre de statut/la zone d'encoche. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Dropit</title>
 <style>
   :root{
@@ -171,8 +175,11 @@
      lui-même position:fixed sans transform (voir plus bas), donc un cadre de
      référence stable — un descendant "fixed" ici perdrait le suivi de la
      fenêtre visible pendant un scroll mobile (barre d'adresse qui se
-     rétracte) puisqu'il ne serait plus fixé à la vraie fenêtre. */
-  .top-bar{position:absolute;top:12px;left:12px;right:12px;z-index:40;display:flex;align-items:center;justify-content:flex-end;gap:8px;}
+     rétracte) puisqu'il ne serait plus fixé à la vraie fenêtre.
+     top tient compte de env(safe-area-inset-top) : sans ça, sur un appareil
+     avec encoche/barre de statut, le bouton menu se retrouve sous cette zone
+     système au lieu du coin haut droit de la page réellement visible. */
+  .top-bar{position:absolute;top:calc(12px + env(safe-area-inset-top));left:12px;right:12px;z-index:40;display:flex;align-items:center;justify-content:flex-end;gap:8px;}
   .top-back-btn{
     width:34px;height:34px;flex-shrink:0;border-radius:50%;background:var(--canvas-card);border:1px solid var(--line);
     display:flex;align-items:center;justify-content:center;color:var(--ink);box-shadow:0 6px 16px rgba(43,36,32,0.14);
@@ -1098,9 +1105,12 @@
     .obq *{transition-duration:.12s !important;}
   }
 
-  /* Bouton compte (accueil) */
+  /* Bouton compte (accueil) — top tient compte de env(safe-area-inset-top) :
+     sans ça, sur un appareil avec encoche/barre de statut (rendu edge-to-edge
+     dans l'app native), le bouton se retrouve sous cette zone système au lieu
+     du coin haut droit de la page réellement visible. */
   .account-btn{
-    position:fixed;right:16px;top:16px;z-index:45;width:36px;height:36px;
+    position:fixed;right:16px;top:calc(16px + env(safe-area-inset-top));z-index:45;width:36px;height:36px;
     border-radius:50%;background:var(--canvas-card);border:1px solid var(--line);
     display:flex;align-items:center;justify-content:center;color:var(--ink-soft);
     box-shadow:0 4px 12px rgba(43,36,32,0.12);font-size:13px;font-weight:700;
