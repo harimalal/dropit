@@ -2971,6 +2971,7 @@
           '<button class="btn" id="account-profile-btn">Mon profil · personnaliser mon IA</button>'+
           '<button class="btn" id="account-close-btn">Fermer</button>'+
           '<button class="btn btn-danger" id="account-signout-btn">Se déconnecter</button>'+
+          '<button class="btn btn-danger" id="account-delete-btn">Supprimer mon compte</button>'+
         '</div>'+
       '</div>'+
     '</div>';
@@ -4656,6 +4657,21 @@
     var accountSignoutBtn = document.getElementById("account-signout-btn");
     if(accountSignoutBtn) accountSignoutBtn.addEventListener("click", function(){
       signOut();
+    });
+    var accountDeleteBtn = document.getElementById("account-delete-btn");
+    if(accountDeleteBtn) accountDeleteBtn.addEventListener("click", function(){
+      if(!confirm("Supprimer définitivement ton compte et tous tes projets ? Cette action est irréversible.")) return;
+      accountDeleteBtn.disabled = true;
+      apiFetch("/api/account", {method: "DELETE"}).then(function(res){
+        if(!res.ok) throw new Error("delete-failed");
+        signOut();
+        authInfo = "Ton compte a été supprimé.";
+        renderAuth();
+      }).catch(function(err){
+        if(err && err.message === "unauthorized") return; // signOut a déjà pris la main
+        accountDeleteBtn.disabled = false;
+        showToast("Suppression impossible — réessaie");
+      });
     });
 
     // Task list — barre de saisie
