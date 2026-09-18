@@ -2666,21 +2666,38 @@
   // l'accueil (projet, liste, agenda) : on retire "open" (l'écran glisse hors champ),
   // et seulement une fois l'animation terminée on efface l'état et on redessine —
   // sinon le nouveau render() supprimerait l'écran avant qu'il ait eu le temps de glisser.
-  function slideScreenOutThenBack(screenId, clearStateFn){
+  // `getSnapshotFn` capture la valeur exacte de l'état concerné (ex: l'id du projet en
+  // cours) avant l'animation : si une nouvelle navigation change cette valeur pendant
+  // les 280ms (ex: retour d'un projet puis ouverture rapide d'un autre), le clearStateFn
+  // d'origine ne s'applique plus au bon écran et ne doit pas s'exécuter — sinon il
+  // effacerait l'état du nouvel écran ouvert entre-temps.
+  function slideScreenOutThenBack(screenId, getSnapshotFn, clearStateFn){
     var el = document.getElementById(screenId);
     if(el){
+      var snapshot = getSnapshotFn();
       el.classList.remove('open');
-      setTimeout(function(){ clearStateFn(); render(); }, 280);
+      setTimeout(function(){
+        if(getSnapshotFn() !== snapshot) return;
+        clearStateFn();
+        render();
+      }, 280);
     } else {
       clearStateFn(); render();
     }
   }
 
   function goBackOneLevel(){
-    if(calendarOpen){ slideScreenOutThenBack('calendar-screen', function(){ calendarOpen = false; }); return; }
-    if(taskListOpen){ slideScreenOutThenBack('tasklist-screen', function(){ taskListOpen = false; }); return; }
+    if(calendarOpen){
+      slideScreenOutThenBack('calendar-screen', function(){ return calendarOpen; }, function(){ calendarOpen = false; });
+      return;
+    }
+    if(taskListOpen){
+      slideScreenOutThenBack('tasklist-screen', function(){ return taskListOpen; }, function(){ taskListOpen = false; });
+      return;
+    }
     if(currentProjectId){
-      slideScreenOutThenBack('detail-screen', function(){ currentProjectId = null; projectMenuOpen = false; });
+      slideScreenOutThenBack('detail-screen', function(){ return currentProjectId; },
+        function(){ currentProjectId = null; projectMenuOpen = false; });
       return;
     }
     // déjà à l'accueil : rien à faire côté app, le navigateur reprend la main normalement
@@ -3082,7 +3099,7 @@
           '--tile-card-bg:'+pc.card+';--tile-badge-glass:'+pc.glass+';" '+
         'role="button" tabindex="0">'+
         '<div class="tile-body">'+
-          '<div class="tile-emoji" style="font-size:'+(sizeClass==='size-tiny'?22:31)+'px;">'+p.emoji+'</div>'+
+          '<div class="tile-emoji" style="font-size:'+(sizeClass==='size-tiny'?22:31)+'px;">'+escapeHtml(p.emoji)+'</div>'+
           '<div class="tile-title" style="font-size:'+titleFontSize+'px;">'+escapeHtml(p.title)+'</div>'+
           (showMeta ? '<div class="tile-meta">'+pct+'%</div>' : '')+
         '</div>'+
@@ -3141,7 +3158,7 @@
     // L'émoji projet ne sert à rien (non cliquable, toujours le même) quand la liste
     // est déjà scopée à ce seul projet — on ne l'affiche que dans les vues mixtes.
     var emojiHtml = hideProjectEmoji ? '' :
-      '<span class="tl-proj-emoji" style="--row-proj-badge:'+pcRow.badge+';">'+t.project.emoji+'</span>';
+      '<span class="tl-proj-emoji" style="--row-proj-badge:'+pcRow.badge+';">'+escapeHtml(t.project.emoji)+'</span>';
     return '<div class="tl-row'+(t.priority==='reste'?' muted':'')+'" data-tl-nav-proj="'+t.project.id+'">'+
       '<button class="tl-check" data-tl-toggle="'+t.item.id+'" data-tl-proj="'+t.project.id+'"></button>'+
       '<div class="tl-info">'+
@@ -3221,7 +3238,7 @@
     if(!p || !state.projects.length) return '';
     var showLabel = state.projects.length > 1 && tlSelectedProjects.length !== 1;
     var labelHtml = showLabel
-      ? '<span class="tl-target-label">'+p.emoji+' '+escapeHtml(p.title.slice(0,14)+(p.title.length>14?'…':''))+'</span>'
+      ? '<span class="tl-target-label">'+escapeHtml(p.emoji)+' '+escapeHtml(p.title.slice(0,14)+(p.title.length>14?'…':''))+'</span>'
       : '';
     return '<div class="tl-compose-bar">'+
       labelHtml+
@@ -3292,7 +3309,7 @@
     var tasks = buildFlatTasks();
     var scopedProject = tlScopedToProject ? tlTargetProject() : null;
     var titleHtml = scopedProject
-      ? scopedProject.emoji+' '+escapeHtml(scopedProject.title.slice(0,22)+(scopedProject.title.length>22?'…':''))
+      ? escapeHtml(scopedProject.emoji)+' '+escapeHtml(scopedProject.title.slice(0,22)+(scopedProject.title.length>22?'…':''))
       : 'Priorités';
     var countLabel;
     if(tlScopedToProject){
@@ -3329,7 +3346,7 @@
         var pcChip = projectColorVars(p.id);
         return '<button class="tl-proj-chip'+(active?' active':'')+
           '" data-tl-proj-filter="'+p.id+'" title="'+escapeHtml(p.title)+'" '+
-          'style="--chip-badge:'+pcChip.badge+';--chip-solid:'+pcChip.solid+';">'+p.emoji+'</button>';
+          'style="--chip-badge:'+pcChip.badge+';--chip-solid:'+pcChip.solid+';">'+escapeHtml(p.emoji)+'</button>';
       }).join('');
       filterRowHtml = '<div class="tl-filter-row">'+filterLabel+filterChips+'</div>';
     } else {
@@ -3421,7 +3438,7 @@
       // position = jour d'échéance. Rappel visuel direct dans la grille, sans ouvrir le projet.
       var dueProjects = c.dateStr ? projectsDueOn(c.dateStr) : [];
       var dueBadges = dueProjects.map(function(p){
-        return '<span class="cal-due-badge" style="--pct:'+progressPct(p)+'%;" title="'+escapeHtml(p.title)+' — échéance, '+progressPct(p)+'% fait">'+p.emoji+'</span>';
+        return '<span class="cal-due-badge" style="--pct:'+progressPct(p)+'%;" title="'+escapeHtml(p.title)+' — échéance, '+progressPct(p)+'% fait">'+escapeHtml(p.emoji)+'</span>';
       });
       // Jalons intermédiaires : verdict "dans les temps / en retard" une fois la date
       // atteinte (comparaison avec le % de tâches réellement fait), neutre avant.
@@ -3430,7 +3447,7 @@
         var actual = progressPct(cp.project);
         var status = !reached ? "upcoming" : (actual >= cp.expectedPct ? "ontrack" : "behind");
         var statusLabel = status==="ontrack" ? "dans les temps" : status==="behind" ? "en retard" : "à venir";
-        return '<span class="cal-checkpoint-badge cp-'+status+'" title="'+escapeHtml(cp.project.title)+' — jalon '+cp.expectedPct+'% ('+statusLabel+', '+actual+'% fait)">'+cp.project.emoji+'</span>';
+        return '<span class="cal-checkpoint-badge cp-'+status+'" title="'+escapeHtml(cp.project.title)+' — jalon '+cp.expectedPct+'% ('+statusLabel+', '+actual+'% fait)">'+escapeHtml(cp.project.emoji)+'</span>';
       }) : [];
       var allBadges = dueBadges.concat(checkpointBadges).slice(0,3);
       var dueHtml = allBadges.length ? '<span class="cal-day-dues">'+allBadges.join('')+'</span>' : '';
@@ -3524,7 +3541,7 @@
 
     var headerHtml = ''+
     '<div class="detail-header">'+
-      '<div class="detail-emoji">'+p.emoji+'</div>'+
+      '<div class="detail-emoji">'+escapeHtml(p.emoji)+'</div>'+
       '<div class="detail-title">'+escapeHtml(p.title)+'</div>'+
       (p.summary ? '<div class="detail-summary">'+escapeHtml(p.summary)+'</div>' : '')+
       (p.dna ? '<div class="project-dna">'+escapeHtml(p.dna)+'</div>' : '')+
@@ -3535,7 +3552,7 @@
     if(accompli){
       mainActionHtml = ''+
       '<div class="accompli-banner">'+
-        '<div class="big">Vous l\'avez fait '+p.emoji+'</div>'+
+        '<div class="big">Vous l\'avez fait '+escapeHtml(p.emoji)+'</div>'+
         '<div class="stats">'+items2.length+' étape'+(items2.length!==1?"s":"")+' accomplie'+(items2.length!==1?"s":"")+'</div>'+
       '</div>';
     } else if(next){
