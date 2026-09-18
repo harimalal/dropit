@@ -1,38 +1,12 @@
-import { json, supabaseHeaders, requireUser } from "../_lib/auth.js";
+import { json, supabaseHeaders, requireUser, enforceRateLimit } from "../_lib/auth.js";
 
 const TABLE = "dropit_user_data";
-const LEGACY_TABLE = "dropit_projects";
 const EMPTY = { projects: [] };
 
-// Récupère les données de l'ancienne table (clé device_id) pour les rattacher
-// au compte lors de la première connexion. Sans cela, les projets créés avant
-// l'authentification seraient inaccessibles.
-async function claimLegacyData(env, deviceId) {
-  if (!deviceId) return null;
-  const res = await fetch(
-    env.SUPABASE_URL + "/rest/v1/" + LEGACY_TABLE +
-      "?device_id=eq." + encodeURIComponent(deviceId) + "&select=data",
-    { headers: supabaseHeaders(env) }
-  );
-  if (!res.ok) return null;
-  const rows = await res.json();
-  if (!Array.isArray(rows) || rows.length === 0) return null;
-  const data = rows[0].data;
-  if (!data || !Array.isArray(data.projects) || data.projects.length === 0) return null;
-  return data;
-}
-
-// Un device_id est partagé par tous les comptes créés depuis le même
-// navigateur. Sans suppression après récupération, chaque nouveau compte
-// créé sur ce navigateur re-réclamerait la même ligne et hériterait des
-// projets d'un compte précédent — la ligne doit être consommée une seule fois.
-async function deleteLegacyData(env, deviceId) {
-  await fetch(
-    env.SUPABASE_URL + "/rest/v1/" + LEGACY_TABLE +
-      "?device_id=eq." + encodeURIComponent(deviceId),
-    { method: "DELETE", headers: supabaseHeaders(env) }
-  );
-}
+// 30/minute : très large au-dessus de l'usage normal (sauvegarde debouncée à
+// 350ms côté client, jamais plus d'un appel toutes les quelques secondes en
+// usage réel), assez bas pour limiter un bug client qui boucleraient.
+const RATE_LIMIT_PER_MINUTE = 30;
 
 async function writeUserData(env, userId, data) {
   return fetch(env.SUPABASE_URL + "/rest/v1/" + TABLE + "?on_conflict=user_id", {
@@ -47,9 +21,12 @@ async function writeUserData(env, userId, data) {
 }
 
 export async function onRequestGet(context) {
-  const { env, request } = context;
+  const { env } = context;
   const { user, error } = await requireUser(context);
   if (error) return error;
+
+  const limited = await enforceRateLimit(env, user.id, "projects", RATE_LIMIT_PER_MINUTE);
+  if (limited) return limited;
 
   const res = await fetch(
     env.SUPABASE_URL + "/rest/v1/" + TABLE +
@@ -64,16 +41,7 @@ export async function onRequestGet(context) {
     return json({ data: rows[0].data || EMPTY });
   }
 
-  // Aucune ligne pour ce compte : première connexion.
-  // On tente de récupérer les projets créés en mode device_id.
-  const deviceId = new URL(request.url).searchParams.get("device_id");
-  const legacy = await claimLegacyData(env, deviceId);
-  if (legacy) {
-    await writeUserData(env, user.id, legacy);
-    await deleteLegacyData(env, deviceId);
-    return json({ data: legacy, migrated: true });
-  }
-
+  // Aucune ligne pour ce compte : première connexion, compte tout neuf.
   return json({ data: EMPTY });
 }
 
@@ -87,6 +55,9 @@ export async function onRequestPost(context) {
   const { env, request } = context;
   const { user, error } = await requireUser(context);
   if (error) return error;
+
+  const limited = await enforceRateLimit(env, user.id, "projects", RATE_LIMIT_PER_MINUTE);
+  if (limited) return limited;
 
   const contentLength = Number(request.headers.get("content-length") || 0);
   if (contentLength > MAX_BODY_BYTES) {

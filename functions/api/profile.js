@@ -1,6 +1,10 @@
-import { json, supabaseHeaders, requireUser } from "../_lib/auth.js";
+import { json, supabaseHeaders, requireUser, enforceRateLimit } from "../_lib/auth.js";
 
 const TABLE = "dropit_user_profile";
+
+// 15/minute : le questionnaire ne sauvegarde qu'à chaque écran validé, jamais
+// en boucle — largement suffisant sans jamais gêner un usage normal.
+const RATE_LIMIT_PER_MINUTE = 15;
 
 // Le profil est petit par construction (une vingtaine de réponses courtes).
 // Le plafond est large au-dessus de tout usage réel mais empêche un compte
@@ -12,6 +16,9 @@ export async function onRequestGet(context) {
   const { env } = context;
   const { user, error } = await requireUser(context);
   if (error) return error;
+
+  const limited = await enforceRateLimit(env, user.id, "profile", RATE_LIMIT_PER_MINUTE);
+  if (limited) return limited;
 
   const res = await fetch(
     env.SUPABASE_URL + "/rest/v1/" + TABLE +
@@ -36,6 +43,9 @@ export async function onRequestPost(context) {
   const { env, request } = context;
   const { user, error } = await requireUser(context);
   if (error) return error;
+
+  const limited = await enforceRateLimit(env, user.id, "profile", RATE_LIMIT_PER_MINUTE);
+  if (limited) return limited;
 
   const contentLength = Number(request.headers.get("content-length") || 0);
   if (contentLength > MAX_BODY_BYTES) {
