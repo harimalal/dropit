@@ -166,8 +166,13 @@
   }
   .empty-state b{color:var(--ink);}
 
-  /* TOP BAR (project detail) */
-  .top-bar{position:fixed;top:12px;left:12px;right:12px;z-index:40;display:flex;align-items:center;justify-content:flex-end;gap:8px;}
+  /* TOP BAR (project detail)
+     position:absolute plutôt que fixed : posé dans .detail-screen, qui est
+     lui-même position:fixed sans transform (voir plus bas), donc un cadre de
+     référence stable — un descendant "fixed" ici perdrait le suivi de la
+     fenêtre visible pendant un scroll mobile (barre d'adresse qui se
+     rétracte) puisqu'il ne serait plus fixé à la vraie fenêtre. */
+  .top-bar{position:absolute;top:12px;left:12px;right:12px;z-index:40;display:flex;align-items:center;justify-content:flex-end;gap:8px;}
   .top-back-btn{
     width:34px;height:34px;flex-shrink:0;border-radius:50%;background:var(--canvas-card);border:1px solid var(--line);
     display:flex;align-items:center;justify-content:center;color:var(--ink);box-shadow:0 6px 16px rgba(43,36,32,0.14);
@@ -181,8 +186,9 @@
   .top-delete-btn:hover{border-color:#9C4632;color:#9C4632;}
   .top-delete-btn .icon{width:14px;height:14px;}
 
-  /* PROJECT DETAIL */
-  .detail-scroll{position:fixed;inset:0;background:var(--canvas);overflow-y:auto;}
+  /* PROJECT DETAIL
+     position:absolute (voir .top-bar juste au-dessus pour le pourquoi). */
+  .detail-scroll{position:absolute;inset:0;background:var(--canvas);overflow-y:auto;}
   .detail-inner{max-width:600px;margin:0 auto;padding:50px 20px calc(90px + var(--tabbar-h));}
   .detail-header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;margin-bottom:12px;}
   .detail-emoji{font-size:32px;line-height:1;}
@@ -412,8 +418,11 @@
     padding:9px 10px;font-size:13px;color:var(--ink-faint);background:transparent;
   }
   .note-add-trigger:hover{border-color:var(--accent);color:var(--accent);}
-  /* NOTE EDIT MODAL (tâche) */
-  .note-edit-modal{position:fixed;inset:0;z-index:55;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
+  /* NOTE EDIT MODAL (tâche) — position:absolute : uniquement rendu dans
+     .detail-screen (voir .top-bar plus haut pour le pourquoi), sinon un
+     position:fixed resterait affiché plein écran, immobile, pendant les
+     280ms où .detail-screen glisse hors champ au retour arrière. */
+  .note-edit-modal{position:absolute;inset:0;z-index:55;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
   .note-edit-modal-box{width:100%;max-width:620px;height:94vh;background:var(--canvas-card);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 32px rgba(43,36,32,0.18);}
   .note-edit-modal-header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
   .note-edit-modal-title{font-size:13.5px;font-weight:700;color:var(--ink);}
@@ -458,6 +467,24 @@
     display:flex;align-items:stretch;padding-bottom:env(safe-area-inset-bottom);
     box-shadow:0 -2px 12px rgba(43,36,32,0.06);
   }
+  /* Dans .detail-screen/.calendar-screen, la barre est posée à l'intérieur de
+     l'écran plein écran plutôt qu'à côté de .home-container — position:fixed
+     y perd le suivi de la vraie fenêtre visible pendant un scroll mobile (la
+     barre d'adresse qui se rétracte redimensionne la fenêtre, et un fixed
+     imbriqué ne suit alors plus que la boîte de son ancêtre, pas la fenêtre
+     réelle) : elle semble alors se décrocher/disparaître pendant le scroll.
+     .detail-screen/.calendar-screen restent eux-mêmes position:fixed sans
+     transform, donc un repère stable pour un position:absolute ici. */
+  .detail-screen .bottom-tabbar,
+  .calendar-screen .bottom-tabbar{ position:absolute; }
+  /* Même raison : .chat-modal et .account-sheet sont partagées entre un usage
+     à l'accueil (fixed, correct) et un usage imbriqué dans .detail-screen
+     (chat du projet, menu du projet) — seul ce second cas doit passer en
+     absolute. Sans ça, un chat/menu resterait figé plein écran, immobile,
+     pendant les 280ms où .detail-screen glisse hors champ au retour arrière
+     (transform déplaçait auparavant tout le sous-arbre en un bloc ; left, non). */
+  .detail-screen .chat-modal,
+  .detail-screen .account-sheet{ position:absolute; }
   .tabbar-item{
     flex:1;border:none;background:none;cursor:pointer;color:var(--ink-faint);
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
@@ -467,7 +494,10 @@
   .tabbar-item.active{color:var(--accent);}
   .tabbar-item:disabled{opacity:0.35;pointer-events:none;cursor:default;}
 
-  /* CHAT MODAL */
+  /* CHAT MODAL — partagée entre le chat de l'accueil (id chat-modal-home,
+     reste position:fixed, pas dans un écran plein écran) et celui du détail
+     projet (id chat-modal, imbriqué dans .detail-screen : voir l'override
+     ".detail-screen .chat-modal" plus bas, même raison que .top-bar). */
   .chat-modal{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
   .chat-modal-box{width:100%;max-width:620px;height:72vh;background:var(--canvas-card);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 32px rgba(43,36,32,0.18);}
   .chat-modal-header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
@@ -566,25 +596,28 @@
   /* Project DNA */
   .project-dna{font-size:12.5px;color:var(--status-actif);font-style:italic;max-width:440px;line-height:1.4;margin-top:4px;}
 
-  /* TASK LIST SCREEN (swipe depuis home) */
+  /* TASK LIST SCREEN (swipe depuis home)
+     Glissement animé via "left" plutôt que "transform:translateX" : un transform
+     sur cet écran ferait de lui le bloc de référence de ses descendants en
+     position fixed (barre de tâche, barre d'ajout) au lieu de la fenêtre —
+     sur mobile, ceux-ci perdent alors le suivi automatique de la fenêtre
+     visible et semblent se décrocher/disparaître pendant un scroll. */
   .tasklist-screen{
-    position:fixed;inset:0;z-index:60;background:var(--canvas);
+    position:fixed;top:0;bottom:0;left:100%;width:100%;z-index:60;background:var(--canvas);
     display:flex;flex-direction:column;
-    transform:translateX(100%);
-    transition:transform .28s cubic-bezier(.4,0,.2,1);
+    transition:left .28s cubic-bezier(.4,0,.2,1);
   }
-  .tasklist-screen.open{transform:translateX(0);}
+  .tasklist-screen.open{left:0;}
 
   /* PROJECT DETAIL SCREEN — même glissement que .tasklist-screen : posé par-dessus
      l'accueil (jamais détruit pendant que c'est ouvert), pour un retour cohérent
      partout dans l'app plutôt qu'un remplacement instantané. */
   .detail-screen{
-    position:fixed;inset:0;z-index:60;background:var(--canvas);
+    position:fixed;top:0;bottom:0;left:100%;width:100%;z-index:60;background:var(--canvas);
     display:flex;flex-direction:column;
-    transform:translateX(100%);
-    transition:transform .28s cubic-bezier(.4,0,.2,1);
+    transition:left .28s cubic-bezier(.4,0,.2,1);
   }
-  .detail-screen.open{transform:translateX(0);}
+  .detail-screen.open{left:0;}
   .tasklist-top{
     flex-shrink:0;background:var(--canvas-card);border-bottom:1px solid var(--line);
     padding:14px 16px;display:flex;align-items:center;gap:10px;
@@ -646,10 +679,10 @@
 
   /* CALENDRIER */
   .calendar-screen{
-    position:fixed;inset:0;z-index:60;background:var(--canvas);display:flex;flex-direction:column;
-    transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+    position:fixed;top:0;bottom:0;left:100%;width:100%;z-index:60;background:var(--canvas);display:flex;flex-direction:column;
+    transition:left .28s cubic-bezier(.4,0,.2,1);
   }
-  .calendar-screen.open{transform:translateX(0);}
+  .calendar-screen.open{left:0;}
   .cal-top-bar{
     flex-shrink:0;padding:calc(12px + env(safe-area-inset-top)) 16px 4px;
     display:flex;align-items:center;gap:10px;
@@ -709,8 +742,9 @@
   }
 
   /* BARRE FIXE DÉTAIL (catégorie/tâches & projet) — barre IA, accent vert dédié (design system v5) */
+  /* position:absolute (voir .top-bar plus haut pour le pourquoi). */
   .detail-fixed-bar{
-    position:fixed;left:0;right:0;bottom:var(--tabbar-h);z-index:42;
+    position:absolute;left:0;right:0;bottom:var(--tabbar-h);z-index:42;
     background:var(--canvas-card);border-top:1px solid var(--line);
     padding:10px 12px calc(10px + env(safe-area-inset-bottom));
     display:flex;align-items:center;gap:8px;box-shadow:0 -4px 16px rgba(43,36,32,0.08);
