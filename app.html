@@ -195,7 +195,7 @@
   /* PROJECT DETAIL
      position:absolute (voir .top-bar juste au-dessus pour le pourquoi). */
   .detail-scroll{position:absolute;inset:0;background:var(--canvas);overflow-y:auto;}
-  .detail-inner{max-width:600px;margin:0 auto;padding:50px 20px calc(90px + var(--tabbar-h));}
+  .detail-inner{max-width:600px;margin:0 auto;padding:50px 20px calc(90px + var(--tabbar-h) + env(safe-area-inset-bottom));}
   .detail-header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;margin-bottom:12px;}
   .detail-emoji{font-size:32px;line-height:1;}
   .detail-title{font-size:19px;font-weight:800;letter-spacing:-0.01em;}
@@ -329,11 +329,17 @@
 
   .suggest-more-btn{width:100%;margin-top:16px;}
 
-  /* COMPOSE BAR — barre IA (accueil), accent vert dédié + sparkle dans le champ (design system v5) */
+  /* COMPOSE BAR — barre IA (accueil), accent vert dédié + sparkle dans le champ (design system v5)
+     bottom ajoute env(safe-area-inset-bottom) : .bottom-tabbar juste en dessous
+     grandit de ce même montant (son propre padding-bottom), donc sans ça cette
+     barre restait à --tabbar-h pile alors que la tabbar est devenue plus haute
+     — un vide seulement visible là où l'inset est réellement non nul. Padding
+     interne remis à plat (10px) : le décalage de position suffit déjà, plus
+     besoin de l'ajouter une seconde fois dans le padding. */
   .compose-bar{
-    position:fixed;left:0;right:0;bottom:var(--tabbar-h);z-index:42;
+    position:fixed;left:0;right:0;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom));z-index:42;
     background:var(--canvas-card);border-top:1px solid var(--line);
-    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    padding:10px 12px;
     display:flex;align-items:center;gap:8px;box-shadow:0 -4px 16px rgba(43,36,32,0.08);
   }
   .compose-input-wrap{
@@ -467,8 +473,14 @@
   /* BARRE DE NAVIGATION FIXE — accueil / liste / chat IA / calendrier.
      Remplace l'ancien bouton flottant (FAB) qui se superposait par-dessus les cartes
      projet lors du scroll : ici la zone de tap est dédiée et jamais partagée avec le contenu. */
+  /* *{box-sizing:border-box} : la hauteur grandit de env(safe-area-inset-bottom)
+     mais le padding-bottom du même montant préserve --tabbar-h de contenu
+     réel — les icônes gardent leur place normale, simplement remontée
+     au-dessus de la barre de gestes système, au lieu d'être compressées dans
+     une hauteur fixe (ce qui les rendrait minuscules) ou de rester sous elle. */
   .bottom-tabbar{
-    position:fixed;left:0;right:0;bottom:0;z-index:46;height:var(--tabbar-h);
+    position:fixed;left:0;right:0;bottom:0;z-index:46;
+    height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
     background:var(--canvas-card);border-top:1px solid var(--line);
     display:flex;align-items:stretch;padding-bottom:env(safe-area-inset-bottom);
     box-shadow:0 -2px 12px rgba(43,36,32,0.06);
@@ -748,11 +760,15 @@
   }
 
   /* BARRE FIXE DÉTAIL (catégorie/tâches & projet) — barre IA, accent vert dédié (design system v5) */
-  /* position:absolute (voir .top-bar plus haut pour le pourquoi). */
+  /* position:absolute (voir .top-bar plus haut pour le pourquoi).
+     bottom + env(safe-area-inset-bottom) et padding remis à plat : même
+     raison que .compose-bar juste au-dessus — sans ça, un vide apparaît
+     entre cette barre et .bottom-tabbar juste en dessous, large exactement
+     de l'inset (visible uniquement là où il est non nul). */
   .detail-fixed-bar{
-    position:absolute;left:0;right:0;bottom:var(--tabbar-h);z-index:42;
+    position:absolute;left:0;right:0;bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom));z-index:42;
     background:var(--canvas-card);border-top:1px solid var(--line);
-    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    padding:10px 12px;
     display:flex;align-items:center;gap:8px;box-shadow:0 -4px 16px rgba(43,36,32,0.08);
   }
   .dfb-input-wrap{
