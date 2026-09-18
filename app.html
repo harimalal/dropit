@@ -2,7 +2,13 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- viewport-fit=cover : sans lui, env(safe-area-inset-*) vaut toujours 0 partout
+     dans l'app (barre de saisie, barre de nav en bas, modales...) — nécessaire
+     car l'app Android cible le SDK 36 (rendu edge-to-edge imposé par le
+     système à partir d'Android 15/API 35). Sans lui, la barre de navigation du
+     bas se retrouve sous la barre de gestes système : ses icônes disparaissent
+     et elle semble décrochée du champ de saisie juste au-dessus. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Dropit</title>
 <style>
   :root{
