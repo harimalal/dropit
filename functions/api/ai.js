@@ -1,5 +1,11 @@
-import { json, requireUser } from "../_lib/auth.js";
+import { json, requireUser, enforceRateLimit } from "../_lib/auth.js";
 import { fetchProfileAnswers, profileContext } from "../_lib/profile.js";
+
+// 20/minute couvre largement le chat + suggestions + génération de projet en
+// usage normal (aucun de ces flux n'appelle /api/ai en boucle serrée côté
+// client) — assez bas pour limiter un abus ou un bug client qui spammerait,
+// sans jamais gêner un utilisateur normal.
+const AI_RATE_LIMIT_PER_MINUTE = 20;
 
 // Seuls les modèles réellement utilisés par l'app sont autorisés à passer
 // par ce proxy. Sans ça, un appel direct à /api/ai (n'importe quel compte
@@ -18,6 +24,9 @@ export async function onRequestPost(context) {
   // le quota Anthropic en appelant /api/ai directement.
   const { user, error } = await requireUser(context);
   if (error) return error;
+
+  const limited = await enforceRateLimit(env, user.id, "ai", AI_RATE_LIMIT_PER_MINUTE);
+  if (limited) return limited;
 
   if (!env.ANTHROPIC_API_KEY) {
     return json({ error: "ANTHROPIC_API_KEY not set" }, 500);

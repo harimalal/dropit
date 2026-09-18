@@ -1093,17 +1093,6 @@
 (function(){
   "use strict";
 
-  var DEVICE_ID_KEY = "dropit-device-id";
-
-  function getOrCreateDeviceId(){
-    var id = localStorage.getItem(DEVICE_ID_KEY);
-    if(!id){
-      id = "did-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,10);
-      localStorage.setItem(DEVICE_ID_KEY, id);
-    }
-    return id;
-  }
-
   /* ================= AUTHENTIFICATION ================= */
 
   var SESSION_KEY = "dropit-session";
@@ -2505,10 +2494,7 @@
   /* ---------- persistence ---------- */
 
   function load(){
-    // device_id transmis uniquement pour la reprise des projets créés
-    // avant l'authentification ; le serveur scope tout sur le compte.
-    var deviceId = getOrCreateDeviceId();
-    return apiFetch("/api/projects?device_id=" + encodeURIComponent(deviceId))
+    return apiFetch("/api/projects")
       .then(function(res){ return res.json(); })
       .then(function(json){
         var parsed = json.data || {};
