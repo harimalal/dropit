@@ -2493,6 +2493,11 @@
 
   /* ---------- persistence ---------- */
 
+  // Version de dropit_user_data sur laquelle nos modifications locales sont
+  // basées : envoyée à chaque sauvegarde pour que le serveur détecte un
+  // conflit multi-appareils (voir sendSaveNow) plutôt que d'écraser en silence.
+  var lastKnownUpdatedAt = null;
+
   function load(){
     return apiFetch("/api/projects")
       .then(function(res){ return res.json(); })
@@ -2500,6 +2505,7 @@
         var parsed = json.data || {};
         var dropZone = Array.isArray(parsed.dropZone) ? parsed.dropZone.map(normalizeDropItem) : [];
         var fresh = !(parsed.projects && parsed.projects.length > 0);
+        lastKnownUpdatedAt = json.updatedAt || null;
         if(fresh){
           state = defaultData();
           persist();
@@ -2529,8 +2535,25 @@
     apiFetch("/api/projects", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({state: state}),
+      body: JSON.stringify({state: state, baseUpdatedAt: lastKnownUpdatedAt}),
       keepalive: true // survit à la fermeture de l'onglet si déclenché juste avant
+    }).then(function(res){
+      if(res.status === 409){
+        // Un autre appareil a sauvegardé entre notre dernier chargement et cet
+        // enregistrement : pas de logique de fusion possible ici, donc plutôt
+        // que d'écraser silencieusement ce travail plus récent, on l'affiche
+        // et on prévient — nos changements locaux non enregistrés sont perdus.
+        return res.json().then(function(conflict){
+          var parsed = conflict.data || {};
+          var dropZone = Array.isArray(parsed.dropZone) ? parsed.dropZone.map(normalizeDropItem) : [];
+          state = {projects: (parsed.projects || []).map(normalizeProject), dropZone: dropZone};
+          lastKnownUpdatedAt = conflict.updatedAt || null;
+          render();
+          showToast("Modifié sur un autre appareil — tes derniers changements n'ont pas pu être enregistrés");
+        });
+      }
+      if(!res.ok) throw new Error("save-failed");
+      return res.json().then(function(ok){ lastKnownUpdatedAt = ok.updatedAt || lastKnownUpdatedAt; });
     }).catch(function(err){
       if(err && err.message === "unauthorized") return;
       showToast("Échec de l'enregistrement");
