@@ -556,6 +556,17 @@
     transition:transform .28s cubic-bezier(.4,0,.2,1);
   }
   .tasklist-screen.open{transform:translateX(0);}
+
+  /* PROJECT DETAIL SCREEN — même glissement que .tasklist-screen : posé par-dessus
+     l'accueil (jamais détruit pendant que c'est ouvert), pour un retour cohérent
+     partout dans l'app plutôt qu'un remplacement instantané. */
+  .detail-screen{
+    position:fixed;inset:0;z-index:60;background:var(--canvas);
+    display:flex;flex-direction:column;
+    transform:translateX(100%);
+    transition:transform .28s cubic-bezier(.4,0,.2,1);
+  }
+  .detail-screen.open{transform:translateX(0);}
   .tasklist-top{
     flex-shrink:0;background:var(--canvas-card);border-bottom:1px solid var(--line);
     padding:14px 16px;display:flex;align-items:center;gap:10px;
@@ -616,7 +627,11 @@
   .tl-empty{padding:48px 24px;text-align:center;color:var(--ink-soft);font-size:14px;line-height:1.6;}
 
   /* CALENDRIER */
-  .calendar-screen{position:fixed;inset:0;z-index:41;background:var(--canvas);display:flex;flex-direction:column;}
+  .calendar-screen{
+    position:fixed;inset:0;z-index:60;background:var(--canvas);display:flex;flex-direction:column;
+    transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+  }
+  .calendar-screen.open{transform:translateX(0);}
   .cal-top-bar{
     flex-shrink:0;padding:calc(12px + env(safe-area-inset-top)) 16px 4px;
     display:flex;align-items:center;gap:10px;
@@ -2661,19 +2676,27 @@
     try{ history.pushState({dropitNav:true}, '', location.href); }catch(e){}
   }
 
+  // Glissement vers la droite commun aux écrans plein écran qui se posent par-dessus
+  // l'accueil (projet, liste, agenda) : on retire "open" (l'écran glisse hors champ),
+  // et seulement une fois l'animation terminée on efface l'état et on redessine —
+  // sinon le nouveau render() supprimerait l'écran avant qu'il ait eu le temps de glisser.
+  function slideScreenOutThenBack(screenId, clearStateFn){
+    var el = document.getElementById(screenId);
+    if(el){
+      el.classList.remove('open');
+      setTimeout(function(){ clearStateFn(); render(); }, 280);
+    } else {
+      clearStateFn(); render();
+    }
+  }
+
   function goBackOneLevel(){
-    if(calendarOpen){ calendarOpen = false; render(); return; }
-    if(taskListOpen){
-      var tl = document.getElementById('tasklist-screen');
-      if(tl){
-        tl.classList.remove('open');
-        setTimeout(function(){ taskListOpen = false; render(); }, 280);
-      } else {
-        taskListOpen = false; render();
-      }
+    if(calendarOpen){ slideScreenOutThenBack('calendar-screen', function(){ calendarOpen = false; }); return; }
+    if(taskListOpen){ slideScreenOutThenBack('tasklist-screen', function(){ taskListOpen = false; }); return; }
+    if(currentProjectId){
+      slideScreenOutThenBack('detail-screen', function(){ currentProjectId = null; projectMenuOpen = false; });
       return;
     }
-    if(currentProjectId){ currentProjectId = null; projectMenuOpen = false; render(); return; }
     // déjà à l'accueil : rien à faire côté app, le navigateur reprend la main normalement
   }
 
@@ -2683,6 +2706,22 @@
   // la réapplique juste après — une seule fois ici plutôt que dans chaque gestionnaire d'événement.
   var SCROLL_CONTAINER_IDS = ['detail-scroll','tl-scroll','cal-list'];
 
+  // Fait glisser un écran plein écran (projet/liste/agenda) depuis la droite après
+  // qu'il vient d'être (ré)inséré dans le DOM. `wasAlreadyOpen` coupe la transition
+  // pour un rendu qui ne fait que rafraîchir un écran déjà ouvert (coche d'une tâche,
+  // changement de filtre...) — l'animation ne doit jouer qu'à une vraie ouverture.
+  function slideScreenIn(screenId, wasAlreadyOpen){
+    var el = document.getElementById(screenId);
+    if(!el) return;
+    if(wasAlreadyOpen){
+      el.style.transition = 'none';
+      el.classList.add('open');
+      requestAnimationFrame(function(){ el.style.transition = ''; });
+    } else {
+      requestAnimationFrame(function(){ el.classList.add('open'); });
+    }
+  }
+
   function render(){
     var scrollSnapshot = {};
     SCROLL_CONTAINER_IDS.forEach(function(id){
@@ -2690,34 +2729,32 @@
       if(el) scrollSnapshot[id] = el.scrollTop;
     });
 
+    // L'accueil reste toujours la base, même quand un projet/la liste/l'agenda est
+    // ouvert par-dessus : c'est ce qui permet à l'écran du dessus de glisser vers la
+    // droite au retour, plutôt qu'un remplacement instantané. On retient lesquels
+    // étaient déjà affichés AVANT ce rendu pour ne rejouer l'animation d'ouverture
+    // que sur une vraie ouverture (pas à chaque coche de tâche ou changement de filtre).
+    var tlWasOpen = !!document.getElementById('tasklist-screen');
+    var detailWasOpen = !!document.getElementById('detail-screen');
+    var calWasOpen = !!document.getElementById('calendar-screen');
+    var project = currentProjectId ? findProject(currentProjectId) : null;
+
     var app = document.getElementById("app");
-    if(calendarOpen){
-      app.innerHTML = renderCalendarScreen();
-    } else {
-      // Le DOM va être entièrement remplacé : on retient si la liste était déjà
-      // affichée AVANT ce rendu pour ne rejouer l'animation de glissement que sur
-      // une vraie ouverture (pas à chaque coche de tâche ou changement de filtre).
-      var tlWasOpen = !!document.getElementById('tasklist-screen');
-      var project = currentProjectId ? findProject(currentProjectId) : null;
-      if(project){
-        app.innerHTML = renderDetail(project);
-      } else {
-        app.innerHTML = renderHome();
-        layoutHomeTreemap();
-        if(taskListOpen){
-          var tl = document.getElementById('tasklist-screen');
-          if(tl){
-            if(tlWasOpen){
-              tl.style.transition = 'none';
-              tl.classList.add('open');
-              requestAnimationFrame(function(){ tl.style.transition = ''; });
-            } else {
-              requestAnimationFrame(function(){ tl.classList.add('open'); });
-            }
-          }
-        }
-      }
+    app.innerHTML = renderHome();
+    layoutHomeTreemap();
+
+    if(taskListOpen) slideScreenIn('tasklist-screen', tlWasOpen);
+
+    if(project){
+      app.insertAdjacentHTML('beforeend', renderDetail(project));
+      slideScreenIn('detail-screen', detailWasOpen);
     }
+
+    if(calendarOpen){
+      app.insertAdjacentHTML('beforeend', renderCalendarScreen());
+      slideScreenIn('calendar-screen', calWasOpen);
+    }
+
     // Bouton flottant Drop it + sa fenêtre : présents sur tous les écrans de l'app
     // authentifiée, un seul point d'injection plutôt que de le répéter par écran.
     app.insertAdjacentHTML('beforeend', renderDropFab() + renderDropSheet());
@@ -3579,7 +3616,7 @@
 
     var pc = projectColorVars(p.id);
     var scrollStyle = 'style="--current-proj-card:'+pc.card+';--current-proj-card-faint:'+pc.cardFaint+';--current-proj-badge:'+pc.badge+';--current-proj-solid:'+pc.solid+';--current-proj-priority:'+pc.priority+';--current-proj-btn:'+pc.btn+';--current-proj-next:'+pc.next+';"';
-    return ''+
+    return '<div class="detail-screen" id="detail-screen">'+
     topBarHtml+
     '<div class="detail-scroll" id="detail-scroll" '+scrollStyle+'>'+
       '<div class="detail-inner">'+
@@ -3593,7 +3630,8 @@
     renderNoteModal()+
     renderProjectMenu(p)+
     renderBottomTabBar()+
-    '<div class="toast" id="toast"></div>';
+    '<div class="toast" id="toast"></div>'+
+    '</div>';
   }
 
   /* Catégorie en accordéon : une seule fenêtre pour parcourir un projet, plus de
