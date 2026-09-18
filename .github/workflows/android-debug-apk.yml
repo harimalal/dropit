@@ -57,6 +57,16 @@ jobs:
           fi
           echo "OK : le site répond 200, sert bien app.html, et contient le correctif OAuth natif (WebView Android suit les redirections comme un navigateur normal)."
 
+          # Vérifie que Cloudflare Pages sert bien l'en-tête Cache-Control
+          # ajouté pour app.html (_headers) — sans lui, un navigateur/WebView
+          # peut continuer à afficher une version périmée après déploiement.
+          headers=$(curl -sSI -L "$url/app.html")
+          if ! echo "$headers" | grep -qi "cache-control:.*no-cache"; then
+            echo "::error::L'en-tête Cache-Control: no-cache n'est pas présent sur app.html — _headers n'est peut-être pas pris en compte."
+            exit 1
+          fi
+          echo "OK : Cache-Control: no-cache est bien présent sur app.html."
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
