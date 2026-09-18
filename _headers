@@ -2,11 +2,3 @@
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-
-# Sans ceci, un navigateur (ou la WebView Android de l'app, chargée en direct
-# depuis ce domaine) peut garder en cache une version périmée de app.html
-# après un déploiement — cause déjà vue plusieurs fois de "le correctif
-# n'apparaît pas". must-revalidate force une vérification auprès du serveur
-# à chaque chargement (réponse 304 si rien n'a changé, donc pas de coût réel).
-/app.html
-  Cache-Control: no-cache, must-revalidate
