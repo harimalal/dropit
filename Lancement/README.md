@@ -7,6 +7,7 @@ Dossier de travail pour le plan d'action de lancement et la création de contenu
 - **Stratégie/** — positionnement, prix, plan d'action de lancement.
   - `etude-benchmark-et-prix.html` — étude concurrentielle (11 outils, deux familles : planificateurs IA et organisateurs familiaux), valeur unique de Dropit, comparatif de prix, positionnement, recommandation de prix en deux paliers (solo + collaboratif).
   - `sprint-lancement-30-jours.html` — plan d'action détaillé sur 30 jours : comparatif des canaux de distribution, mécanique technique (Android/TWA, piège App Store 4.2, Product Hunt, Reddit, TikTok), calendrier semaine par semaine, indicateurs, risques.
+  - `dropit-en-un-coup-doeil.html` — résumé produit non technique en une page : présentation, proposition de valeur unique, fonctionnalités (construit/prévu/hors périmètre), profil client idéal, stratégie de prix, paysage concurrentiel, stratégie de lancement. Synthèse des deux documents ci-dessus, pensée pour être partagée telle quelle.
 
 - **Création de contenu/** — production de contenu pour le lancement (TikTok, Reels, Instagram, LinkedIn, X).
   - `usine-a-contenu.html` — kit de contenu : hooks 2026, formule UGC en 4 temps, matrice génératrice d'idées (7 hooks × 6 moments de vie), 20 idées prêtes à tourner, 3 scripts complets, carrousels, threads, posts LinkedIn fondateur.
@@ -16,7 +17,11 @@ Dossier de travail pour le plan d'action de lancement et la création de contenu
 
 ## Chaque document existe aussi en artefact publié
 
-Ces trois documents ont été construits comme des pages web autonomes et publiés en artefact Claude pour une lecture confortable (mise en forme, graphiques). Les fichiers `.html` ici sont la source de vérité versionnée ; les artefacts publiés peuvent être mis à jour à partir de ces mêmes fichiers si besoin.
+Ces documents ont été construits comme des pages web autonomes et publiés en artefact Claude pour une lecture confortable (mise en forme, graphiques). Les fichiers `.html` ici sont la source de vérité versionnée ; les artefacts publiés peuvent être mis à jour à partir de ces mêmes fichiers si besoin.
+
+- `etude-benchmark-et-prix.html` → *Le prix de Dropit*
+- `sprint-lancement-30-jours.html` → *Le sprint de lancement Dropit*
+- `dropit-en-un-coup-doeil.html` → *Dropit en un coup d'œil*
 
 ## À compléter au fil du travail
 
