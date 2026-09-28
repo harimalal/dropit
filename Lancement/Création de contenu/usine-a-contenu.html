@@ -1,0 +1,448 @@
+<title>L'usine à contenu Dropit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,440;9..144,560;9..144,680&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#F8F8F9; --surface:#FFFFFF; --ink:#2B2420; --ink-soft:#7A7168; --ink-faint:#B4ABA1;
+    --line:#EFEBE6; --accent:#BF5B44; --accent-soft:#F7E9E4; --accent-ink:#8C4432;
+    --blue:#1D6FA5; --blue-soft:#E6F0F7;
+    --green:#3E8C63; --green-soft:#E7F3EC;
+    --font-display:'Fraunces', Georgia, serif;
+    --font-body:'Public Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --canvas:#1A1817; --surface:#242120; --ink:#EFE9E3; --ink-soft:#AFA69D; --ink-faint:#6E655C;
+      --line:#37322F; --accent:#E0895F; --accent-soft:#3A2A22; --accent-ink:#F0A783;
+      --blue:#6FAEDD; --blue-soft:#1E2B36;
+      --green:#6BC393; --green-soft:#1B2E24;
+    }
+  }
+  :root[data-theme="dark"]{
+    --canvas:#1A1817; --surface:#242120; --ink:#EFE9E3; --ink-soft:#AFA69D; --ink-faint:#6E655C;
+    --line:#37322F; --accent:#E0895F; --accent-soft:#3A2A22; --accent-ink:#F0A783;
+    --blue:#6FAEDD; --blue-soft:#1E2B36;
+    --green:#6BC393; --green-soft:#1B2E24;
+  }
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.6;}
+  .page{max-width:820px;margin:0 auto;padding:56px 20px 80px;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:680;text-wrap:balance;margin:0;color:var(--ink);}
+  p{margin:0 0 1em;max-width:68ch;}
+  a{color:var(--accent-ink);}
+  code{font-family:var(--font-mono);font-size:.9em;background:var(--accent-soft);padding:1px 5px;border-radius:4px;}
+  .eyebrow{font-family:var(--font-mono);font-size:11.5px;font-weight:600;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px;}
+  header.hero h1{font-size:clamp(2.1rem,5.6vw,2.9rem);line-height:1.08;letter-spacing:-.01em;}
+  .dek{font-size:1.12rem;color:var(--ink-soft);max-width:60ch;margin-top:16px;}
+
+  .thesis{margin:40px 0 8px;padding:26px 28px;border-radius:4px;background:var(--accent-soft);border-left:3px solid var(--accent);}
+  .thesis p{font-family:var(--font-display);font-size:1.22rem;line-height:1.42;font-weight:560;color:var(--ink);max-width:none;margin:0;}
+  .thesis p em{font-style:normal;color:var(--accent-ink);}
+
+  section{margin-top:60px;}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:20px;}
+  .sec-num{font-family:var(--font-mono);font-size:13px;color:var(--ink-faint);flex-shrink:0;padding-top:4px;}
+  .sec-head h2{font-size:1.5rem;}
+  .lede{color:var(--ink-soft);font-size:1.01rem;margin-bottom:24px;}
+
+  /* --- Platform tags --- */
+  .ptag{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:.7rem;
+    font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+  .ptag.video{background:var(--accent-soft);color:var(--accent-ink);}
+  .ptag.carousel{background:var(--blue-soft);color:var(--blue);}
+  .ptag.text{background:var(--green-soft);color:var(--green);}
+
+  /* --- Hook pattern cards --- */
+  .hook-card{border:1px solid var(--line);border-radius:10px;padding:16px 18px;background:var(--surface);display:flex;gap:14px;}
+  .hook-card + .hook-card{margin-top:10px;}
+  .hook-num{font-family:var(--font-display);font-weight:680;font-size:1.3rem;color:var(--accent-ink);flex-shrink:0;width:28px;}
+  .hook-card h3{font-size:.98rem;margin-bottom:4px;}
+  .hook-card .ex{font-size:.88rem;color:var(--ink-soft);line-height:1.5;font-style:italic;}
+  .hook-card .ex::before{content:"\201C";} .hook-card .ex::after{content:"\201D";}
+
+  /* --- Formula strip --- */
+  .formula{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex-wrap:wrap;}
+  .formula .step{flex:1;min-width:140px;padding:16px 16px;background:var(--surface);}
+  .formula .step + .step{border-left:1px solid var(--line);}
+  .formula .step .t{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;}
+  .formula .step .h{font-weight:700;font-size:.92rem;margin-bottom:5px;}
+  .formula .step .d{font-size:.82rem;color:var(--ink-soft);line-height:1.4;}
+  @media (max-width:640px){.formula .step + .step{border-left:none;border-top:1px solid var(--line);}}
+
+  /* --- Matrix --- */
+  .matrix-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;}
+  table.matrix{width:100%;border-collapse:collapse;font-size:.78rem;min-width:920px;}
+  table.matrix th{text-align:left;font-family:var(--font-mono);font-size:9.5px;font-weight:600;letter-spacing:.03em;
+    text-transform:uppercase;color:var(--ink-soft);padding:10px 11px;border-bottom:1px solid var(--line);background:var(--surface);
+    position:sticky;top:0;}
+  table.matrix th:first-child{position:sticky;left:0;z-index:2;}
+  table.matrix td{padding:10px 11px;border-bottom:1px solid var(--line);border-left:1px solid var(--line);vertical-align:top;background:var(--surface);line-height:1.4;}
+  table.matrix td:first-child{font-weight:700;white-space:nowrap;border-left:none;position:sticky;left:0;background:var(--surface);}
+  table.matrix tr:last-child td{border-bottom:none;}
+  .matrix-note{font-size:.8rem;color:var(--ink-faint);margin-top:10px;}
+
+  /* --- Idea cards grid --- */
+  .idea-group-label{display:flex;align-items:center;gap:9px;margin:30px 0 12px;}
+  .idea-group-label:first-child{margin-top:0;}
+  .idea-group-label h3{font-size:1.02rem;}
+  .ideas{display:flex;flex-direction:column;gap:8px;}
+  .idea{border:1px solid var(--line);border-radius:9px;padding:13px 16px;background:var(--surface);
+    display:flex;gap:12px;align-items:baseline;}
+  .idea .n{font-family:var(--font-mono);font-size:.72rem;color:var(--ink-faint);flex-shrink:0;width:16px;}
+  .idea .txt{font-size:.9rem;color:var(--ink);line-height:1.5;}
+  .idea .txt strong{color:var(--ink);}
+
+  /* --- Script sheet --- */
+  .script{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden;margin-bottom:16px;}
+  .script-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+  .script-head strong{font-size:.98rem;}
+  .script-row{display:grid;grid-template-columns:66px 1fr;gap:0;}
+  .script-row + .script-row{border-top:1px solid var(--line);}
+  .script-time{font-family:var(--font-mono);font-size:.72rem;color:var(--ink-faint);padding:12px 10px;background:var(--canvas);}
+  .script-body{padding:12px 16px;font-size:.87rem;line-height:1.55;}
+  .script-body .cue{display:block;font-family:var(--font-mono);font-size:.7rem;color:var(--blue);margin-bottom:3px;text-transform:uppercase;letter-spacing:.03em;}
+  .script-body .say{color:var(--ink);}
+
+  /* --- Carousel slide chips --- */
+  .carousel-outline{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:18px 20px;margin-bottom:14px;}
+  .carousel-outline .chead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .carousel-outline .chead strong{font-size:1rem;}
+  .slides{display:flex;flex-direction:column;gap:6px;}
+  .slide-chip{display:flex;gap:10px;font-size:.85rem;line-height:1.45;}
+  .slide-chip .sn{font-family:var(--font-mono);font-size:.7rem;color:var(--surface);background:var(--ink-soft);
+    border-radius:5px;padding:1px 6px;flex-shrink:0;height:fit-content;margin-top:2px;}
+  .slide-chip.hook .sn{background:var(--accent);}
+  .slide-chip.cta .sn{background:var(--green);}
+
+  /* --- LinkedIn post card --- */
+  .li-post{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:20px 22px;margin-bottom:14px;
+    font-size:.9rem;line-height:1.65;white-space:pre-wrap;}
+  .li-post b{display:block;font-family:var(--font-mono);font-size:.72rem;color:var(--ink-faint);margin-bottom:10px;
+    text-transform:uppercase;letter-spacing:.04em;white-space:normal;}
+
+  /* --- Calendar table --- */
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;}
+  table.cal{width:100%;border-collapse:collapse;font-size:.85rem;min-width:640px;}
+  table.cal thead th{text-align:left;font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--ink-soft);padding:11px 13px;border-bottom:1px solid var(--line);background:var(--surface);}
+  table.cal tbody td{padding:11px 13px;border-bottom:1px solid var(--line);vertical-align:top;background:var(--surface);}
+  table.cal tbody tr:last-child td{border-bottom:none;}
+  table.cal td.wk{font-weight:700;white-space:nowrap;}
+
+  .sources{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);}
+  .sources h3{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--ink-faint);font-weight:600;margin-bottom:14px;}
+  .sources ol{margin:0;padding-left:20px;columns:2;column-gap:28px;font-size:.78rem;color:var(--ink-faint);}
+  .sources li{margin-bottom:7px;break-inside:avoid;}
+  .sources a{color:var(--ink-soft);text-decoration:underline;text-decoration-color:var(--line);}
+  @media (max-width:560px){.sources ol{columns:1;}}
+</style>
+
+<div class="page">
+
+  <header class="hero">
+    <div class="eyebrow">Kit de contenu — lancement Dropit</div>
+    <h1>L'usine à contenu Dropit</h1>
+    <p class="dek">Un système pour produire des idées de vidéos et carrousels à l'infini pour TikTok, Reels, Instagram, LinkedIn et X — pas juste une liste qui s'épuise après 10 idées.</p>
+  </header>
+
+  <div class="thesis">
+    <p>On ne montre jamais une fonctionnalité. <em>On montre un problème qui disparaît en 3 secondes.</em> Chaque idée ci-dessous part d'un moment réel — acheter une voiture, chercher un appartement, préparer une rentrée, cacher une surprise — jamais d'un écran vide.</p>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Les hooks qui marchent en 2026</h2></div>
+    <p class="lede">70 % de la performance d'une vidéo se joue dans les 3 premières secondes. On ouvre toujours sur le résultat, la question ou la surprise — jamais sur un « salut les amis » ou un écran de connexion.</p>
+
+    <div class="hook-card"><div class="hook-num">1</div><div><h3>La réclamation contrariante</h3><div class="ex">Arrête de faire des listes de tâches. Note juste ce qui te passe par la tête.</div></div></div>
+    <div class="hook-card"><div class="hook-num">2</div><div><h3>La mise en garde</h3><div class="ex">Personne ne te dit qu'acheter une voiture, c'est 8 étapes minimum. Voilà comment je les ai toutes gardées en tête.</div></div></div>
+    <div class="hook-card"><div class="hook-num">3</div><div><h3>La liste-teaser</h3><div class="ex">3 signes que tu as trop d'apps pour gérer ta vie (et la seule qui suffit).</div></div></div>
+    <div class="hook-card"><div class="hook-num">4</div><div><h3>Le POV</h3><div class="ex">POV : tu réalises à minuit que tu dois gérer une voiture, un anniversaire surprise ET la rentrée des enfants.</div></div></div>
+    <div class="hook-card"><div class="hook-num">5</div><div><h3>Le silencieux (faceless)</h3><div class="ex">Aucun visage, aucune voix — juste le geste de « déposer » une idée, texte à l'écran, son ASMR du check.</div></div></div>
+    <div class="hook-card"><div class="hook-num">6</div><div><h3>La routine partagée</h3><div class="ex">« Organise ma semaine avec moi » — format installé en 2026, viewers qui le laissent tourner en fond.</div></div></div>
+    <div class="hook-card"><div class="hook-num">7</div><div><h3>Le « quiet flex »</h3><div class="ex">Esthétique calme, lumière douce — fermer 5 apps, ouvrir Dropit, la tête qui se vide visuellement.</div></div></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>La formule en 4 temps</h2></div>
+    <p class="lede">La structure qui revient dans quasiment toutes les vidéos UGC qui convertissent — à remplir avec n'importe quelle idée de la matrice ci-dessous.</p>
+    <div class="formula">
+      <div class="step"><div class="t">0–3 s</div><div class="h">Hook</div><div class="d">Le résultat ou la surprise, jamais l'intro.</div></div>
+      <div class="step"><div class="t">3–10 s</div><div class="h">Problème</div><div class="d">La galère telle qu'une vraie personne la vivrait.</div></div>
+      <div class="step"><div class="t">10–22 s</div><div class="h">Solution</div><div class="d">L'app qui fait la chose, à l'écran, en vrai.</div></div>
+      <div class="step"><div class="t">22–30 s</div><div class="h">CTA</div><div class="d">Une seule action claire, jamais deux.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>La matrice à idées illimitées</h2></div>
+    <p class="lede">7 types de hook × 6 moments réels de la vie = 42 idées prêtes ci-dessous, et une infinité d'autres en changeant simplement la colonne (un déménagement, un mariage, un nouveau travail…) ou la ligne.</p>
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <thead><tr><th>Hook \ Moment</th><th>🚗 Voiture</th><th>🏠 Appartement</th><th>🎒 Rentrée</th><th>🎉 Anniv. surprise</th><th>🛒 Quotidien</th><th>💼 Freelance</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Contrariant</td>
+            <td>Arrête de comparer 15 onglets de fiches techniques dans ta tête.</td>
+            <td>Ton dossier appart n'a pas besoin d'un Excel à 12 colonnes.</td>
+            <td>Pas besoin d'une appli de plus pour la rentrée — juste d'un seul endroit.</td>
+            <td>Arrête les groupes WhatsApp à 14 personnes pour une surprise.</td>
+            <td>Ta tête n'est pas un bloc-notes. Arrête de t'en servir comme ça.</td>
+            <td>Pas besoin d'un Notion à 40 pages pour lancer ton activité.</td>
+          </tr>
+          <tr>
+            <td>Mise en garde</td>
+            <td>8 étapes minimum pour acheter une voiture. Voilà comment je les garde en tête.</td>
+            <td>J'ai failli louper mon prêt en oubliant une étape. Voilà ce qui m'a sauvé.</td>
+            <td>3 pièges administratifs de la rentrée que tout le monde oublie.</td>
+            <td>J'ai failli vendre la mèche en oubliant un détail — voilà comment j'ai tout gardé secret.</td>
+            <td>Voilà pourquoi ta to-do du dimanche soir ne survit jamais au lundi.</td>
+            <td>J'ai perdu 2 mois à me lancer parce que je n'avais pas ça.</td>
+          </tr>
+          <tr>
+            <td>Liste-teaser</td>
+            <td>3 étapes que tout le monde oublie avant d'acheter une voiture.</td>
+            <td>5 documents que ta banque va te redemander sans prévenir.</td>
+            <td>4 trucs de la rentrée que je note 2 mois avant tout le monde.</td>
+            <td>3 façons d'organiser une surprise sans jamais se faire griller.</td>
+            <td>5 signes que tu as besoin d'un seul endroit pour tout noter.</td>
+            <td>4 étapes pour se lancer, dans l'ordre, sans stress.</td>
+          </tr>
+          <tr>
+            <td>POV</td>
+            <td>POV : tu dois choisir entre 3 voitures et ton cerveau a 40 onglets ouverts.</td>
+            <td>POV : la banque redemande un document que tu avais déjà donné.</td>
+            <td>POV : 21h la veille de la rentrée, tu réalises 3 trucs pas faits.</td>
+            <td>POV : elle te demande ce que tu fais ce soir-là et tu improvises un mensonge.</td>
+            <td>POV : tu te souviens d'un truc important... sous la douche, comme toujours.</td>
+            <td>POV : tu veux te lancer en freelance mais tu ne sais pas par où commencer.</td>
+          </tr>
+          <tr>
+            <td>Silencieux</td>
+            <td>Tape « acheter une voiture d'occasion », le plan apparaît en 2 s. Texte : « 0 organisation. Une phrase. »</td>
+            <td>Le chat IA résume tout le dossier en une réponse. Texte : « Elle connaît déjà tout mon dossier. »</td>
+            <td>Time-lapse silencieux : toutes les tâches rentrée cochées d'affilée, son satisfaisant.</td>
+            <td>Gros plan sur le geste de « déposer » une idée, ASMR. Texte : « Toutes les idées, un seul endroit. »</td>
+            <td>L'écran Aujourd'hui qui tourne entre 5 projets. Texte : « 5 projets. Un seul écran. »</td>
+            <td>La Prochaine Action qui change de tâche en un swipe. Texte : « Jamais 40 tâches en même temps. Une seule. »</td>
+          </tr>
+          <tr>
+            <td>Routine partagée</td>
+            <td>« J'organise l'achat de ma voiture avec moi » — étapes cochées sur la semaine.</td>
+            <td>« Une semaine dans ma recherche d'appart » avec Dropit en fond.</td>
+            <td>« Je prépare la rentrée de mes 3 enfants avec moi. »</td>
+            <td>« J'organise l'anniversaire surprise de ma sœur avec moi (sans qu'elle le sache). »</td>
+            <td>« Ma routine du dimanche soir pour la semaine. »</td>
+            <td>« Une semaine à lancer mon activité en parallèle de mon CDI. »</td>
+          </tr>
+          <tr>
+            <td>Comparatif</td>
+            <td>J'ai testé Motion à 19 $/mois. Voilà ce que ça change... et ce que ça ne change pas.</td>
+            <td>Pourquoi j'ai arrêté l'Excel partagé pour l'achat de l'appart.</td>
+            <td>Todoist me limitait à 5 projets gratuits. J'en ai 7 rien que pour la maison.</td>
+            <td>Cozi c'est bien pour le calendrier familial — zéro pour organiser une surprise en secret.</td>
+            <td>J'ai supprimé Notion : je passais plus de temps à le configurer qu'à avancer.</td>
+            <td>Pourquoi j'ai arrêté de payer pour une app qui ne se souvenait de rien d'une fois sur l'autre.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="matrix-note">Mode d'emploi : change une colonne (mariage, déménagement, nouveau travail, permis de conduire…) ou ajoute une ligne (le « avant/après », le duo, le témoignage chiffré) — la grille ne s'épuise jamais.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>20 idées prêtes à tourner, par format</h2></div>
+
+    <div class="idea-group-label"><span class="ptag video">🎥 Vidéo</span><h3>Démo écran silencieuse (faceless)</h3></div>
+    <div class="ideas">
+      <div class="idea"><span class="n">01</span><div class="txt"><strong>Le drop en 1 geste</strong> — capture d'écran, une idée tapée puis « déposée » avec une animation, zéro voix, musique tendance, texte « ta tête, vidée en 1 seconde. »</div></div>
+      <div class="idea"><span class="n">02</span><div class="txt"><strong>Une phrase → un plan</strong> — on tape « organiser un déménagement » et le plan complet apparaît en une catégorie. Aucun montage, le vrai temps de génération.</div></div>
+      <div class="idea"><span class="n">03</span><div class="txt"><strong>La mosaïque qui grossit</strong> — l'écran d'accueil qui passe de 1 à 7 projets colorés au fil de la semaine, en accéléré.</div></div>
+      <div class="idea"><span class="n">04</span><div class="txt"><strong>Le carrousel de la prochaine action</strong> — swipe entre 3 tâches prioritaires d'un même projet, texte « jamais submergé, jamais perdu. »</div></div>
+      <div class="idea"><span class="n">05</span><div class="txt"><strong>Le projet qui s'éteint</strong> — dernière tâche cochée, la bannière « Vous l'avez fait » apparaît, la tuile devient transparente sur l'accueil.</div></div>
+      <div class="idea"><span class="n">06</span><div class="txt"><strong>Aujourd'hui, en accéléré</strong> — l'écran calendrier qui défile sur un mois avec les échéances de chaque projet qui apparaissent.</div></div>
+    </div>
+
+    <div class="idea-group-label"><span class="ptag video">🎥 Vidéo</span><h3>Témoignage UGC (face caméra)</h3></div>
+    <div class="ideas">
+      <div class="idea"><span class="n">07</span><div class="txt"><strong>« J'ai 3 enfants et 2 boulots »</strong> — une mère de famille montre comment elle jongle entre rentrée, appartement et quotidien sur un seul écran.</div></div>
+      <div class="idea"><span class="n">08</span><div class="txt"><strong>Le sceptique converti</strong> — « je pensais que c'était encore une to-do list, jusqu'à ce que... » + démo du chat IA qui répond sans réexpliquer.</div></div>
+      <div class="idea"><span class="n">09</span><div class="txt"><strong>Le test 24h</strong> — une journée entière filmée en capsules courtes : capture le matin, check le midi, Aujourd'hui le soir.</div></div>
+      <div class="idea"><span class="n">10</span><div class="txt"><strong>La note vocale transformée</strong> — dicter une idée au lieu de taper, montrer que ça atterrit quand même dans la Drop Zone.</div></div>
+    </div>
+
+    <div class="idea-group-label"><span class="ptag video">🎥 Vidéo</span><h3>Comparatif / callout concurrent</h3></div>
+    <div class="ideas">
+      <div class="idea"><span class="n">11</span><div class="txt"><strong>3 apps supprimées</strong> — montrer Notion, Todoist et un calendrier partagé désinstallés un à un, remplacés par Dropit.</div></div>
+      <div class="idea"><span class="n">12</span><div class="txt"><strong>Le chrono du setup</strong> — chronométrer l'installation d'un système Notion (10 min) contre le premier drop sur Dropit (10 s).</div></div>
+      <div class="idea"><span class="n">13</span><div class="txt"><strong>Gratuit vs 19 $/mois</strong> — écran partagé : Motion à 19 $/mois d'un côté, Dropit gratuit de l'autre, même tâche accomplie.</div></div>
+      <div class="idea"><span class="n">14</span><div class="txt"><strong>Le calendrier familial qui ne fait que ça</strong> — Cozi pour le calendrier, Dropit pour tout le reste (organisation d'une surprise incluse).</div></div>
+    </div>
+
+    <div class="idea-group-label"><span class="ptag video">🎥 Vidéo</span><h3>Mini-tuto (30 s, un feature à la fois)</h3></div>
+    <div class="ideas">
+      <div class="idea"><span class="n">15</span><div class="txt"><strong>La Drop Zone en 30 s</strong> — capture → range plus tard, zéro décision à la prise de note.</div></div>
+      <div class="idea"><span class="n">16</span><div class="txt"><strong>Le chat qui n'oublie rien</strong> — poser la même question à 2 semaines d'intervalle, montrer qu'il se souvient du contexte.</div></div>
+      <div class="idea"><span class="n">17</span><div class="txt"><strong>Une échéance, un badge</strong> — montrer comment une échéance de projet apparaît automatiquement dans Aujourd'hui.</div></div>
+    </div>
+
+    <div class="idea-group-label"><span class="ptag video">🎥 Vidéo</span><h3>Humour / relatable</h3></div>
+    <div class="ideas">
+      <div class="idea"><span class="n">18</span><div class="txt"><strong>Les 5 apps dans mon dossier « Organisation »</strong> — zoom sur un dossier plein d'apps jamais ouvertes, sketch.</div></div>
+      <div class="idea"><span class="n">19</span><div class="txt"><strong>Le mari/la femme qui découvre l'anniversaire surprise</strong> — faux suspense, l'app qui a tout gardé secret jusqu'au bout.</div></div>
+      <div class="idea"><span class="n">20</span><div class="txt"><strong>« Range ta tête » challenge</strong> — dicter en 15 secondes tout ce qui traîne dans sa tête, montrer la Drop Zone se remplir en direct.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>3 scripts UGC complets</h2></div>
+    <p class="lede">Prêts à donner à un créateur ou à filmer soi-même — minutés selon la formule en 4 temps.</p>
+
+    <div class="script">
+      <div class="script-head"><strong>Script 1 — « J'ai failli rater mon prêt »</strong><span class="ptag video">🎥 TikTok / Reels · 28 s</span></div>
+      <div class="script-row"><div class="script-time">0–3 s</div><div class="script-body"><span class="cue">Face caméra, ton urgent</span><span class="say">« J'ai failli rater mon prêt immobilier à cause d'un truc bête. »</span></div></div>
+      <div class="script-row"><div class="script-time">3–10 s</div><div class="script-body"><span class="cue">Face caméra</span><span class="say">« Entre les visites, les diagnostics, les 3 banques à comparer... j'ai zappé une étape et failli perdre 2 semaines. »</span></div></div>
+      <div class="script-row"><div class="script-time">10–22 s</div><div class="script-body"><span class="cue">Insert écran</span><span class="say">Montre le projet « Acheter notre appartement » : catégories Recherche / Financement / Démarches, la note IA « Astuce prêt », puis le chat qui répond « comparer les taux, c'est la seule étape qui bloque encore. »</span></div></div>
+      <div class="script-row"><div class="script-time">22–28 s</div><div class="script-body"><span class="cue">Face caméra</span><span class="say">« Depuis, plus rien ne m'échappe. C'est gratuit, lien en bio. »</span></div></div>
+    </div>
+
+    <div class="script">
+      <div class="script-head"><strong>Script 2 — « L'anniversaire surprise »</strong><span class="ptag video">🎥 TikTok / Reels · 25 s</span></div>
+      <div class="script-row"><div class="script-time">0–3 s</div><div class="script-body"><span class="cue">Face caméra, chuchote</span><span class="say">« Chut. Je prépare une surprise et personne ne doit le savoir. »</span></div></div>
+      <div class="script-row"><div class="script-time">3–10 s</div><div class="script-body"><span class="cue">Face caméra</span><span class="say">« Le problème avec les groupes WhatsApp pour organiser ça : tout le monde voit tout, et ça fuite toujours. »</span></div></div>
+      <div class="script-row"><div class="script-time">10–20 s</div><div class="script-body"><span class="cue">Insert écran</span><span class="say">Montre le projet « Anniversaire surprise de Léa » : catégories Organisation / Préparatifs, la Prochaine Action « Envoyer les invitations discrètement. »</span></div></div>
+      <div class="script-row"><div class="script-time">20–25 s</div><div class="script-body"><span class="cue">Face caméra, sourire</span><span class="say">« Tout est là, rien qui fuite. Dropit, gratuit, en bio. »</span></div></div>
+    </div>
+
+    <div class="script">
+      <div class="script-head"><strong>Script 3 — « Ma tête n'est pas un bloc-notes »</strong><span class="ptag video">🎥 Faceless / silencieux · 20 s</span></div>
+      <div class="script-row"><div class="script-time">0–3 s</div><div class="script-body"><span class="cue">Texte à l'écran</span><span class="say">« Combien de trucs traînent dans ta tête là, maintenant ? »</span></div></div>
+      <div class="script-row"><div class="script-time">3–10 s</div><div class="script-body"><span class="cue">Écran, sans voix</span><span class="say">Capture d'écran : on tape en rafale « racheter des piles », « appeler la banque », « idée cadeau fête des pères »... chaque idée tombe dans la Drop Zone avec l'animation de rebond.</span></div></div>
+      <div class="script-row"><div class="script-time">10–17 s</div><div class="script-body"><span class="cue">Écran</span><span class="say">La Drop Zone pleine de bulles colorées, texte overlay : « 0 décision à la prise de note. »</span></div></div>
+      <div class="script-row"><div class="script-time">17–20 s</div><div class="script-body"><span class="cue">Texte final</span><span class="say">« Dropit. Gratuit. Lien en bio. »</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Carrousels Instagram / LinkedIn</h2></div>
+    <p class="lede">8 slides : le slide 1 doit à lui seul donner envie de swiper — contraste fort, promesse claire, aucune explication.</p>
+
+    <div class="carousel-outline">
+      <div class="chead"><strong>« 5 signes que tu as trop d'apps pour gérer ta vie »</strong><span class="ptag carousel">🖼️ Instagram</span></div>
+      <div class="slides">
+        <div class="slide-chip hook"><span class="sn">1</span>Titre choc : « 5 signes que tu as trop d'apps pour organiser ta vie (slide 5 = solution) »</div>
+        <div class="slide-chip"><span class="sn">2</span>Signe 1 : tu as une app pour le calendrier, une pour les tâches, une pour les notes.</div>
+        <div class="slide-chip"><span class="sn">3</span>Signe 2 : tu passes plus de temps à choisir où noter qu'à noter.</div>
+        <div class="slide-chip"><span class="sn">4</span>Signe 3 : tu réexpliques le même projet à chaque nouvelle conversation IA.</div>
+        <div class="slide-chip"><span class="sn">5</span>Signe 4 : ton dimanche soir, c'est une to-do qui ne survit jamais au lundi.</div>
+        <div class="slide-chip"><span class="sn">6</span>Signe 5 : tu as un projet « à finir » depuis 6 mois, jamais rouvert.</div>
+        <div class="slide-chip"><span class="sn">7</span>Ce que fait Dropit à la place : un seul endroit, une IA qui garde le contexte de chaque projet.</div>
+        <div class="slide-chip cta"><span class="sn">8</span>CTA : « Gratuit. Lien en bio. »</div>
+      </div>
+    </div>
+
+    <div class="carousel-outline">
+      <div class="chead"><strong>« Comment j'organise 3 projets de vie en même temps »</strong><span class="ptag carousel">🖼️ Instagram / LinkedIn</span></div>
+      <div class="slides">
+        <div class="slide-chip hook"><span class="sn">1</span>« Voiture, appartement, rentrée scolaire — en même temps, sans y penser 24/7. Voilà comment. »</div>
+        <div class="slide-chip"><span class="sn">2</span>Étape 1 : chaque projet a sa couleur, sa mosaïque, son avancement en un coup d'œil.</div>
+        <div class="slide-chip"><span class="sn">3</span>Étape 2 : jamais 40 tâches en tête — une seule « prochaine action » par projet.</div>
+        <div class="slide-chip"><span class="sn">4</span>Étape 3 : l'écran « Aujourd'hui » fait tourner les 3 projets sans planification manuelle.</div>
+        <div class="slide-chip"><span class="sn">5</span>Étape 4 : une échéance approche ? Elle apparaît d'elle-même sur le calendrier.</div>
+        <div class="slide-chip"><span class="sn">6</span>Étape 5 : besoin d'un résumé ? Le chat IA connaît déjà tout le dossier.</div>
+        <div class="slide-chip"><span class="sn">7</span>Résultat : 3 projets qui avancent, une tête qui reste libre.</div>
+        <div class="slide-chip cta"><span class="sn">8</span>CTA : « Essaie avec le tien — gratuit, lien en bio. »</div>
+      </div>
+    </div>
+
+    <div class="carousel-outline">
+      <div class="chead"><strong>« Ce que personne ne dit sur l'achat d'un appartement »</strong><span class="ptag carousel">🖼️ LinkedIn</span></div>
+      <div class="slides">
+        <div class="slide-chip hook"><span class="sn">1</span>« On m'a caché 5 choses avant d'acheter mon appartement. »</div>
+        <div class="slide-chip"><span class="sn">2</span>1. La banque redemande toujours un document que tu penses déjà avoir donné.</div>
+        <div class="slide-chip"><span class="sn">3</span>2. Comparer 3 taux prend plus de temps que visiter 5 biens.</div>
+        <div class="slide-chip"><span class="sn">4</span>3. Les diagnostics arrivent toujours plus tard que prévu.</div>
+        <div class="slide-chip"><span class="sn">5</span>4. Le budget travaux se décide avant d'avoir signé, pas après.</div>
+        <div class="slide-chip"><span class="sn">6</span>5. Un seul document centralisateur change tout — même un simple projet Dropit.</div>
+        <div class="slide-chip"><span class="sn">7</span>Ce qui m'a aidé à tout suivre sans tableur : capture, catégories, une IA qui garde le contexte.</div>
+        <div class="slide-chip cta"><span class="sn">8</span>CTA : « Commentaire "APPART" pour le lien. »</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Threads X (Twitter)</h2></div>
+    <div class="li-post"><b>Thread 1 — accroche liste</b>J'ai testé 6 apps de productivité pour gérer ma vie perso et pro en 2026.
+
+5 sont mortes en moins d'un mois.
+
+Voici pourquoi, et ce qui a fini par marcher 🧵</div>
+    <div class="li-post"><b>Thread 2 — accroche contrariante</b>Arrête de chercher LA meilleure app de productivité.
+
+Le problème n'a jamais été l'app. C'est le temps que tu passes à décider où noter les choses.
+
+Voici ce qui a réglé ça pour moi 🧵</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>Posts LinkedIn fondateur</h2></div>
+    <p class="lede">Format qui distribue le mieux en B2B en 2026 : texte seul + une image, la structure hook → galère → déclic → leçon.</p>
+
+    <div class="li-post"><b>Post 1 — l'origine</b>Il y a quelques mois, ma tête ressemblait à 6 onglets ouverts en permanence.
+
+Un projet de voiture à acheter. Un appartement à trouver. La rentrée de mes enfants. Un anniversaire surprise à organiser en secret. Et le boulot, à côté.
+
+J'ai testé Notion. J'ai testé Todoist. J'ai fini par ouvrir un Excel partagé.
+
+Le problème n'était jamais l'outil — c'était le temps que je perdais à décider où noter chaque chose, puis à tout réexpliquer à chaque fois que je rouvrais un projet.
+
+Alors j'ai construit Dropit : un seul endroit pour tout déposer, sans réfléchir où, et une IA qui garde le contexte de chaque projet pour de vrai.
+
+C'est gratuit aujourd'hui. Je cherche 50 personnes pour le tester avant le lancement public — dites-moi en commentaire si ça vous parle.</div>
+
+    <div class="li-post"><b>Post 2 — la leçon produit</b>La fonctionnalité la plus utilisée de Dropit n'est pas celle que j'avais prévue.
+
+Ce n'est pas le chat IA. Ce n'est pas les catégories. C'est la Drop Zone — l'endroit où on jette une idée sans avoir à choisir un projet, une catégorie, une priorité.
+
+La leçon : les gens n'abandonnent pas une app de productivité parce qu'elle manque de fonctionnalités. Ils l'abandonnent parce que la première étape — noter quelque chose — leur demande déjà une décision.
+
+Enlevez cette décision, et le reste suit.</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">09</span><h2>Rythme de publication sur le sprint de 30 jours</h2></div>
+    <p class="lede">Aligné sur les 4 semaines du <em>Sprint de lancement Dropit</em> — le contenu change de nature à chaque phase.</p>
+    <div class="table-wrap">
+      <table class="cal">
+        <thead><tr><th>Semaine</th><th>Formats à privilégier</th><th>Objectif</th></tr></thead>
+        <tbody>
+          <tr><td class="wk">S1 — Fondations</td><td>Silencieux/faceless (idées 1–6), 1er post LinkedIn fondateur</td><td>Construire le stock avant le trafic</td></tr>
+          <tr><td class="wk">S2 — Lancement discret</td><td>UGC témoignage, carrousels éducatifs</td><td>Tester quels hooks convertissent</td></tr>
+          <tr><td class="wk">S3 — Lancement public</td><td>Comparatifs, scripts UGC complets, thread X, rythme quotidien</td><td>Maximiser la visibilité au pic Product Hunt</td></tr>
+          <tr><td class="wk">S4 — Amplifier</td><td>Ré-exploiter le format qui a le mieux marché, 2e post LinkedIn (leçon)</td><td>Doubler sur ce qui convertit déjà</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="sources">
+    <h3>Sources</h3>
+    <ol>
+      <li><a href="https://www.opus.pro/blog/tiktok-hooks-that-go-viral-2026">Opus — 5 TikTok Hook Types 2026</a></li>
+      <li><a href="https://www.adroast.ai/blog/tiktok-ad-hooks-first-3-seconds">Adroast — TikTok Ad Hooks, 3 premières secondes</a></li>
+      <li><a href="https://reloop.so/blog/article/ugc-script-templates/">Reloop — UGC Script Templates 2026</a></li>
+      <li><a href="https://adverrastudio.com/ugc-video-script-hooks-that-convert/">Adverra — UGC Video Script Hooks 2026</a></li>
+      <li><a href="https://www.adpicto.com/en/blog/instagram-carousel-best-practices-2026">Adpicto — Instagram Carousel Best Practices 2026</a></li>
+      <li><a href="https://resont.com/blog/top-instagram-carousel-hooks/">Resont — Top Instagram Carousel Hooks</a></li>
+      <li><a href="https://blog.linkboost.co/how-to-use-storytelling-linkedin-2026/">Linkboost — Storytelling LinkedIn 2026</a></li>
+      <li><a href="https://www.foundera.co/blog/linkedin-content-for-saas-founders-2026">Foundera — LinkedIn Content for SaaS Founders 2026</a></li>
+      <li><a href="https://blog.gainapp.com/tiktok-trends/">Gain — 6 TikTok Trends to Watch in 2026</a></li>
+      <li><a href="https://www.inreels.ai/blog/faceless-tiktok-ideas">InReels — Top 20 Faceless TikTok Ideas 2026</a></li>
+    </ol>
+  </div>
+
+</div>

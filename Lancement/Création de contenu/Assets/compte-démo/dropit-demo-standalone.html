@@ -2,12 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<!-- viewport-fit=cover : sans lui, env(safe-area-inset-*) vaut toujours 0 —
-     nécessaire pour que la barre de navigation du bas (et la barre de saisie
-     juste au-dessus) réservent correctement la place de la barre de gestes
-     système (SDK 36 = rendu edge-to-edge imposé par Android). N'affecte pas
-     la position des boutons compte/menu du haut, laissés tels quels. -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dropit</title>
 <style>
   :root{
@@ -92,11 +87,6 @@
     --font-mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
   }
   *{box-sizing:border-box;}
-  /* Dans une WebView Android standalone (app installée / PWA), le "font boosting"
-     du navigateur grossit automatiquement les textes (et tout ce qui suit, en
-     cascade) au-delà des tailles réellement demandées en CSS — absent d'un
-     onglet Chrome classique, d'où l'écart avec la version web. */
-  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;}
   html,body{margin:0;padding:0;height:100%;overflow:hidden;}
   body{
     font-family:var(--font-display);color:var(--ink);background-color:var(--canvas);
@@ -124,7 +114,7 @@
   /* HOME TREEMAP — design system v5 */
   .home-container{position:fixed;inset:0;background:var(--canvas);overflow:hidden;display:flex;flex-direction:column;}
   .home-greeting{
-    flex-shrink:0;padding:calc(16px + var(--safe-area-inset-top, env(safe-area-inset-top))) 20px 8px;
+    flex-shrink:0;padding:calc(16px + env(safe-area-inset-top)) 20px 8px;
     font-size:20px;font-weight:800;letter-spacing:-.01em;color:var(--ink);
   }
   #home-treemap-zone{flex:1;position:relative;min-height:0;overflow:hidden;}
@@ -171,13 +161,8 @@
   }
   .empty-state b{color:var(--ink);}
 
-  /* TOP BAR (project detail)
-     position:absolute plutôt que fixed : posé dans .detail-screen, qui est
-     lui-même position:fixed sans transform (voir plus bas), donc un cadre de
-     référence stable — un descendant "fixed" ici perdrait le suivi de la
-     fenêtre visible pendant un scroll mobile (barre d'adresse qui se
-     rétracte) puisqu'il ne serait plus fixé à la vraie fenêtre. */
-  .top-bar{position:absolute;top:12px;left:12px;right:12px;z-index:40;display:flex;align-items:center;justify-content:flex-end;gap:8px;}
+  /* TOP BAR (project detail) */
+  .top-bar{position:fixed;top:12px;left:12px;right:12px;z-index:40;display:flex;align-items:center;justify-content:flex-end;gap:8px;}
   .top-back-btn{
     width:34px;height:34px;flex-shrink:0;border-radius:50%;background:var(--canvas-card);border:1px solid var(--line);
     display:flex;align-items:center;justify-content:center;color:var(--ink);box-shadow:0 6px 16px rgba(43,36,32,0.14);
@@ -191,10 +176,9 @@
   .top-delete-btn:hover{border-color:#9C4632;color:#9C4632;}
   .top-delete-btn .icon{width:14px;height:14px;}
 
-  /* PROJECT DETAIL
-     position:absolute (voir .top-bar juste au-dessus pour le pourquoi). */
-  .detail-scroll{position:absolute;inset:0;background:var(--canvas);overflow-y:auto;}
-  .detail-inner{max-width:600px;margin:0 auto;padding:50px 20px calc(90px + var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));}
+  /* PROJECT DETAIL */
+  .detail-scroll{position:fixed;inset:0;background:var(--canvas);overflow-y:auto;}
+  .detail-inner{max-width:600px;margin:0 auto;padding:50px 20px calc(90px + var(--tabbar-h));}
   .detail-header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;margin-bottom:12px;}
   .detail-emoji{font-size:32px;line-height:1;}
   .detail-title{font-size:19px;font-weight:800;letter-spacing:-0.01em;}
@@ -246,15 +230,6 @@
   .section-label{
     font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.06em;text-transform:uppercase;
     color:var(--ink-faint);margin:20px 0 10px;
-  }
-  /* Libellés de section repris en badge : fond blanc, texte dans la couleur du
-     projet (--current-proj-solid, posée sur .detail-scroll par renderDetail) —
-     utilisé pour "Catégories" (.section-label) et "Notes" (.proj-notes-label). */
-  .proj-badge-label{
-    display:inline-flex;align-items:center;
-    background:#fff;color:var(--current-proj-solid, var(--ink-faint));
-    padding:5px 11px;border-radius:20px;
-    box-shadow:0 1px 3px rgba(43,36,32,.08);
   }
   /* Accordéon des catégories — une seule fenêtre pour parcourir un projet : la carte
      de catégorie prend toute la largeur, un clic déplie ses tâches juste en dessous. */
@@ -328,15 +303,11 @@
 
   .suggest-more-btn{width:100%;margin-top:16px;}
 
-  /* COMPOSE BAR — barre IA (accueil), accent vert dédié + sparkle dans le champ (design system v5)
-     bottom ajoute var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) : .bottom-tabbar juste en dessous
-     grandit de ce même montant (voir plus bas), donc sans ça un vide apparaît
-     entre les deux barres, large exactement de la zone de gestes système.
-     Padding remis à plat (10px) : le décalage de position suffit déjà. */
+  /* COMPOSE BAR — barre IA (accueil), accent vert dédié + sparkle dans le champ (design system v5) */
   .compose-bar{
-    position:fixed;left:0;right:0;bottom:calc(var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));z-index:42;
+    position:fixed;left:0;right:0;bottom:var(--tabbar-h);z-index:42;
     background:var(--canvas-card);border-top:1px solid var(--line);
-    padding:10px 12px;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
     display:flex;align-items:center;gap:8px;box-shadow:0 -4px 16px rgba(43,36,32,0.08);
   }
   .compose-input-wrap{
@@ -427,11 +398,8 @@
     padding:9px 10px;font-size:13px;color:var(--ink-faint);background:transparent;
   }
   .note-add-trigger:hover{border-color:var(--accent);color:var(--accent);}
-  /* NOTE EDIT MODAL (tâche) — position:absolute : uniquement rendu dans
-     .detail-screen (voir .top-bar plus haut pour le pourquoi), sinon un
-     position:fixed resterait affiché plein écran, immobile, pendant les
-     280ms où .detail-screen glisse hors champ au retour arrière. */
-  .note-edit-modal{position:absolute;inset:0;z-index:55;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
+  /* NOTE EDIT MODAL (tâche) */
+  .note-edit-modal{position:fixed;inset:0;z-index:55;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
   .note-edit-modal-box{width:100%;max-width:620px;height:94vh;background:var(--canvas-card);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 32px rgba(43,36,32,0.18);}
   .note-edit-modal-header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
   .note-edit-modal-title{font-size:13.5px;font-weight:700;color:var(--ink);}
@@ -439,19 +407,10 @@
     flex:1;width:100%;box-sizing:border-box;border:none;background:transparent;
     padding:18px;font-size:16px;color:var(--ink);outline:none;resize:none;font-family:inherit;line-height:1.6;
   }
-  .note-edit-modal-actions{border-top:1px solid var(--line);padding:10px 14px calc(10px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));}
+  .note-edit-modal-actions{border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));}
   /* NOTES LIBRES PROJET */
   .project-notes-section{margin-top:14px;}
-  .proj-notes-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-top:12px;border-top:1px solid var(--line);}
-  .proj-notes-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.05em;text-transform:uppercase;}
-  .proj-notes-add-btn{
-    border:none;cursor:pointer;flex-shrink:0;
-    width:22px;height:22px;border-radius:50%;
-    display:inline-flex;align-items:center;justify-content:center;
-    background:var(--current-proj-solid, var(--accent));color:#fff;
-  }
-  .proj-notes-add-btn .icon{width:12px;height:12px;}
-  .proj-notes-empty{font-size:13px;color:var(--ink-faint);padding:2px 2px 4px;}
+  .proj-notes-label{font-family:var(--font-mono);font-size:10px;letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;display:block;padding-top:12px;border-top:1px solid var(--line);}
   .proj-note-row{background:var(--canvas-card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;}
   .proj-note-top{display:flex;align-items:center;gap:6px;}
   .proj-note-icon{color:var(--ink-faint);flex-shrink:0;display:flex;align-items:center;}
@@ -470,36 +429,12 @@
   /* BARRE DE NAVIGATION FIXE — accueil / liste / chat IA / calendrier.
      Remplace l'ancien bouton flottant (FAB) qui se superposait par-dessus les cartes
      projet lors du scroll : ici la zone de tap est dédiée et jamais partagée avec le contenu. */
-  /* *{box-sizing:border-box} : la hauteur grandit de var(--safe-area-inset-bottom, env(safe-area-inset-bottom))
-     mais le padding-bottom du même montant préserve --tabbar-h de contenu
-     réel — les icônes gardent leur place normale, simplement remontée
-     au-dessus de la barre de gestes système. */
   .bottom-tabbar{
-    position:fixed;left:0;right:0;bottom:0;z-index:46;
-    height:calc(var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
+    position:fixed;left:0;right:0;bottom:0;z-index:46;height:var(--tabbar-h);
     background:var(--canvas-card);border-top:1px solid var(--line);
-    display:flex;align-items:stretch;padding-bottom:var(--safe-area-inset-bottom, env(safe-area-inset-bottom));
+    display:flex;align-items:stretch;padding-bottom:env(safe-area-inset-bottom);
     box-shadow:0 -2px 12px rgba(43,36,32,0.06);
   }
-  /* Dans .detail-screen/.calendar-screen/.tasklist-screen, la barre est posée à l'intérieur de
-     l'écran plein écran plutôt qu'à côté de .home-container — position:fixed
-     y perd le suivi de la vraie fenêtre visible pendant un scroll mobile (la
-     barre d'adresse qui se rétracte redimensionne la fenêtre, et un fixed
-     imbriqué ne suit alors plus que la boîte de son ancêtre, pas la fenêtre
-     réelle) : elle semble alors se décrocher/disparaître pendant le scroll.
-     Ces écrans restent eux-mêmes position:fixed sans
-     transform, donc un repère stable pour un position:absolute ici. */
-  .detail-screen .bottom-tabbar,
-  .calendar-screen .bottom-tabbar,
-  .tasklist-screen .bottom-tabbar{ position:absolute; }
-  /* Même raison : .chat-modal et .account-sheet sont partagées entre un usage
-     à l'accueil (fixed, correct) et un usage imbriqué dans .detail-screen
-     (chat du projet, menu du projet) — seul ce second cas doit passer en
-     absolute. Sans ça, un chat/menu resterait figé plein écran, immobile,
-     pendant les 280ms où .detail-screen glisse hors champ au retour arrière
-     (transform déplaçait auparavant tout le sous-arbre en un bloc ; left, non). */
-  .detail-screen .chat-modal,
-  .detail-screen .account-sheet{ position:absolute; }
   .tabbar-item{
     flex:1;border:none;background:none;cursor:pointer;color:var(--ink-faint);
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
@@ -509,17 +444,8 @@
   .tabbar-item.active{color:var(--accent);}
   .tabbar-item:disabled{opacity:0.35;pointer-events:none;cursor:default;}
 
-  /* CHAT MODAL — partagée entre le chat de l'accueil (id chat-modal-home,
-     reste position:fixed, pas dans un écran plein écran) et celui du détail
-     projet (id chat-modal, imbriqué dans .detail-screen : voir l'override
-     ".detail-screen .chat-modal" plus bas, même raison que .top-bar). */
-  /* bottom borné à --tabbar-h (au lieu de inset:0) : la barre de navigation fixe
-     (accueil/liste/chat/calendrier) reste visible ET cliquable pendant que le chat
-     est ouvert, plutôt que d'être recouverte par le fond assombri de la modale.
-     z-index 63 (> 60) : #chat-modal-home (chat depuis l'accueil, pas imbriqué dans un
-     écran plein écran) doit rester au-dessus de .tasklist-screen/.calendar-screen quand
-     il est ouvert depuis leur tabbar — sinon la modale s'affiche sous ces écrans, invisible. */
-  .chat-modal{position:fixed;left:0;right:0;top:0;bottom:calc(var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));z-index:63;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
+  /* CHAT MODAL */
+  .chat-modal{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
   .chat-modal-box{width:100%;max-width:620px;height:72vh;background:var(--canvas-card);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 32px rgba(43,36,32,0.18);}
   .chat-modal-header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
   .chat-modal-title{font-size:13.5px;font-weight:700;color:var(--ink);}
@@ -534,7 +460,7 @@
     /* 59px = hauteur des barres de saisie fixes (.compose-bar/.tl-compose-bar/.detail-fixed-bar),
        toutes ancrées sur --tabbar-h — sans cette marge le bouton flottant se superpose
        à leur contenu au lieu de flotter au-dessus. */
-    bottom:calc(var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) + 59px + 14px);
+    bottom:calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 59px + 14px);
     /* 61 : au-dessus de .tasklist-screen (60, l'écran Liste plein écran) pour rester
        visible sur les 4 écrans de nav, mais sous les vraies fenêtres modales
        (chat 50, notes 55, menu projet/compte 70) où il n'a rien à faire. */
@@ -558,7 +484,7 @@
   .drop-sheet-title{font-size:19px;font-weight:800;color:var(--ink);text-align:center;}
   .drop-sheet-header .chat-close-btn{position:absolute;right:18px;top:50%;transform:translateY(-50%);}
   .drop-sheet-body{flex:1;overflow-y:auto;padding:14px 18px;}
-  .drop-sheet-compose{flex-shrink:0;padding:12px 18px calc(12px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));border-top:1px solid var(--line);}
+  .drop-sheet-compose{flex-shrink:0;padding:12px 18px;border-top:1px solid var(--line);}
   .drop-sheet-input-row{display:flex;align-items:center;gap:8px;}
   .drop-sheet-input{
     flex:1;border:1.4px solid var(--line);border-radius:12px;padding:11px 14px;font-size:14px;
@@ -571,16 +497,9 @@
   .drop-triage-empty{font-size:13px;color:var(--ink-faint);text-align:center;padding:30px 0;}
   .drop-badges{display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;}
   .drop-badge{
-    display:inline-flex;align-items:center;gap:7px;min-width:0;max-width:100%;
-    border:none;border-radius:999px;padding:6px 12px 6px 8px;font-size:12.5px;font-weight:600;
+    border:none;border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:600;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
-  /* Petite case blanche en tête de badge : signal visuel que le tap coche/retire
-     l'entrée de la Drop Zone — le texte suit toujours la charte du projet
-     (--proj-*-solid), jamais de blanc là ; seule cette case l'est. */
-  .drop-badge-check{
-    flex-shrink:0;width:14px;height:14px;border-radius:5px;background:#fff;opacity:.85;
-  }
-  .drop-badge-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   /* "Jeté" dans la Drop Zone : apparition rapide avec un léger rebond et une rotation,
      jouée automatiquement puisque le badge est un nouveau nœud DOM inséré à la volée
      (pas de render() complet — voir performDropCapture). */
@@ -617,28 +536,14 @@
   /* Project DNA */
   .project-dna{font-size:12.5px;color:var(--status-actif);font-style:italic;max-width:440px;line-height:1.4;margin-top:4px;}
 
-  /* TASK LIST SCREEN (swipe depuis home)
-     Glissement animé via "left" plutôt que "transform:translateX" : un transform
-     sur cet écran ferait de lui le bloc de référence de ses descendants en
-     position fixed (barre de tâche, barre d'ajout) au lieu de la fenêtre —
-     sur mobile, ceux-ci perdent alors le suivi automatique de la fenêtre
-     visible et semblent se décrocher/disparaître pendant un scroll. */
+  /* TASK LIST SCREEN (swipe depuis home) */
   .tasklist-screen{
-    position:fixed;top:0;bottom:0;left:100%;width:100%;z-index:60;background:var(--canvas);
+    position:fixed;inset:0;z-index:60;background:var(--canvas);
     display:flex;flex-direction:column;
-    transition:left .28s cubic-bezier(.4,0,.2,1);
+    transform:translateX(100%);
+    transition:transform .28s cubic-bezier(.4,0,.2,1);
   }
-  .tasklist-screen.open{left:0;}
-
-  /* PROJECT DETAIL SCREEN — même glissement que .tasklist-screen : posé par-dessus
-     l'accueil (jamais détruit pendant que c'est ouvert), pour un retour cohérent
-     partout dans l'app plutôt qu'un remplacement instantané. */
-  .detail-screen{
-    position:fixed;top:0;bottom:0;left:100%;width:100%;z-index:60;background:var(--canvas);
-    display:flex;flex-direction:column;
-    transition:left .28s cubic-bezier(.4,0,.2,1);
-  }
-  .detail-screen.open{left:0;}
+  .tasklist-screen.open{transform:translateX(0);}
   .tasklist-top{
     flex-shrink:0;background:var(--canvas-card);border-bottom:1px solid var(--line);
     padding:14px 16px;display:flex;align-items:center;gap:10px;
@@ -667,7 +572,7 @@
   .tl-text-chip.active{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
   .tl-filter-sep{flex-shrink:0;width:1px;align-self:stretch;background:var(--line);margin:0 2px;}
   /* Scroll liste */
-  .tasklist-scroll{flex:1;overflow-y:auto;padding-bottom:calc(30px + 59px + var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));}
+  .tasklist-scroll{flex:1;overflow-y:auto;padding-bottom:30px;}
   /* Ligne tâche */
   .tl-row{
     display:flex;align-items:center;gap:12px;padding:13px 16px;
@@ -699,13 +604,9 @@
   .tl-empty{padding:48px 24px;text-align:center;color:var(--ink-soft);font-size:14px;line-height:1.6;}
 
   /* CALENDRIER */
-  .calendar-screen{
-    position:fixed;top:0;bottom:0;left:100%;width:100%;z-index:60;background:var(--canvas);display:flex;flex-direction:column;
-    transition:left .28s cubic-bezier(.4,0,.2,1);
-  }
-  .calendar-screen.open{left:0;}
+  .calendar-screen{position:fixed;inset:0;z-index:41;background:var(--canvas);display:flex;flex-direction:column;}
   .cal-top-bar{
-    flex-shrink:0;padding:calc(12px + var(--safe-area-inset-top, env(safe-area-inset-top))) 16px 4px;
+    flex-shrink:0;padding:calc(12px + env(safe-area-inset-top)) 16px 4px;
     display:flex;align-items:center;gap:10px;
   }
   .cal-top-title{flex:1;font-size:15px;font-weight:800;letter-spacing:-.01em;color:var(--ink);}
@@ -751,13 +652,10 @@
   }
   .cal-list{flex:1;overflow-y:auto;padding-bottom:calc(16px + var(--tabbar-h));}
   .cal-empty{padding:40px 24px;text-align:center;color:var(--ink-soft);font-size:14px;line-height:1.6;}
-  /* Barre de saisie dans la task list — même gabarit que .detail-fixed-bar : position:absolute
-     posée juste au-dessus de la bottom-tabbar (ajoutée sous cette barre pour que le tab "Liste"
-     reste accessible), plutôt qu'un enfant flex en bas d'écran sans barre de nav en dessous. */
+  /* Barre de saisie dans la task list */
   .tl-compose-bar{
-    position:absolute;left:0;right:0;bottom:calc(var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));z-index:42;
-    background:var(--canvas-card);border-top:1px solid var(--line);
-    padding:10px 12px;
+    flex-shrink:0;background:var(--canvas-card);border-top:1px solid var(--line);
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
     display:flex;align-items:center;gap:8px;box-shadow:0 -4px 16px rgba(43,36,32,0.10);
   }
   .tl-target-label{
@@ -766,13 +664,10 @@
   }
 
   /* BARRE FIXE DÉTAIL (catégorie/tâches & projet) — barre IA, accent vert dédié (design system v5) */
-  /* position:absolute (voir .top-bar plus haut pour le pourquoi).
-     bottom + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) et padding remis à plat : même
-     raison que .compose-bar plus haut. */
   .detail-fixed-bar{
-    position:absolute;left:0;right:0;bottom:calc(var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));z-index:42;
+    position:fixed;left:0;right:0;bottom:var(--tabbar-h);z-index:42;
     background:var(--canvas-card);border-top:1px solid var(--line);
-    padding:10px 12px;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
     display:flex;align-items:center;gap:8px;box-shadow:0 -4px 16px rgba(43,36,32,0.08);
   }
   .dfb-input-wrap{
@@ -940,7 +835,7 @@
     white-space:nowrap;z-index:3;transform:rotate(-3deg);
   }
   .ob-body{font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin:14px auto 24px;text-align:center;padding:0 4px;max-width:320px;}
-  .ob-footer{flex-shrink:0;padding:14px 24px calc(14px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));max-width:420px;width:100%;margin:0 auto;box-sizing:border-box;}
+  .ob-footer{flex-shrink:0;padding:14px 24px calc(14px + env(safe-area-inset-bottom));max-width:420px;width:100%;margin:0 auto;box-sizing:border-box;}
   .ob-dots{display:flex;justify-content:center;gap:6px;margin-bottom:14px;}
   .ob-dot{width:7px;height:7px;border-radius:50%;background:var(--line);transition:background .2s,width .2s;}
   .ob-dot.active{background:var(--ob-color, var(--accent));width:20px;border-radius:4px;}
@@ -963,7 +858,7 @@
   }
   .sample-notice-modal{
     width:100%;max-width:340px;background:var(--canvas);border-radius:22px;
-    padding:30px 26px calc(22px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));text-align:center;
+    padding:30px 26px calc(22px + env(safe-area-inset-bottom));text-align:center;
     box-shadow:0 24px 60px rgba(0,0,0,.35);
   }
   .sample-notice-emoji{font-size:28px;letter-spacing:6px;margin-bottom:16px;}
@@ -972,156 +867,6 @@
   .sample-notice-btn{
     width:100%;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;
     background:var(--ia-accent);color:#fff;
-  }
-
-  /* --- Questionnaire de personnalisation (premier lancement d'un compte) ---
-     Univers visuel propre au questionnaire (bleu, fond dégradé), validé en
-     maquette avant implémentation : il encadre l'arrivée, pas l'app elle-même. */
-  .obq{
-    position:fixed;inset:0;z-index:320;display:flex;flex-direction:column;color:#16243F;
-    background:
-      radial-gradient(115% 62% at 0% 0%, #FDE9F0 0%, rgba(253,233,240,0) 58%),
-      radial-gradient(105% 55% at 100% 2%, #E4EEFC 0%, rgba(228,238,252,0) 52%),
-      radial-gradient(130% 55% at 50% 100%, #EEF3FB 0%, rgba(238,243,251,0) 62%),
-      #FFFFFF;
-  }
-  .obq-top{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:calc(18px + var(--safe-area-inset-top, env(safe-area-inset-top))) 24px 0;}
-  .obq-back{
-    width:30px;height:30px;border-radius:50%;border:1px solid #E9EEF5;background:#FFFFFF;flex-shrink:0;
-    display:flex;align-items:center;justify-content:center;color:#64748B;padding:0;
-  }
-  .obq-count{font-size:11.5px;font-weight:600;color:#94A3B8;}
-  .obq-logo{margin-left:auto;display:inline-flex;align-items:center;font-size:13.5px;font-weight:800;letter-spacing:-.02em;}
-  .obq-logo i{width:6px;height:6px;border-radius:50%;background:#EF5D4E;margin:0 4px;font-style:normal;}
-  /* La phrase passe avant la barre : sur un écran bas, barre + emoji
-     grignotaient la place du titre juste en dessous, au point de le rogner
-     (bug remonté). La faire passer au-dessus libère cette place, jamais en
-     dessous d'un titre. */
-  .obq-quip{flex-shrink:0;margin:14px 26px 0;font-size:11.5px;font-weight:600;color:#94A3B8;
-            text-align:center;line-height:1.35;}
-  .obq-prog{flex-shrink:0;margin:12px 24px 0;}
-  .obq-bar{position:relative;height:4px;border-radius:999px;background:#E8EEF6;}
-  .obq-fill{position:relative;height:100%;border-radius:999px;background:linear-gradient(90deg,#3B82F6,#2563EB);
-            transition:width .5s cubic-bezier(.65,0,.35,1);}
-  /* L'emoji chevauche la pointe de la barre remplie : ancré en % de la
-     largeur du fill, il glisse avec elle pendant la même transition, sans
-     JS dédié à son déplacement. */
-  .obq-mood{position:absolute;top:50%;left:100%;font-size:18px;line-height:1;transform-origin:center;
-            transition:transform .34s cubic-bezier(.34,1.56,.64,1);}
-  .obq-body{flex:1;min-height:0;overflow-y:auto;padding:20px 24px 4px;text-align:center;
-            display:flex;flex-direction:column;
-            /* "safe" évite qu'un écran chargé (beaucoup d'options) rogne le
-               haut du contenu de façon inatteignable au scroll — la vraie
-               cause du bug, pas la position de la phrase. Navigateur qui
-               ignore "safe" : replie sur le haut, jamais pire qu'avant. */
-            justify-content:flex-start;justify-content:safe center;}
-  .obq-title{font-size:23px;font-weight:800;letter-spacing:-.03em;line-height:1.2;margin:0;text-wrap:balance;}
-  .obq-sub{font-size:13px;font-weight:500;line-height:1.5;color:#64748B;margin:9px auto 0;max-width:30ch;}
-  .obq-hint{font-size:11.5px;font-weight:600;color:#94A3B8;margin:7px 0 0;}
-  .obq-list{display:flex;flex-direction:column;gap:8px;margin-top:20px;text-align:left;}
-  .obq-row{
-    display:flex;align-items:center;gap:12px;width:100%;background:#FFFFFF;border:1.5px solid #E9EEF5;
-    border-radius:14px;padding:0 14px;min-height:52px;color:#16243F;font-size:14px;font-weight:600;
-    text-align:left;box-shadow:0 1px 2px rgba(22,36,63,.04),0 6px 16px rgba(22,36,63,.05);
-  }
-  .obq-row.sel{background:#F3F8FF;border-color:#3B82F6;box-shadow:0 1px 2px rgba(37,99,235,.08),0 8px 20px rgba(37,99,235,.13);}
-  .obq-ic{
-    width:34px;height:34px;border-radius:11px;background:#F3F6FB;flex-shrink:0;line-height:1;font-size:16px;
-    display:flex;align-items:center;justify-content:center;transition:background .2s ease;
-  }
-  .obq-row.sel .obq-ic{background:#DBEAFE;}
-  .obq-lb{flex:1;min-width:0;line-height:1.3;}
-  .obq-box{
-    width:22px;height:22px;border-radius:7px;border:1.8px solid #CBD5E1;background:#FFFFFF;flex-shrink:0;
-    display:flex;align-items:center;justify-content:center;color:#FFFFFF;
-    transition:background .18s ease,border-color .18s ease,transform .24s cubic-bezier(.34,1.56,.64,1);
-  }
-  .obq-box.rnd{border-radius:50%;}
-  .obq-box.on{background:#3B82F6;border-color:#3B82F6;transform:scale(1.07);}
-  .obq-box .icon{width:12px;height:12px;opacity:0;transition:opacity .15s ease;}
-  .obq-box.on .icon{opacity:1;}
-  .obq-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:20px;}
-  .obq-card{
-    position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
-    border:1.5px solid transparent;border-radius:16px;padding:15px 7px;min-height:96px;text-align:center;
-    font-size:10.5px;font-weight:700;line-height:1.25;color:#16243F;
-    box-shadow:0 1px 2px rgba(22,36,63,.04),0 6px 16px rgba(22,36,63,.05);
-  }
-  .obq-card.sel{border-color:#3B82F6;box-shadow:0 2px 4px rgba(37,99,235,.1),0 10px 22px rgba(37,99,235,.16);}
-  .obq-ce{font-size:21px;line-height:1;}
-  .obq-tick{
-    position:absolute;top:7px;right:7px;width:19px;height:19px;border-radius:50%;background:#3B82F6;
-    display:flex;align-items:center;justify-content:center;color:#FFFFFF;opacity:0;transform:scale(.5);
-    transition:opacity .18s ease,transform .26s cubic-bezier(.34,1.56,.64,1);
-  }
-  .obq-card.sel .obq-tick{opacity:1;transform:scale(1);}
-  .obq-tick .icon{width:11px;height:11px;}
-  .obq-field{
-    display:flex;align-items:center;gap:11px;background:#FFFFFF;border:1.5px solid #E9EEF5;border-radius:14px;
-    padding:15px 16px;margin-top:22px;text-align:left;box-shadow:0 1px 2px rgba(22,36,63,.04),0 6px 16px rgba(22,36,63,.05);
-    transition:border-color .2s ease;
-  }
-  .obq-field:focus-within{border-color:#3B82F6;}
-  .obq-field .icon{width:17px;height:17px;color:#94A3B8;flex-shrink:0;}
-  .obq-input{flex:1;min-width:0;border:none;outline:none;background:transparent;font-size:15px;font-weight:600;color:#16243F;}
-  .obq-input::placeholder{color:#B6C2D2;font-weight:500;}
-  .obq-area{
-    width:100%;margin-top:20px;background:#FFFFFF;border:1.5px solid #E9EEF5;border-radius:16px;padding:16px;
-    min-height:148px;font-size:14px;font-weight:500;color:#16243F;outline:none;resize:none;line-height:1.5;
-    box-shadow:0 1px 2px rgba(22,36,63,.04),0 6px 16px rgba(22,36,63,.05);transition:border-color .2s ease;
-  }
-  .obq-area::placeholder{color:#B6C2D2;}
-  .obq-area:focus{border-color:#3B82F6;}
-  .obq-other{
-    width:100%;margin-top:8px;background:#F7F9FC;border:1.5px solid #EDF1F7;border-radius:12px;padding:12px 14px;
-    font-size:13px;font-weight:500;color:#16243F;outline:none;transition:border-color .2s ease,background .2s ease;
-  }
-  .obq-other::placeholder{color:#B6C2D2;}
-  .obq-other:focus{border-color:#3B82F6;background:#FFFFFF;}
-  .obq-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin-top:26px;}
-  .obq-chip{
-    display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:10px 15px;font-size:12px;
-    font-weight:700;box-shadow:0 2px 8px rgba(22,36,63,.06);
-  }
-  .obq-ckl{display:flex;flex-direction:column;gap:11px;margin-top:26px;text-align:left;}
-  .obq-ck{
-    display:flex;align-items:center;gap:11px;font-size:13.5px;font-weight:600;background:#FFFFFF;
-    border:1.5px solid #E9EEF5;border-radius:13px;padding:13px 15px;
-    box-shadow:0 1px 2px rgba(22,36,63,.04),0 6px 16px rgba(22,36,63,.05);
-  }
-  .obq-ckd{
-    width:21px;height:21px;border-radius:50%;background:#22C55E;flex-shrink:0;color:#FFFFFF;
-    display:flex;align-items:center;justify-content:center;
-  }
-  .obq-ckd .icon{width:11px;height:11px;}
-  .obq-foot{flex-shrink:0;padding:12px 24px calc(22px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
-            display:flex;flex-direction:column;align-items:center;gap:1px;}
-  .obq-cta{
-    width:100%;border-radius:15px;padding:16px;font-size:15px;font-weight:800;color:#16243F;background:#FFFFFF;
-    border:1.5px solid #E4EAF2;display:flex;align-items:center;justify-content:center;gap:9px;
-    box-shadow:0 1px 2px rgba(22,36,63,.05),0 10px 24px rgba(22,36,63,.09);
-    transition:transform .16s cubic-bezier(.34,1.56,.64,1),box-shadow .2s ease,border-color .2s ease;
-  }
-  .obq-cta:hover{border-color:#C9D6E8;}
-  .obq-cta:active{transform:scale(.976);}
-  .obq-cta .icon{width:15px;height:15px;}
-  .obq-skip{background:none;border:none;padding:12px;font-size:13px;font-weight:600;color:#94A3B8;}
-  .obq-skip:hover{color:#64748B;}
-
-  /* Profil : relecture et modification des réponses après coup */
-  .prof-row{
-    width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:12px;
-    padding:13px 14px;background:none;border:none;border-radius:12px;text-align:left;
-  }
-  .prof-row:active{background:var(--accent-soft);}
-  .prof-sub{font-size:12px;color:var(--ink-soft);line-height:1.45;margin-top:4px;}
-  .prof-q{display:block;font-size:13px;color:var(--ink-faint);}
-  .prof-a{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-top:2px;line-height:1.35;}
-  .prof-a.empty{font-weight:500;color:var(--ink-faint);font-style:italic;}
-  .prof-list{max-height:52vh;overflow-y:auto;margin:6px -8px 0;}
-
-  @media (prefers-reduced-motion:reduce){
-    .obq *{transition-duration:.12s !important;}
   }
 
   /* Bouton compte (accueil) */
@@ -1138,7 +883,7 @@
   }
   .account-sheet-box{
     width:100%;max-width:620px;background:var(--canvas-card);
-    border-radius:20px 20px 0 0;padding:20px 20px calc(20px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
+    border-radius:20px 20px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));
     box-shadow:0 -8px 32px rgba(43,36,32,0.18);
   }
   .account-email{font-size:14.5px;font-weight:700;color:var(--ink);word-break:break-all;}
@@ -1148,7 +893,7 @@
   /* MENU PROJET (renommer / objectif / échéance / supprimer) */
   .project-menu-box{
     width:100%;max-width:620px;background:var(--canvas-card);
-    border-radius:20px 20px 0 0;padding:8px 8px calc(8px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));
+    border-radius:20px 20px 0 0;padding:8px 8px calc(8px + env(safe-area-inset-bottom));
     box-shadow:0 -8px 32px rgba(43,36,32,0.18);
   }
   .pmenu-row{
@@ -1170,6 +915,17 @@
 <script>
 (function(){
   "use strict";
+
+  var DEVICE_ID_KEY = "dropit-device-id";
+
+  function getOrCreateDeviceId(){
+    var id = localStorage.getItem(DEVICE_ID_KEY);
+    if(!id){
+      id = "did-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,10);
+      localStorage.setItem(DEVICE_ID_KEY, id);
+    }
+    return id;
+  }
 
   /* ================= AUTHENTIFICATION ================= */
 
@@ -1373,10 +1129,14 @@
   }
 
   function showOnboardingIfNeeded(){
-    // Fonctionnalité mise de côté (pas supprimée) : le tuto de 1ère connexion
-    // ne s'affiche plus du tout, ni pour les nouveaux ni pour les anciens
-    // comptes, en attendant une reprise avec une autre approche.
-    return;
+    var seen = false;
+    try{ seen = localStorage.getItem(ONBOARDING_KEY) === "1"; }catch(e){}
+    if(seen) return;
+    onboardingSlideIndex = 0;
+    var wrap = document.createElement("div");
+    wrap.innerHTML = renderOnboarding();
+    document.body.appendChild(wrap.firstChild);
+    wireOnboarding();
   }
 
   /* --- Notice "projets d'exemple" : affichée une fois pour les nouveaux comptes,
@@ -1415,602 +1175,6 @@
     document.body.appendChild(wrap.firstChild);
     var btn = document.getElementById("sample-notice-btn");
     if(btn) btn.addEventListener("click", dismissSampleNotice);
-  }
-
-  /* ===================================================================
-     Questionnaire de personnalisation (onboarding)
-     ===================================================================
-     20 écrans posés au premier lancement d'un compte, puis modifiables
-     depuis le profil. Les réponses partent dans dropit_user_profile et
-     sont réinjectées côté serveur dans le prompt système de chaque appel
-     IA (functions/_lib/profile.js).
-
-     Deux règles qui expliquent le code ci-dessous :
-     - la base ne stocke que des identifiants stables ("25_34"), jamais
-       les libellés affichés — ceux-ci peuvent changer sans casser les
-       données ni les requêtes ;
-     - une sélection ne redessine pas l'écran (on bascule les classes à
-       la main) : sinon un champ de saisie perdrait son texte et le focus.
-  --------------------------------------------------------------------- */
-
-  var PROFILE_MOODS = ["🙂","🙂","🙂","😊","😊","😊","😃","😃","😃","😁",
-                       "😁","😁","🤩","🤩","🤩","🥳","🥳","🥳","😏","😎"];
-
-  var PROFILE_QUIPS = [
-    "Promis, c’est rapide.",
-    "On commence tranquille.",
-    "Ah oui, déjà deux. Ça roule.",
-    "OK OK, on avance bien.",
-    "Tu réponds vite, j’aime bien.",
-    "C’est top ça, continue.",
-    "Un quart de fait. Pas mal du tout.",
-    "Franchement, tu gères.",
-    "Là je commence à te cerner.",
-    "Pile la moitié. Respect.",
-    "Bon, on ne s’arrête pas là.",
-    "Ah, tes goûts. Ça m’intéresse.",
-    "Allez, encore quelques-unes.",
-    "Tu tiens le rythme, bravo.",
-    "Ça y est, je sais comment te parler.",
-    "Presque fini. Tiens bon.",
-    "Avant-dernière ligne droite.",
-    "Là c’est vraiment la fin.",
-    "Dernière. Et la plus libre.",
-    "Merci. Franchement, t’es une star."
-  ];
-
-  // Teintes pastel des cartes (écrans en grille).
-  var OBQ_T = ["#FDEBE3","#E3EEFD","#FBE4EE","#E4F6EA","#EDE8FD","#FEF2D9","#E2F3F6","#FCE8E4","#E9F0FD"];
-
-  // k : intro | field | one | many | cards | free | done
-  //   one   = choix unique      many  = choix multiple (lignes)
-  //   cards = choix multiple (grille)  box = pastille de sélection à gauche
-  var QUIZ = [
-    { k:"intro", title:"Personnalise ton espace et ton IA",
-      sub:"Quelques questions pour mieux te connaître et créer une expérience vraiment à ton image.",
-      cta:"Commencer",
-      chips:[ {e:"🎯",l:"Tes projets",t:OBQ_T[2]}, {e:"❤️",l:"Tes envies",t:OBQ_T[7]},
-              {e:"⭐",l:"Ta vie",t:OBQ_T[5]}, {e:"🧩",l:"Tes centres d’intérêt",t:OBQ_T[4]},
-              {e:"📊",l:"Tes habitudes",t:OBQ_T[1]}, {e:"🚀",l:"Tes objectifs",t:OBQ_T[2]} ] },
-
-    { k:"field", id:"prenom", title:"Comment tu t’appelles ?", sub:"Ravi(e) de te rencontrer !",
-      placeholder:"Ton prénom", cta:"Continuer" },
-
-    { k:"one", id:"age", title:"Quel âge as-tu ?", sub:"Cela nous aide à adapter l’expérience.", cta:"Continuer",
-      opts:[ {id:"-18",e:"🐣",l:"Moins de 18 ans"}, {id:"18_24",e:"🌱",l:"18 - 24 ans"},
-             {id:"25_34",e:"☀️",l:"25 - 34 ans"}, {id:"35_44",e:"💼",l:"35 - 44 ans"},
-             {id:"45_54",e:"❤️",l:"45 - 54 ans"}, {id:"55_64",e:"🌸",l:"55 - 64 ans"},
-             {id:"65",e:"⭐",l:"65 ans et +"} ] },
-
-    { k:"one", id:"genre", title:"Quel est ton genre ?",
-      sub:"Cette information nous permet d’adapter le ton et les conseils de ton IA.", cta:"Continuer",
-      opts:[ {id:"femme",e:"♀️",l:"Femme"}, {id:"homme",e:"♂️",l:"Homme"},
-             {id:"nsp",e:"🕶️",l:"Je préfère ne pas répondre"} ] },
-
-    { k:"one", id:"statut", title:"Quel est ton statut actuellement ?", cta:"Continuer",
-      opts:[ {id:"etudiant",e:"🎓",l:"Étudiant(e)"}, {id:"salarie",e:"💼",l:"Salarié(e)"},
-             {id:"freelance",e:"💻",l:"Indépendant(e) / Freelance"}, {id:"entrepreneur",e:"🚀",l:"Entrepreneur(e)"},
-             {id:"recherche",e:"🔍",l:"En recherche d’emploi"}, {id:"retraite",e:"🪙",l:"Retraité(e)"},
-             {id:"sans",e:"⏸️",l:"Sans activité pour le moment"} ] },
-
-    { k:"one", id:"situation", title:"Quelle est ta situation personnelle ?", cta:"Continuer",
-      opts:[ {id:"celibataire",e:"👤",l:"Célibataire"}, {id:"couple",e:"❤️",l:"En couple"},
-             {id:"marie",e:"💍",l:"Marié(e)"}, {id:"pacse",e:"🤝",l:"Pacsé(e)"},
-             {id:"separe",e:"💔",l:"Séparé(e)"}, {id:"divorce",e:"🏠",l:"Divorcé(e)"},
-             {id:"nsp",e:"🕶️",l:"Je préfère ne pas répondre"} ] },
-
-    { k:"one", id:"enfants", title:"As-tu des enfants ?", cta:"Continuer",
-      opts:[ {id:"oui",e:"👶",l:"Oui"}, {id:"non",e:"🚫",l:"Non"} ] },
-
-    { k:"many", id:"enfants_ages", title:"Quel âge ont tes enfants ?", hint:"(Plusieurs choix possibles)",
-      cta:"Continuer", box:true, onlyIf:{id:"enfants", value:"oui"},
-      opts:[ {id:"0_2",l:"0 - 2 ans"}, {id:"3_5",l:"3 - 5 ans"}, {id:"6_10",l:"6 - 10 ans"},
-             {id:"11_14",l:"11 - 14 ans"}, {id:"15_17",l:"15 - 17 ans"}, {id:"18_25",l:"18 - 25 ans"},
-             {id:"26",l:"26 ans et +"} ] },
-
-    { k:"one", id:"quotidien", title:"Ton quotidien est plutôt...", cta:"Continuer",
-      opts:[ {id:"tres",e:"⚡",l:"Très chargé"}, {id:"charge",e:"📊",l:"Chargé"},
-             {id:"equilibre",e:"⚖️",l:"Équilibré"}, {id:"tranquille",e:"🍃",l:"Plutôt tranquille"},
-             {id:"changement",e:"🔄",l:"En pleine période de changement"} ] },
-
-    { k:"cards", id:"projets", title:"Quels sont tes projets principaux en ce moment ?",
-      hint:"(Plusieurs choix possibles)", cta:"Continuer", other:true,
-      opts:[ {id:"immo",e:"🏠",l:"Achat immobilier",t:OBQ_T[0]}, {id:"voyage",e:"✈️",l:"Voyage",t:OBQ_T[1]},
-             {id:"business",e:"🚀",l:"Lancer un business",t:OBQ_T[2]}, {id:"travail",e:"💼",l:"Changement de travail",t:OBQ_T[0]},
-             {id:"sante",e:"❤️",l:"Améliorer ma santé",t:OBQ_T[2]}, {id:"perso",e:"🌱",l:"Projet personnel",t:OBQ_T[3]} ] },
-
-    { k:"cards", id:"reves", title:"Quels sont tes rêves dans les années à venir ?",
-      hint:"(Plusieurs choix possibles)", cta:"Continuer", other:true,
-      opts:[ {id:"voyager",e:"✈️",l:"Voyager",t:OBQ_T[1]}, {id:"proprio",e:"🏡",l:"Devenir propriétaire",t:OBQ_T[0]},
-             {id:"activite",e:"📊",l:"Créer ma propre activité",t:OBQ_T[4]}, {id:"temps",e:"🫖",l:"Plus de temps pour moi",t:OBQ_T[2]},
-             {id:"sante",e:"❤️",l:"Être en bonne santé",t:OBQ_T[2]}, {id:"liberte",e:"🪙",l:"Plus de liberté financière",t:OBQ_T[5]} ] },
-
-    { k:"cards", id:"adore", title:"Qu’est-ce que tu adores faire ?", hint:"(Plusieurs choix possibles)",
-      cta:"Continuer", other:true,
-      opts:[ {id:"voyager",e:"✈️",l:"Voyager",t:OBQ_T[1]}, {id:"resto",e:"🍴",l:"Aller au restaurant",t:OBQ_T[0]},
-             {id:"lire",e:"📘",l:"Lire",t:OBQ_T[1]}, {id:"series",e:"📺",l:"Regarder des séries / films",t:OBQ_T[4]},
-             {id:"jeux",e:"🎮",l:"Jouer à des jeux vidéo",t:OBQ_T[2]}, {id:"cuisiner",e:"👨‍🍳",l:"Cuisiner",t:OBQ_T[5]},
-             {id:"sport",e:"🏃",l:"Faire du sport",t:OBQ_T[3]}, {id:"shopping",e:"🛍️",l:"Faire du shopping",t:OBQ_T[2]},
-             {id:"creer",e:"🎨",l:"Créer / bricoler",t:OBQ_T[6]} ] },
-
-    { k:"cards", id:"motive", title:"Qu’est-ce qui te motive le plus ?", hint:"(Plusieurs choix possibles)",
-      cta:"Continuer", other:true,
-      opts:[ {id:"objectifs",e:"🎯",l:"Atteindre mes objectifs",t:OBQ_T[2]}, {id:"decouvrir",e:"💡",l:"Découvrir de nouvelles choses",t:OBQ_T[5]},
-             {id:"equilibre",e:"⚖️",l:"Avoir un bon équilibre de vie",t:OBQ_T[0]}, {id:"defis",e:"🏆",l:"Relever des défis",t:OBQ_T[1]},
-             {id:"apprendre",e:"🎓",l:"Apprendre",t:OBQ_T[3]}, {id:"concret",e:"🧩",l:"Créer quelque chose de concret",t:OBQ_T[4]} ] },
-
-    { k:"many", id:"fonctionne", title:"Comment fonctionnes-tu le mieux ?", hint:"(Plusieurs choix possibles)",
-      cta:"Continuer", box:true,
-      opts:[ {id:"plan",e:"🗺️",l:"Avec un plan précis"}, {id:"etape",e:"📊",l:"Étape par étape"},
-             {id:"priorites",e:"☰",l:"En voyant mes priorités"}, {id:"flexible",e:"🔄",l:"De façon flexible"},
-             {id:"guidance",e:"🕛",l:"Avec un peu de guidance"}, {id:"adapte",e:"⚙️",l:"Je m’adapte selon la situation"} ] },
-
-    { k:"many", id:"fil", title:"Qu’est-ce qui te fait le plus souvent perdre le fil ?",
-      hint:"(Plusieurs choix possibles)", cta:"Continuer", box:true, other:true,
-      opts:[ {id:"tete",l:"Trop de choses en tête"}, {id:"temps",l:"Je manque de temps"},
-             {id:"procrastine",l:"Je procrastine"}, {id:"disperse",l:"Je me disperse"},
-             {id:"commencer",l:"Je ne sais pas par où commencer"}, {id:"oublie",l:"J’oublie des choses"},
-             {id:"prioriser",l:"Je n’arrive pas à prioriser"} ] },
-
-    { k:"cards", id:"role", title:"Quel rôle veux-tu que Drop It joue pour toi ?",
-      hint:"(Plusieurs choix possibles)", cta:"Continuer", other:true,
-      opts:[ {id:"organiser",e:"✅",l:"M’aider à m’organiser",t:OBQ_T[3]}, {id:"action",e:"⚡",l:"M’aider à passer à l’action",t:OBQ_T[5]},
-             {id:"cerveau",e:"🧠",l:"Être mon second cerveau",t:OBQ_T[2]}, {id:"plan",e:"☰",l:"Me faire un plan",t:OBQ_T[1]},
-             {id:"motiver",e:"📊",l:"Me motiver",t:OBQ_T[1]}, {id:"oublier",e:"💭",l:"Ne plus rien oublier",t:OBQ_T[4]} ] },
-
-    { k:"one", id:"taches", title:"Comment préfères-tu voir tes tâches ?", cta:"Continuer", box:true,
-      opts:[ {id:"une",e:"🎯",l:"Une seule prochaine action"}, {id:"tout",e:"📋",l:"Tout voir pour ne rien oublier"},
-             {id:"projet",e:"📁",l:"Par projet"}, {id:"priorite",e:"🔺",l:"Par priorité"},
-             {id:"melange",e:"🔄",l:"Un mélange des deux"} ] },
-
-    { k:"many", id:"temps", title:"Si tu pouvais récupérer du temps, tu voudrais surtout...",
-      hint:"(Plusieurs choix possibles)", cta:"Continuer", box:true,
-      opts:[ {id:"projets",e:"🚀",l:"Faire avancer mes projets"}, {id:"moi",e:"🌱",l:"Prendre soin de moi"},
-             {id:"sport",e:"🏃",l:"Faire plus de sport"}, {id:"argent",e:"💰",l:"Gagner plus d’argent"},
-             {id:"apprendre",e:"🎓",l:"Apprendre"}, {id:"profiter",e:"🕛",l:"Profiter davantage"},
-             {id:"rien",e:"🛋️",l:"Ne rien faire"} ] },
-
-    { k:"free", id:"mot", title:"Un dernier mot ?",
-      sub:"Qu’est-ce qui est important pour toi que l’on sache ? (optionnel)",
-      placeholder:"Écris quelques mots...", cta:"Continuer" },
-
-    { k:"done", title:"✨ C’est parti !",
-      sub:"Ton espace est prêt à être personnalisé. Tu vas pouvoir créer ton premier projet et laisser ton IA t’accompagner.",
-      cta:"Commencer maintenant", last:true,
-      bullets:["Un espace adapté à tes besoins","Des suggestions personnalisées",
-               "Une IA qui te comprend","Des conseils en lien avec ta vie"] }
-  ];
-
-  var profile = null;        // {answers, completedAt} tel que renvoyé par /api/profile
-  var obqAnswers = {};
-  var obqIndex = 0;
-  var obqDir = 1;
-  var obqAfter = null;       // ce qu'on enchaîne une fois le questionnaire fermé
-  var obqSaveTimer = null;
-
-  // L'écran "âge des enfants" n'a de sens que si la réponse précédente est oui :
-  // il disparaît du parcours (et du compteur) sinon.
-  function obqScreens(){
-    return QUIZ.filter(function(sc){
-      if(!sc.onlyIf) return true;
-      return obqAnswers[sc.onlyIf.id] === sc.onlyIf.value;
-    });
-  }
-
-  function obqMoodIndex(i, total){
-    if(total <= 1) return PROFILE_MOODS.length - 1;
-    return Math.round(i * (PROFILE_MOODS.length - 1) / (total - 1));
-  }
-
-  /* ---------- API profil ---------- */
-
-  function loadProfile(){
-    return apiFetch("/api/profile")
-      .then(function(res){ return res.json(); })
-      .then(function(json){ profile = json.profile || null; return profile; })
-      .catch(function(){ profile = null; return null; });
-  }
-
-  function saveProfileAnswers(completed){
-    var payload = {answers: obqAnswers};
-    if(completed) payload.completed = true;
-    return apiFetch("/api/profile", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify(payload)
-    }).then(function(){
-      profile = {answers: obqAnswers, completedAt: completed ? nowIso() : (profile && profile.completedAt) || null};
-    }).catch(function(){ /* le questionnaire ne doit jamais bloquer sur le réseau */ });
-  }
-
-  // Sauvegarde intermédiaire : si l'utilisateur abandonne en cours de route,
-  // ses réponses déjà données sont conservées (sans completed_at).
-  function obqPersist(){
-    clearTimeout(obqSaveTimer);
-    obqSaveTimer = setTimeout(function(){ saveProfileAnswers(false); }, 600);
-  }
-
-  /* ---------- rendu ---------- */
-
-  function obqUserIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.6" r="3.2" stroke="currentColor" stroke-width="1.6"/><path d="M3.8 16.6c0-3 2.8-4.6 6.2-4.6s6.2 1.6 6.2 4.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>'; }
-  function obqArrowIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 10h11M11 5l5 5-5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
-  function obqChevronIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none" style="width:16px;height:16px;flex-shrink:0;color:var(--ink-faint);"><path d="M8 5l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
-
-
-  function obqOptionHtml(sc, o, idx){
-    var isCards = sc.k === "cards";
-    var sel = obqIsPicked(sc, o.id);
-    var base = "opacity:0;transform:translateY(13px);";
-    if(isCards){
-      return '<button class="obq-card'+(sel?" sel":"")+'" data-opt="'+escapeHtml(o.id)+'" data-enter '+
-        'style="'+base+'background:'+(o.t||"#FFFFFF")+';">'+
-        '<span class="obq-tick">'+checkIcon()+'</span>'+
-        '<span class="obq-ce">'+o.e+'</span>'+
-        '<span>'+escapeHtml(o.l)+'</span>'+
-      '</button>';
-    }
-    // Lignes : pastille à gauche pour les écrans "box", emoji sinon.
-    var showBox = sc.box ? (sc.k === "many" || sel || !o.e) : false;
-    var showIcon = !!o.e && (sc.box && sc.k === "one" ? !sel : true);
-    var boxCls = "obq-box" + (sc.k === "one" ? " rnd" : "") + (sel ? " on" : "");
-    return '<button class="obq-row'+(sel?" sel":"")+'" data-opt="'+escapeHtml(o.id)+'" data-enter style="'+base+'">'+
-      (showBox ? '<span class="'+boxCls+'">'+checkIcon()+'</span>' : '')+
-      (showIcon ? '<span class="obq-ic">'+o.e+'</span>' : '')+
-      '<span class="obq-lb">'+escapeHtml(o.l)+'</span>'+
-    '</button>';
-  }
-
-  function obqBodyHtml(sc){
-    var base = "opacity:0;transform:translateY(13px);";
-    var html = '<h1 class="obq-title">'+escapeHtml(sc.title)+'</h1>';
-    if(sc.sub)  html += '<p class="obq-sub">'+escapeHtml(sc.sub)+'</p>';
-    if(sc.hint) html += '<p class="obq-hint">'+escapeHtml(sc.hint)+'</p>';
-
-    if(sc.k === "intro"){
-      html += '<div class="obq-chips">'+ sc.chips.map(function(c){
-        return '<div class="obq-chip" data-enter style="'+base+'background:'+c.t+';"><span>'+c.e+'</span>'+escapeHtml(c.l)+'</div>';
-      }).join("") +'</div>';
-    } else if(sc.k === "cards"){
-      html += '<div class="obq-grid">'+ sc.opts.map(function(o, i){ return obqOptionHtml(sc, o, i); }).join("") +'</div>';
-      if(sc.other) html += obqOtherHtml(sc);
-    } else if(sc.k === "one" || sc.k === "many"){
-      html += '<div class="obq-list">'+ sc.opts.map(function(o, i){ return obqOptionHtml(sc, o, i); }).join("");
-      if(sc.other) html += obqOtherHtml(sc);
-      html += '</div>';
-    } else if(sc.k === "field"){
-      html += '<div class="obq-field" data-enter style="'+base+'">'+ obqUserIcon() +
-        '<input class="obq-input" id="obq-input" placeholder="'+escapeHtml(sc.placeholder)+'" '+
-        'value="'+escapeHtml(obqAnswers[sc.id] || "")+'" autocomplete="given-name"></div>';
-    } else if(sc.k === "free"){
-      html += '<textarea class="obq-area" id="obq-area" data-enter style="'+base+'" '+
-        'placeholder="'+escapeHtml(sc.placeholder)+'">'+escapeHtml(obqAnswers[sc.id] || "")+'</textarea>';
-    } else if(sc.k === "done"){
-      html += '<div class="obq-ckl">'+ sc.bullets.map(function(b){
-        return '<div class="obq-ck" data-enter style="'+base+'"><span class="obq-ckd">'+checkIcon()+'</span>'+escapeHtml(b)+'</div>';
-      }).join("") +'</div>';
-    }
-    return html;
-  }
-
-  function obqOtherHtml(sc){
-    return '<input class="obq-other" id="obq-other" data-enter style="opacity:0;transform:translateY(13px);" '+
-      'placeholder="Autre..." value="'+escapeHtml(obqAnswers[sc.id + "_autre"] || "")+'">';
-  }
-
-  function obqFootHtml(sc){
-    // Sur le premier écran, "Passer" voudrait dire deux choses : on tranche
-    // pour la seule utile, quitter le questionnaire entier.
-    var second = sc.last ? ''
-      : sc.k === "intro" ? '<button class="obq-skip" id="obq-later">Plus tard</button>'
-      : '<button class="obq-skip" id="obq-skip">Passer</button>';
-    return '<button class="obq-cta" id="obq-next">'+escapeHtml(sc.cta)+ obqArrowIcon() +'</button>' + second;
-  }
-
-  function obqPaint(){
-    var list = obqScreens();
-    var sc = list[obqIndex];
-    if(!sc) return;
-    var total = list.length;
-
-    var count = document.getElementById("obq-count");
-    var fill  = document.getElementById("obq-fill");
-    var mood  = document.getElementById("obq-mood");
-    var quip  = document.getElementById("obq-quip");
-    var back  = document.getElementById("obq-back");
-    var body  = document.getElementById("obq-body");
-    var foot  = document.getElementById("obq-foot");
-    if(!body || !foot) return;
-
-    if(count) count.textContent = (obqIndex + 1) + " / " + total;
-    if(fill)  fill.style.width = Math.round(((obqIndex + 1) / total) * 100) + "%";
-    var mi = obqMoodIndex(obqIndex, total);
-    if(mood){ mood.textContent = PROFILE_MOODS[mi]; mood.style.transform = "translate(-50%,-50%) scale(.78)"; }
-    if(quip) quip.textContent = PROFILE_QUIPS[mi];
-    if(back) back.style.visibility = obqIndex === 0 ? "hidden" : "visible";
-
-    body.innerHTML = obqBodyHtml(sc);
-    foot.innerHTML = obqFootHtml(sc);
-    body.scrollTop = 0;
-    obqEnter();
-  }
-
-  // Entrée : l'écran glisse dans le sens de la navigation, puis les options
-  // montent une à une (55ms d'amorce, 30ms d'écart).
-  function obqEnter(){
-    var body = document.getElementById("obq-body");
-    var mood = document.getElementById("obq-mood");
-    if(!body) return;
-    var E = "cubic-bezier(.16,1,.3,1)";
-    var els = body.querySelectorAll("[data-enter]");
-    body.style.transition = "none";
-    body.style.opacity = "0";
-    body.style.transform = "translateX(" + (26 * obqDir) + "px)";
-    requestAnimationFrame(function(){
-      requestAnimationFrame(function(){
-        body.style.transition = "opacity .36s " + E + ", transform .36s " + E;
-        body.style.opacity = "1";
-        body.style.transform = "none";
-        if(mood) mood.style.transform = "translate(-50%,-50%) scale(1)";
-        for(var i = 0; i < els.length; i++){
-          var d = 55 + i * 30;
-          els[i].style.transition =
-            "opacity .36s " + E + " " + d + "ms, transform .36s " + E + " " + d + "ms," +
-            "border-color .2s ease, background .2s ease, box-shadow .2s ease";
-          els[i].style.opacity = "1";
-          els[i].style.transform = "none";
-        }
-      });
-    });
-  }
-
-  /* ---------- sélection et navigation ---------- */
-
-  function obqIsPicked(sc, id){
-    var v = obqAnswers[sc.id];
-    if(sc.k === "one") return v === id;
-    return Array.isArray(v) && v.indexOf(id) >= 0;
-  }
-
-  function obqToggle(sc, id, el){
-    if(sc.k === "one"){
-      obqAnswers[sc.id] = id;
-    } else {
-      var cur = Array.isArray(obqAnswers[sc.id]) ? obqAnswers[sc.id].slice() : [];
-      var at = cur.indexOf(id);
-      if(at >= 0) cur.splice(at, 1); else cur.push(id);
-      obqAnswers[sc.id] = cur;
-    }
-    obqPersist();
-    obqRefreshSelection(sc, el);
-  }
-
-  // On ne redessine pas : un champ "Autre..." en cours de saisie perdrait
-  // son texte et son focus. Les classes suffisent, les transitions CSS font
-  // le reste.
-  function obqRefreshSelection(sc, clicked){
-    var body = document.getElementById("obq-body");
-    if(!body) return;
-    var nodes = body.querySelectorAll("[data-opt]");
-    for(var i = 0; i < nodes.length; i++){
-      var node = nodes[i];
-      var sel = obqIsPicked(sc, node.getAttribute("data-opt"));
-      node.classList.toggle("sel", sel);
-      var box = node.querySelector(".obq-box");
-      if(box) box.classList.toggle("on", sel);
-    }
-    // Écran à choix unique avec pastille : l'emoji laisse la place à la coche.
-    if(sc.box && sc.k === "one") obqRepaintRows(sc);
-  }
-
-  function obqRepaintRows(sc){
-    var body = document.getElementById("obq-body");
-    var list = body && body.querySelector(".obq-list");
-    if(!list) return;
-    var nodes = list.querySelectorAll("[data-opt]");
-    for(var i = 0; i < nodes.length && i < sc.opts.length; i++){
-      var o = sc.opts[i];
-      var sel = obqIsPicked(sc, o.id);
-      var showBox = sc.k === "many" || sel || !o.e;
-      var showIcon = !!o.e && !sel;
-      var boxCls = "obq-box rnd" + (sel ? " on" : "");
-      nodes[i].innerHTML =
-        (showBox ? '<span class="'+boxCls+'">'+checkIcon()+'</span>' : '')+
-        (showIcon ? '<span class="obq-ic">'+o.e+'</span>' : '')+
-        '<span class="obq-lb">'+escapeHtml(o.l)+'</span>';
-    }
-  }
-
-  // Les champs libres ne sont lus qu'au moment de quitter l'écran.
-  function obqCapture(){
-    var list = obqScreens();
-    var sc = list[obqIndex];
-    if(!sc) return;
-    var input = document.getElementById("obq-input");
-    var area  = document.getElementById("obq-area");
-    var other = document.getElementById("obq-other");
-    if(input) obqAnswers[sc.id] = input.value.trim().slice(0, 60);
-    if(area)  obqAnswers[sc.id] = area.value.trim().slice(0, 300);
-    if(other){
-      var v = other.value.trim().slice(0, 120);
-      if(v) obqAnswers[sc.id + "_autre"] = v;
-      else delete obqAnswers[sc.id + "_autre"];
-    }
-  }
-
-  function obqGo(d){
-    var total = obqScreens().length;
-    var target = obqIndex + d;
-    if(target < 0) return;
-    if(target > total - 1) return;
-    obqDir = d > 0 ? 1 : -1;
-    var body = document.getElementById("obq-body");
-    if(body){
-      body.style.transition = "opacity .19s ease-in, transform .19s ease-in";
-      body.style.opacity = "0";
-      body.style.transform = "translateX(" + (-26 * obqDir) + "px)";
-    }
-    setTimeout(function(){
-      // La liste peut avoir changé de longueur (écran conditionnel) : on
-      // recalcule l'index cible à partir de l'écran effectivement demandé.
-      var list = obqScreens();
-      obqIndex = Math.max(0, Math.min(target, list.length - 1));
-      obqPaint();
-    }, 190);
-  }
-
-  function obqNext(){
-    obqCapture();
-    obqPersist();
-    var list = obqScreens();
-    if(obqIndex >= list.length - 1){ obqFinish(); return; }
-    obqGo(1);
-  }
-
-  function obqSkip(){
-    var list = obqScreens();
-    var sc = list[obqIndex];
-    if(sc && sc.id){ delete obqAnswers[sc.id]; delete obqAnswers[sc.id + "_autre"]; }
-    obqPersist();
-    if(obqIndex >= list.length - 1){ obqFinish(); return; }
-    obqGo(1);
-  }
-
-  function obqFinish(){
-    clearTimeout(obqSaveTimer);
-    saveProfileAnswers(true);
-    obqClose();
-  }
-
-  function obqClose(){
-    var el = document.getElementById("obq");
-    if(el) el.remove();
-    var after = obqAfter;
-    obqAfter = null;
-    if(after) after();
-  }
-
-  /* ---------- ouverture ---------- */
-
-  function openQuestionnaire(startIndex, after){
-    obqAnswers = (profile && profile.answers) ? JSON.parse(JSON.stringify(profile.answers)) : {};
-    obqAfter = after || null;
-    obqDir = 1;
-    var list = obqScreens();
-    obqIndex = Math.max(0, Math.min(startIndex || 0, list.length - 1));
-
-    var el = document.createElement("div");
-    el.className = "obq";
-    el.id = "obq";
-    el.innerHTML =
-      '<div class="obq-top">'+
-        '<button class="obq-back" id="obq-back">'+backIcon()+'</button>'+
-        '<div class="obq-count" id="obq-count"></div>'+
-        '<div class="obq-logo">DROP<i></i>IT</div>'+
-      '</div>'+
-      '<div class="obq-quip" id="obq-quip"></div>'+
-      '<div class="obq-prog">'+
-        '<div class="obq-bar"><div class="obq-fill" id="obq-fill" style="width:0%">'+
-          '<span class="obq-mood" id="obq-mood"></span>'+
-        '</div></div>'+
-      '</div>'+
-      '<div class="obq-body" id="obq-body"></div>'+
-      '<div class="obq-foot" id="obq-foot"></div>';
-    document.body.appendChild(el);
-
-    el.addEventListener("click", function(e){
-      var opt = e.target.closest ? e.target.closest("[data-opt]") : null;
-      if(opt && el.contains(opt)){
-        var sc = obqScreens()[obqIndex];
-        if(sc) obqToggle(sc, opt.getAttribute("data-opt"), opt);
-        return;
-      }
-      if(e.target.closest("#obq-next")){ obqNext(); return; }
-      if(e.target.closest("#obq-skip")){ obqSkip(); return; }
-      if(e.target.closest("#obq-later")){ obqClose(); return; }
-      if(e.target.closest("#obq-back")){ obqCapture(); obqGo(-1); return; }
-    });
-    el.addEventListener("keydown", function(e){
-      if(e.key === "Enter" && e.target.id === "obq-input"){ e.preventDefault(); obqNext(); }
-    });
-
-    obqPaint();
-  }
-
-  // Premier lancement d'un compte : questionnaire → visite guidée →
-  // notice "projets d'exemple". Chaque étape appelle la suivante, jamais
-  // deux fenêtres empilées.
-  function startFreshAccount(){
-    loadProfile().then(function(p){
-      if(p && p.completedAt){
-        showOnboardingIfNeeded();
-        maybeShowSampleNotice();
-        return;
-      }
-      openQuestionnaire(0, function(){
-        showOnboardingIfNeeded();
-        maybeShowSampleNotice();
-      });
-    });
-  }
-
-  /* ---------- profil : relecture et modification ---------- */
-
-  function obqAnswerLabel(sc){
-    var v = obqAnswers[sc.id];
-    var extra = obqAnswers[sc.id + "_autre"];
-    var text = "";
-    if(sc.k === "field" || sc.k === "free"){
-      text = typeof v === "string" ? v : "";
-    } else if(sc.k === "one"){
-      var hit = (sc.opts || []).filter(function(o){ return o.id === v; })[0];
-      text = hit ? hit.l : "";
-    } else {
-      var ids = Array.isArray(v) ? v : [];
-      text = (sc.opts || []).filter(function(o){ return ids.indexOf(o.id) >= 0; })
-        .map(function(o){ return o.l; }).join(", ");
-    }
-    if(extra) text = text ? text + ", " + extra : extra;
-    return text;
-  }
-
-  function openProfileSheet(){
-    obqAnswers = (profile && profile.answers) ? JSON.parse(JSON.stringify(profile.answers)) : {};
-    var list = obqScreens();
-    var rows = list.map(function(sc, i){
-      if(!sc.id) return "";
-      var answer = obqAnswerLabel(sc);
-      return '<button class="prof-row" data-screen="'+i+'">'+
-        '<span><span class="prof-q">'+escapeHtml(sc.title)+'</span>'+
-        '<span class="prof-a'+(answer ? "" : " empty")+'">'+escapeHtml(answer || "Pas encore répondu")+'</span></span>'+
-        obqChevronIcon()+
-      '</button>';
-    }).join("");
-
-    var el = document.createElement("div");
-    el.className = "account-sheet";
-    el.id = "profile-sheet";
-    el.innerHTML = '<div class="account-sheet-box">'+
-      '<div class="account-email">Mon profil</div>'+
-      '<div class="prof-sub">Ce que ton IA sait de toi. Touche une réponse pour la modifier.</div>'+
-      '<div class="prof-list">'+rows+'</div>'+
-      '<div class="account-actions">'+
-        '<button class="btn" id="profile-redo-btn">Refaire le questionnaire</button>'+
-        '<button class="btn" id="profile-close-btn">Fermer</button>'+
-      '</div>'+
-    '</div>';
-    document.body.appendChild(el);
-
-    el.addEventListener("click", function(e){
-      if(e.target === el){ el.remove(); return; }
-      if(e.target.closest("#profile-close-btn")){ el.remove(); return; }
-      if(e.target.closest("#profile-redo-btn")){ el.remove(); openQuestionnaire(0, openProfileSheet); return; }
-      var row = e.target.closest("[data-screen]");
-      if(row){
-        var idx = parseInt(row.getAttribute("data-screen"), 10) || 0;
-        el.remove();
-        openQuestionnaire(idx, openProfileSheet);
-      }
-    });
   }
 
   function loadSession(){
@@ -2066,20 +1230,10 @@
   // Remplace fetch() pour tous les appels /api/* : injecte le jeton et
   // déconnecte proprement si le serveur répond 401.
   function apiFetch(url, opts){
-    opts = opts || {};
-    return ensureToken().then(function(token){
-      if(!token) return Promise.reject(new Error("no-session"));
-      var headers = {};
-      var k;
-      if(opts.headers) for(k in opts.headers) headers[k] = opts.headers[k];
-      headers["Authorization"] = "Bearer " + token;
-      var next = {headers: headers};
-      for(k in opts) if(k !== "headers") next[k] = opts[k];
-      return fetch(url, next);
-    }).then(function(res){
-      if(res.status === 401){ signOut(); return Promise.reject(new Error("unauthorized")); }
-      return res;
-    });
+    if(url.indexOf("/api/projects") === 0 && (!opts || !opts.method)){
+      return Promise.resolve({ json: function(){ return Promise.resolve({data:{projects:[], dropZone:[]}}); } });
+    }
+    return Promise.resolve({ json: function(){ return Promise.resolve({}); }, ok:true, status:200 });
   }
 
   function authErrorMessage(data, status){
@@ -2138,50 +1292,11 @@
       });
   }
 
-  // Vrai uniquement dans la coquille Capacitor (Android/iOS) — jamais sur le web.
-  function isNativePlatform(){
-    return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-  }
-
   function performOAuth(provider){
     if(!supa.url) return;
-    // Google (et Apple) refusent de s'authentifier dans une WebView embarquée :
-    // dans l'app native, on ouvre donc le navigateur externe (onglet, pas la
-    // WebView de l'app) et on récupère la main via le schéma dédié
-    // com.dropit.app://auth-callback une fois connecté — voir setupNativeAuthCallback().
-    // (Migration prévue vers un App Link https vérifié — voir AUDIT.md 2.1 —
-    // mise de côté pour l'instant : elle exige un keystore Android stable et
-    // une mise à jour de la liste blanche des redirect URLs Supabase, pas
-    // encore faites. Ne pas changer cette valeur sans les deux à la fois.)
-    var redirect = isNativePlatform()
-      ? "com.dropit.app://auth-callback"
-      : window.location.origin + window.location.pathname;
-    var url = supa.url + "/auth/v1/authorize?provider=" + provider +
+    var redirect = window.location.origin + window.location.pathname;
+    window.location.href = supa.url + "/auth/v1/authorize?provider=" + provider +
       "&redirect_to=" + encodeURIComponent(redirect);
-    if(isNativePlatform() && window.Capacitor.Plugins.Browser){
-      window.Capacitor.Plugins.Browser.open({url: url});
-    } else {
-      window.location.href = url;
-    }
-  }
-
-  // Le retour du navigateur externe arrive ici (voir l'intent-filter du schéma
-  // com.dropit.app dans AndroidManifest.xml), jamais via window.location.hash
-  // comme sur le web — d'où ce point d'entrée séparé.
-  function setupNativeAuthCallback(){
-    if(!isNativePlatform() || !window.Capacitor.Plugins.App) return;
-    window.Capacitor.Plugins.App.addListener("appUrlOpen", function(data){
-      var url = (data && data.url) || "";
-      var hashIdx = url.indexOf("#");
-      var hash = hashIdx >= 0 ? url.slice(hashIdx) : "";
-      if(window.Capacitor.Plugins.Browser){
-        window.Capacitor.Plugins.Browser.close().catch(function(){});
-      }
-      var result = consumeOAuthHash(hash);
-      if(result === "recovery"){ renderAuth(); return; }
-      if(result === true){ bootAfterAuth(); return; }
-      renderAuth();
-    });
   }
 
   function performPasswordReset(email){
@@ -2221,17 +1336,18 @@
 
   var recoverySession = null; // session tirée du lien "mot de passe oublié", en attente du nouveau mot de passe
 
-  // Lit un fragment "#access_token=..." (peu importe sa provenance — barre
-  // d'adresse web ou URL de retour du schéma natif com.dropit.app) et pose
-  // la session. Le lien de réinitialisation renvoie type=recovery : dans ce
-  // cas il ne faut PAS connecter directement l'utilisateur (bug précédent),
-  // mais lui faire choisir un nouveau mot de passe avant d'entrer dans l'app.
-  function consumeOAuthHash(hash){
+  // Récupère les jetons renvoyés dans le fragment d'URL (#access_token=...)
+  // puis nettoie la barre d'adresse. Le lien de réinitialisation renvoie
+  // type=recovery : dans ce cas il ne faut PAS connecter directement
+  // l'utilisateur (bug précédent), mais lui faire choisir un nouveau mot
+  // de passe avant d'entrer dans l'app.
+  function consumeOAuthRedirect(){
+    var hash = window.location.hash || "";
     if(hash.indexOf("access_token=") < 0){
       if(hash.indexOf("error=") >= 0){
         var ep = new URLSearchParams(hash.slice(1));
         authError = ep.get("error_description") || "Connexion annulée.";
-        return "error";
+        history.replaceState(null, "", window.location.pathname);
       }
       return false;
     }
@@ -2242,6 +1358,7 @@
       refresh_token: params.get("refresh_token"),
       expires_in: parseInt(params.get("expires_in") || "3600", 10)
     });
+    history.replaceState(null, "", window.location.pathname);
     if(!s) return false;
     if(isRecovery){
       recoverySession = s;
@@ -2250,18 +1367,6 @@
     }
     saveSession(s);
     return true;
-  }
-
-  // Chemin web : lit le fragment dans la barre d'adresse elle-même, puis la
-  // nettoie. Le chemin natif (voir setupNativeAuthCallback) appelle
-  // consumeOAuthHash() directement, sans barre d'adresse à nettoyer.
-  function consumeOAuthRedirect(){
-    var hash = window.location.hash || "";
-    var result = consumeOAuthHash(hash);
-    if(hash.indexOf("access_token=") >= 0 || hash.indexOf("error=") >= 0){
-      history.replaceState(null, "", window.location.pathname);
-    }
-    return result === "error" ? false : result;
   }
 
   function performSetNewPassword(newPassword){
@@ -2532,79 +1637,141 @@
   /* ---------- default sample data ---------- */
 
   function defaultData(){
-    var bali = makeProject({
-      title:"Bali cet été", emoji:"🌴",
-      summary:"Vous avez commencé à organiser le voyage — reste l'hébergement et le budget.",
+    function withDone(cat, doneTitles){
+      cat.items.forEach(function(it){ if(doneTitles.indexOf(it.title) >= 0) it.done = true; });
+      return cat;
+    }
+    function daysAgo(n){ var d = new Date(); d.setDate(d.getDate()-n); return d.toISOString(); }
+    function inDays(n){ var d = new Date(); d.setDate(d.getDate()+n); return d.toISOString(); }
+
+    var courses = makeProject({
+      title:"Courses & maison", emoji:"🛒",
+      summary:"Presque à jour — reste le plombier et le garage.",
+      categories:[ withDone(makeCategory("Courses & entretien", [
+        "Faire les courses de la semaine","Passer à la pharmacie",
+        "Prendre RDV plombier pour la fuite","Ranger le garage"
+      ]), ["Faire les courses de la semaine","Passer à la pharmacie"]) ]
+    });
+    courses.updatedAt = daysAgo(0);
+
+    var dentiste = makeProject({
+      title:"RDV dentiste", emoji:"🦷",
+      summary:"Contrôle annuel pris et fait.",
+      categories:[ withDone(makeCategory("À faire", [
+        "Prendre rendez-vous","Faire le contrôle annuel"
+      ]), ["Prendre rendez-vous","Faire le contrôle annuel"]) ]
+    });
+    dentiste.updatedAt = daysAgo(3);
+
+    var voiture = makeProject({
+      title:"Acheter une voiture", emoji:"🚗",
+      summary:"Le budget est fixé — reste à choisir le modèle et financer.",
       categories:[
-        makeCategory("Dates & transport", ["Choisir les dates de départ","Réserver les billets d'avion"]),
-        makeCategory("Sur place", ["Trouver un hébergement","Lister les activités sur place"]),
-        makeCategory("Budget", ["Définir le budget global"])
+        withDone(makeCategory("Recherche & budget", [
+          "Définir le budget max (occasion ou neuf)","Comparer 3 modèles compacts hybrides","Éplucher les avis fiabilité"
+        ]), ["Définir le budget max (occasion ou neuf)","Comparer 3 modèles compacts hybrides"]),
+        makeCategory("Financement", ["Simuler un crédit auto","Demander une offre de reprise pour l'ancienne voiture"]),
+        makeCategory("Achat", ["Prendre RDV pour un essai","Négocier le prix","Signer et immatriculer"])
       ]
     });
-    bali.categories[0].items.forEach(function(it){ it.done = true; });
-    bali.updatedAt = nowIso();
+    voiture.updatedAt = daysAgo(2);
+    voiture.dueBucket = "3m"; voiture.dueDate = inDays(75);
 
-    var julie = makeProject({
-      title:"Anniversaire de Julie", emoji:"🎂",
-      summary:"Presque prêt — reste le gâteau et la décoration.",
+    var appart = makeProject({
+      title:"Acheter notre appartement", emoji:"🏠",
+      summary:"L'accord de banque est obtenu — reste à trouver le bon bien.",
+      dna:"Budget fixé à 320 000 €, quartier prioritaire : centre-ville proche écoles.",
       categories:[
-        makeCategory("Organisation", ["Fixer la date et le lieu","Faire la liste des invités","Envoyer les invitations"]),
-        makeCategory("Préparatifs", ["Commander le gâteau","Prévoir la décoration"])
+        withDone(makeCategory("Recherche", [
+          "Définir les quartiers ciblés","Visiter au moins 5 biens","Shortlister 2 favoris"
+        ]), ["Définir les quartiers ciblés","Visiter au moins 5 biens"]),
+        withDone(makeCategory("Financement", [
+          "Obtenir l'accord de principe bancaire","Comparer les taux de 3 banques","Calculer l'apport disponible"
+        ]), ["Obtenir l'accord de principe bancaire","Calculer l'apport disponible"]),
+        makeCategory("Démarches", ["Faire réaliser les diagnostics","Contacter un notaire"]),
+        makeCategory("Après achat", ["Prévoir le budget travaux"])
       ]
     });
-    julie.categories[0].items.forEach(function(it){ it.done = true; });
-    var d1 = new Date(); d1.setDate(d1.getDate()-6);
-    julie.updatedAt = d1.toISOString();
+    appart.updatedAt = daysAgo(1);
+    appart.dueBucket = "6m"; appart.dueDate = inDays(150);
+    appart.projectNotes = [{id:uid(), title:"Astuce prêt", body:"Comparer avec un courtier avant de signer l'offre — ça peut faire gagner 0,2 point de taux.", catId:null, createdAt: daysAgo(1)}];
 
-    var demenagement = makeProject({
-      title:"Déménagement", emoji:"📦",
-      summary:"Les achats sont faits — reste l'administratif et l'organisation.",
+    var rentree = makeProject({
+      title:"Rentrée scolaire", emoji:"🎒",
+      summary:"Les fournitures sont prêtes — reste l'administratif.",
       categories:[
-        makeCategory("Achats & aménagement", ["Acheter un canapé","Acheter une table et des chaises","Acheter de la vaisselle","Commander des cartons"]),
-        makeCategory("Administratif", ["Changer d'adresse","Résilier les anciens contrats (eau, électricité)","Souscrire les nouveaux contrats","Prévenir l'employeur et les organismes"]),
-        makeCategory("Organisation", ["Réserver un camion de déménagement","Demander de l'aide pour le jour J","Planifier l'emballage des cartons"]),
-        makeCategory("Budget", ["Estimer le coût total du déménagement"])
+        withDone(makeCategory("Fournitures", [
+          "Acheter les cahiers et fournitures","Commander les manuels scolaires","Étiqueter les affaires"
+        ]), ["Acheter les cahiers et fournitures","Commander les manuels scolaires"]),
+        withDone(makeCategory("Administratif", [
+          "Renvoyer le dossier d'inscription","Payer la cantine et la garderie"
+        ]), ["Renvoyer le dossier d'inscription"]),
+        makeCategory("Activités", ["Inscrire aux activités périscolaires"])
       ]
     });
-    demenagement.categories[0].items.forEach(function(it){ it.done = true; });
-    var d2 = new Date(); d2.setDate(d2.getDate()-1);
-    demenagement.updatedAt = d2.toISOString();
+    rentree.updatedAt = daysAgo(4);
+    rentree.dueBucket = "2w"; rentree.dueDate = inDays(12);
 
-    return {projects: [bali, julie, demenagement], dropZone: []};
+    var anniv = makeProject({
+      title:"Anniversaire surprise de Léa", emoji:"🎉",
+      summary:"La date et le lieu sont bookés — reste à tout coordonner en secret.",
+      categories:[
+        withDone(makeCategory("Organisation", [
+          "Fixer la date et réserver le lieu","Établir la liste des invités","Envoyer les invitations discrètement"
+        ]), ["Fixer la date et réserver le lieu","Établir la liste des invités"]),
+        makeCategory("Préparatifs", ["Commander le gâteau","Prévoir la déco et la playlist","Organiser la diversion pour la surprise"])
+      ]
+    });
+    anniv.updatedAt = daysAgo(0);
+    anniv.dueBucket = "1w"; anniv.dueDate = inDays(6);
+
+    var freelance = makeProject({
+      title:"Lancer mon activité freelance", emoji:"💼",
+      summary:"Le statut est choisi — reste à s'immatriculer et se lancer.",
+      categories:[
+        withDone(makeCategory("Cadrage", ["Définir l'offre et les tarifs","Choisir le statut juridique"]),
+          ["Définir l'offre et les tarifs","Choisir le statut juridique"]),
+        makeCategory("Administratif", ["Immatriculer l'activité","Ouvrir un compte bancaire pro"]),
+        makeCategory("Visibilité", ["Créer un site vitrine simple","Contacter 5 premiers prospects"])
+      ]
+    });
+    freelance.updatedAt = daysAgo(6);
+
+    var dropZoneTitles = [
+      "Racheter des piles","Appeler la banque pour la carte bloquée","Idée cadeau pour la fête des pères",
+      "Réserver le camping pour l'été","Renouveler l'assurance habitation","Devis pour repeindre le salon",
+      "Anniversaire de mariage le 14 → réserver un resto"
+    ];
+    var dropZone = dropZoneTitles.map(function(title){ return {id: uid(), title:title, createdAt: nowIso()}; });
+
+    return {projects: [anniv, courses, appart, voiture, rentree, freelance, dentiste], dropZone: dropZone};
   }
 
   /* ---------- persistence ---------- */
 
-  // Version de dropit_user_data sur laquelle nos modifications locales sont
-  // basées : envoyée à chaque sauvegarde pour que le serveur détecte un
-  // conflit multi-appareils (voir sendSaveNow) plutôt que d'écraser en silence.
-  var lastKnownUpdatedAt = null;
-
   function load(){
-    return apiFetch("/api/projects")
+    // device_id transmis uniquement pour la reprise des projets créés
+    // avant l'authentification ; le serveur scope tout sur le compte.
+    var deviceId = getOrCreateDeviceId();
+    return apiFetch("/api/projects?device_id=" + encodeURIComponent(deviceId))
       .then(function(res){ return res.json(); })
       .then(function(json){
         var parsed = json.data || {};
         var dropZone = Array.isArray(parsed.dropZone) ? parsed.dropZone.map(normalizeDropItem) : [];
-        var fresh = !(parsed.projects && parsed.projects.length > 0);
-        lastKnownUpdatedAt = json.updatedAt || null;
-        if(fresh){
+        if(parsed.projects && parsed.projects.length > 0){
+          state = {projects: parsed.projects.map(normalizeProject), dropZone: dropZone};
+        } else {
           state = defaultData();
           persist();
-        } else {
-          state = {projects: parsed.projects.map(normalizeProject), dropZone: dropZone};
+          maybeShowSampleNotice();
         }
         render();
         if(json.migrated) showToast("Tes projets ont été rattachés à ton compte");
-        // Le parcours d'arrivée ne peut démarrer qu'ici : il faut savoir si le
-        // compte est neuf, et l'appel est asynchrone.
-        if(fresh) startFreshAccount(); else showOnboardingIfNeeded();
       })
       .catch(function(err){
         if(err && err.message === "unauthorized") return; // signOut a déjà pris la main
         state = defaultData();
         render();
-        showOnboardingIfNeeded();
         showToast("Chargement impossible — données locales affichées");
       });
   }
@@ -2617,25 +1784,8 @@
     apiFetch("/api/projects", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({state: state, baseUpdatedAt: lastKnownUpdatedAt}),
+      body: JSON.stringify({state: state}),
       keepalive: true // survit à la fermeture de l'onglet si déclenché juste avant
-    }).then(function(res){
-      if(res.status === 409){
-        // Un autre appareil a sauvegardé entre notre dernier chargement et cet
-        // enregistrement : pas de logique de fusion possible ici, donc plutôt
-        // que d'écraser silencieusement ce travail plus récent, on l'affiche
-        // et on prévient — nos changements locaux non enregistrés sont perdus.
-        return res.json().then(function(conflict){
-          var parsed = conflict.data || {};
-          var dropZone = Array.isArray(parsed.dropZone) ? parsed.dropZone.map(normalizeDropItem) : [];
-          state = {projects: (parsed.projects || []).map(normalizeProject), dropZone: dropZone};
-          lastKnownUpdatedAt = conflict.updatedAt || null;
-          render();
-          showToast("Modifié sur un autre appareil — tes derniers changements n'ont pas pu être enregistrés");
-        });
-      }
-      if(!res.ok) throw new Error("save-failed");
-      return res.json().then(function(ok){ lastKnownUpdatedAt = ok.updatedAt || lastKnownUpdatedAt; });
     }).catch(function(err){
       if(err && err.message === "unauthorized") return;
       showToast("Échec de l'enregistrement");
@@ -2730,7 +1880,6 @@
   function checkIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 10.5l3.5 3.5L16 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function sendIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M3 10l14-7-5 14-2.5-5.5L3 10z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/></svg>'; }
   function sparkleIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M10 3l1.3 4.2L15.5 8.5l-4.2 1.3L10 14l-1.3-4.2L4.5 8.5l4.2-1.3L10 3z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>'; }
-  function bulbIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M10 3.5a4.5 4.5 0 0 0-2.5 8.25c.4.3.6.75.6 1.25v.5h3.8v-.5c0-.5.2-.95.6-1.25A4.5 4.5 0 0 0 10 3.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8.3 16h3.4M8.7 17.5h2.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'; }
   function copyIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><rect x="5" y="3" width="8" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 5.5H2.5A1.5 1.5 0 001 7v6a1.5 1.5 0 001.5 1.5h5A1.5 1.5 0 009 13v-.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'; }
   function pencilIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><path d="M2 11.5l6-6 2.5 2.5-6 6-2.5.5.5-3z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M9.5 5l1-1a1.2 1.2 0 011.7 0l.3.3a1.2 1.2 0 010 1.7l-1 1L9.5 5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>'; }
   function bookmarkIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><path d="M3.5 2.5h9v11l-4.5-2.5L3.5 13.5V2.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>'; }
@@ -2767,44 +1916,19 @@
     try{ history.pushState({dropitNav:true}, '', location.href); }catch(e){}
   }
 
-  // Glissement vers la droite commun aux écrans plein écran qui se posent par-dessus
-  // l'accueil (projet, liste, agenda) : on retire "open" (l'écran glisse hors champ),
-  // et seulement une fois l'animation terminée on efface l'état et on redessine —
-  // sinon le nouveau render() supprimerait l'écran avant qu'il ait eu le temps de glisser.
-  // `getSnapshotFn` capture la valeur exacte de l'état concerné (ex: l'id du projet en
-  // cours) avant l'animation : si une nouvelle navigation change cette valeur pendant
-  // les 280ms (ex: retour d'un projet puis ouverture rapide d'un autre), le clearStateFn
-  // d'origine ne s'applique plus au bon écran et ne doit pas s'exécuter — sinon il
-  // effacerait l'état du nouvel écran ouvert entre-temps.
-  function slideScreenOutThenBack(screenId, getSnapshotFn, clearStateFn){
-    var el = document.getElementById(screenId);
-    if(el){
-      var snapshot = getSnapshotFn();
-      el.classList.remove('open');
-      setTimeout(function(){
-        if(getSnapshotFn() !== snapshot) return;
-        clearStateFn();
-        render();
-      }, 280);
-    } else {
-      clearStateFn(); render();
-    }
-  }
-
   function goBackOneLevel(){
-    if(calendarOpen){
-      slideScreenOutThenBack('calendar-screen', function(){ return calendarOpen; }, function(){ calendarOpen = false; });
-      return;
-    }
+    if(calendarOpen){ calendarOpen = false; render(); return; }
     if(taskListOpen){
-      slideScreenOutThenBack('tasklist-screen', function(){ return taskListOpen; }, function(){ taskListOpen = false; });
+      var tl = document.getElementById('tasklist-screen');
+      if(tl){
+        tl.classList.remove('open');
+        setTimeout(function(){ taskListOpen = false; render(); }, 280);
+      } else {
+        taskListOpen = false; render();
+      }
       return;
     }
-    if(currentProjectId){
-      slideScreenOutThenBack('detail-screen', function(){ return currentProjectId; },
-        function(){ currentProjectId = null; projectMenuOpen = false; });
-      return;
-    }
+    if(currentProjectId){ currentProjectId = null; projectMenuOpen = false; render(); return; }
     // déjà à l'accueil : rien à faire côté app, le navigateur reprend la main normalement
   }
 
@@ -2814,22 +1938,6 @@
   // la réapplique juste après — une seule fois ici plutôt que dans chaque gestionnaire d'événement.
   var SCROLL_CONTAINER_IDS = ['detail-scroll','tl-scroll','cal-list'];
 
-  // Fait glisser un écran plein écran (projet/liste/agenda) depuis la droite après
-  // qu'il vient d'être (ré)inséré dans le DOM. `wasAlreadyOpen` coupe la transition
-  // pour un rendu qui ne fait que rafraîchir un écran déjà ouvert (coche d'une tâche,
-  // changement de filtre...) — l'animation ne doit jouer qu'à une vraie ouverture.
-  function slideScreenIn(screenId, wasAlreadyOpen){
-    var el = document.getElementById(screenId);
-    if(!el) return;
-    if(wasAlreadyOpen){
-      el.style.transition = 'none';
-      el.classList.add('open');
-      requestAnimationFrame(function(){ el.style.transition = ''; });
-    } else {
-      requestAnimationFrame(function(){ el.classList.add('open'); });
-    }
-  }
-
   function render(){
     var scrollSnapshot = {};
     SCROLL_CONTAINER_IDS.forEach(function(id){
@@ -2837,32 +1945,34 @@
       if(el) scrollSnapshot[id] = el.scrollTop;
     });
 
-    // L'accueil reste toujours la base, même quand un projet/la liste/l'agenda est
-    // ouvert par-dessus : c'est ce qui permet à l'écran du dessus de glisser vers la
-    // droite au retour, plutôt qu'un remplacement instantané. On retient lesquels
-    // étaient déjà affichés AVANT ce rendu pour ne rejouer l'animation d'ouverture
-    // que sur une vraie ouverture (pas à chaque coche de tâche ou changement de filtre).
-    var tlWasOpen = !!document.getElementById('tasklist-screen');
-    var detailWasOpen = !!document.getElementById('detail-screen');
-    var calWasOpen = !!document.getElementById('calendar-screen');
-    var project = currentProjectId ? findProject(currentProjectId) : null;
-
     var app = document.getElementById("app");
-    app.innerHTML = renderHome();
-    layoutHomeTreemap();
-
-    if(taskListOpen) slideScreenIn('tasklist-screen', tlWasOpen);
-
-    if(project){
-      app.insertAdjacentHTML('beforeend', renderDetail(project));
-      slideScreenIn('detail-screen', detailWasOpen);
-    }
-
     if(calendarOpen){
-      app.insertAdjacentHTML('beforeend', renderCalendarScreen());
-      slideScreenIn('calendar-screen', calWasOpen);
+      app.innerHTML = renderCalendarScreen();
+    } else {
+      // Le DOM va être entièrement remplacé : on retient si la liste était déjà
+      // affichée AVANT ce rendu pour ne rejouer l'animation de glissement que sur
+      // une vraie ouverture (pas à chaque coche de tâche ou changement de filtre).
+      var tlWasOpen = !!document.getElementById('tasklist-screen');
+      var project = currentProjectId ? findProject(currentProjectId) : null;
+      if(project){
+        app.innerHTML = renderDetail(project);
+      } else {
+        app.innerHTML = renderHome();
+        layoutHomeTreemap();
+        if(taskListOpen){
+          var tl = document.getElementById('tasklist-screen');
+          if(tl){
+            if(tlWasOpen){
+              tl.style.transition = 'none';
+              tl.classList.add('open');
+              requestAnimationFrame(function(){ tl.style.transition = ''; });
+            } else {
+              requestAnimationFrame(function(){ tl.classList.add('open'); });
+            }
+          }
+        }
+      }
     }
-
     // Bouton flottant Drop it + sa fenêtre : présents sur tous les écrans de l'app
     // authentifiée, un seul point d'injection plutôt que de le répéter par écran.
     app.insertAdjacentHTML('beforeend', renderDropFab() + renderDropSheet());
@@ -3050,10 +2160,8 @@
         '<div class="account-email">'+escapeHtml(email)+'</div>'+
         '<div class="account-meta">'+providerLabel+' · '+count+' projet'+(count>1?'s':'')+' synchronisé'+(count>1?'s':'')+'</div>'+
         '<div class="account-actions">'+
-          '<button class="btn" id="account-profile-btn">Mon profil · personnaliser mon IA</button>'+
           '<button class="btn" id="account-close-btn">Fermer</button>'+
           '<button class="btn btn-danger" id="account-signout-btn">Se déconnecter</button>'+
-          '<button class="btn btn-danger" id="account-delete-btn">Supprimer mon compte</button>'+
         '</div>'+
       '</div>'+
     '</div>';
@@ -3114,10 +2222,7 @@
     renderTaskList()+
     '<button class="account-btn" id="account-btn" title="Mon compte">'+accountInitial()+'</button>'+
     renderAccountSheet()+
-    // Quand la liste est ouverte, elle embarque déjà sa propre bottom-tabbar (voir
-    // renderTaskList) : ne pas en émettre une seconde ici, sous peine d'un doublon
-    // d'id dont seule la copie masquée de l'accueil recevrait les clics.
-    (hasProjects && !taskListOpen ? renderBottomTabBar() : '')+
+    (hasProjects ? renderBottomTabBar() : '')+
     '<div class="toast" id="toast"></div>';
   }
 
@@ -3208,7 +2313,7 @@
           '--tile-card-bg:'+pc.card+';--tile-badge-glass:'+pc.glass+';" '+
         'role="button" tabindex="0">'+
         '<div class="tile-body">'+
-          '<div class="tile-emoji" style="font-size:'+(sizeClass==='size-tiny'?22:31)+'px;">'+escapeHtml(p.emoji)+'</div>'+
+          '<div class="tile-emoji" style="font-size:'+(sizeClass==='size-tiny'?22:31)+'px;">'+p.emoji+'</div>'+
           '<div class="tile-title" style="font-size:'+titleFontSize+'px;">'+escapeHtml(p.title)+'</div>'+
           (showMeta ? '<div class="tile-meta">'+pct+'%</div>' : '')+
         '</div>'+
@@ -3267,7 +2372,7 @@
     // L'émoji projet ne sert à rien (non cliquable, toujours le même) quand la liste
     // est déjà scopée à ce seul projet — on ne l'affiche que dans les vues mixtes.
     var emojiHtml = hideProjectEmoji ? '' :
-      '<span class="tl-proj-emoji" style="--row-proj-badge:'+pcRow.badge+';">'+escapeHtml(t.project.emoji)+'</span>';
+      '<span class="tl-proj-emoji" style="--row-proj-badge:'+pcRow.badge+';">'+t.project.emoji+'</span>';
     return '<div class="tl-row'+(t.priority==='reste'?' muted':'')+'" data-tl-nav-proj="'+t.project.id+'">'+
       '<button class="tl-check" data-tl-toggle="'+t.item.id+'" data-tl-proj="'+t.project.id+'"></button>'+
       '<div class="tl-info">'+
@@ -3347,7 +2452,7 @@
     if(!p || !state.projects.length) return '';
     var showLabel = state.projects.length > 1 && tlSelectedProjects.length !== 1;
     var labelHtml = showLabel
-      ? '<span class="tl-target-label">'+escapeHtml(p.emoji)+' '+escapeHtml(p.title.slice(0,14)+(p.title.length>14?'…':''))+'</span>'
+      ? '<span class="tl-target-label">'+p.emoji+' '+escapeHtml(p.title.slice(0,14)+(p.title.length>14?'…':''))+'</span>'
       : '';
     return '<div class="tl-compose-bar">'+
       labelHtml+
@@ -3418,7 +2523,7 @@
     var tasks = buildFlatTasks();
     var scopedProject = tlScopedToProject ? tlTargetProject() : null;
     var titleHtml = scopedProject
-      ? escapeHtml(scopedProject.emoji)+' '+escapeHtml(scopedProject.title.slice(0,22)+(scopedProject.title.length>22?'…':''))
+      ? scopedProject.emoji+' '+escapeHtml(scopedProject.title.slice(0,22)+(scopedProject.title.length>22?'…':''))
       : 'Priorités';
     var countLabel;
     if(tlScopedToProject){
@@ -3455,7 +2560,7 @@
         var pcChip = projectColorVars(p.id);
         return '<button class="tl-proj-chip'+(active?' active':'')+
           '" data-tl-proj-filter="'+p.id+'" title="'+escapeHtml(p.title)+'" '+
-          'style="--chip-badge:'+pcChip.badge+';--chip-solid:'+pcChip.solid+';">'+escapeHtml(p.emoji)+'</button>';
+          'style="--chip-badge:'+pcChip.badge+';--chip-solid:'+pcChip.solid+';">'+p.emoji+'</button>';
       }).join('');
       filterRowHtml = '<div class="tl-filter-row">'+filterLabel+filterChips+'</div>';
     } else {
@@ -3475,11 +2580,6 @@
       filterRowHtml+
       '<div class="tasklist-scroll" id="tl-scroll">'+rows+'</div>'+
       renderTaskListBar()+
-      // .tasklist-screen reste dans le DOM (hors écran, left:100%) même fermé, pour
-      // l'animation de glissement — ne pas y ajouter la tabbar en permanence, seulement
-      // pendant que cet écran est réellement affiché, sous peine d'un second jeu de
-      // boutons #tabbar-* hors-champ mais bien présent (doublon d'id + tabulation clavier).
-      (taskListOpen ? renderBottomTabBar() : '')+
     '</div>';
   }
 
@@ -3552,7 +2652,7 @@
       // position = jour d'échéance. Rappel visuel direct dans la grille, sans ouvrir le projet.
       var dueProjects = c.dateStr ? projectsDueOn(c.dateStr) : [];
       var dueBadges = dueProjects.map(function(p){
-        return '<span class="cal-due-badge" style="--pct:'+progressPct(p)+'%;" title="'+escapeHtml(p.title)+' — échéance, '+progressPct(p)+'% fait">'+escapeHtml(p.emoji)+'</span>';
+        return '<span class="cal-due-badge" style="--pct:'+progressPct(p)+'%;" title="'+escapeHtml(p.title)+' — échéance, '+progressPct(p)+'% fait">'+p.emoji+'</span>';
       });
       // Jalons intermédiaires : verdict "dans les temps / en retard" une fois la date
       // atteinte (comparaison avec le % de tâches réellement fait), neutre avant.
@@ -3561,7 +2661,7 @@
         var actual = progressPct(cp.project);
         var status = !reached ? "upcoming" : (actual >= cp.expectedPct ? "ontrack" : "behind");
         var statusLabel = status==="ontrack" ? "dans les temps" : status==="behind" ? "en retard" : "à venir";
-        return '<span class="cal-checkpoint-badge cp-'+status+'" title="'+escapeHtml(cp.project.title)+' — jalon '+cp.expectedPct+'% ('+statusLabel+', '+actual+'% fait)">'+escapeHtml(cp.project.emoji)+'</span>';
+        return '<span class="cal-checkpoint-badge cp-'+status+'" title="'+escapeHtml(cp.project.title)+' — jalon '+cp.expectedPct+'% ('+statusLabel+', '+actual+'% fait)">'+cp.project.emoji+'</span>';
       }) : [];
       var allBadges = dueBadges.concat(checkpointBadges).slice(0,3);
       var dueHtml = allBadges.length ? '<span class="cal-day-dues">'+allBadges.join('')+'</span>' : '';
@@ -3618,8 +2718,8 @@
       '<div class="dfb-input-wrap"><span class="sparkle-prefix">✨</span>'+
         '<input class="dfb-input" id="dfb-input" type="text" data-dfb-cat="'+catId+'" placeholder="Ajouter une tâche…">'+
       '</div>'+
+      '<button class="dfb-btn secondary" id="dfb-suggest-btn" data-dfb-cat="'+catId+'" title="Suggérer la suite">'+sparkleIcon()+'</button>'+
       '<button class="dfb-btn primary" id="dfb-add-btn" data-dfb-cat="'+catId+'" title="Valider">'+checkIcon()+'</button>'+
-      '<button class="dfb-btn secondary" id="dfb-suggest-btn" data-dfb-cat="'+catId+'" title="Suggérer la suite">'+bulbIcon()+'</button>'+
     '</div>';
   }
 
@@ -3628,8 +2728,8 @@
       '<div class="dfb-input-wrap"><span class="sparkle-prefix">✨</span>'+
         '<input class="dfb-input" id="dfb-proj-input" type="text" placeholder="Nouvelle catégorie… (verbe + sujet, ex : Préparer le budget)">'+
       '</div>'+
+      '<button class="dfb-btn secondary" id="dfb-proj-suggest-btn" data-proj-id="'+p.id+'" title="Suggérer la suite">'+sparkleIcon()+'</button>'+
       '<button class="dfb-btn primary" id="dfb-proj-add-btn" data-proj-id="'+p.id+'" title="Ajouter">'+plusIcon()+'</button>'+
-      '<button class="dfb-btn secondary" id="dfb-proj-suggest-btn" data-proj-id="'+p.id+'" title="Suggérer la suite">'+bulbIcon()+'</button>'+
     '</div>';
   }
 
@@ -3655,7 +2755,7 @@
 
     var headerHtml = ''+
     '<div class="detail-header">'+
-      '<div class="detail-emoji">'+escapeHtml(p.emoji)+'</div>'+
+      '<div class="detail-emoji">'+p.emoji+'</div>'+
       '<div class="detail-title">'+escapeHtml(p.title)+'</div>'+
       (p.summary ? '<div class="detail-summary">'+escapeHtml(p.summary)+'</div>' : '')+
       (p.dna ? '<div class="project-dna">'+escapeHtml(p.dna)+'</div>' : '')+
@@ -3666,7 +2766,7 @@
     if(accompli){
       mainActionHtml = ''+
       '<div class="accompli-banner">'+
-        '<div class="big">Vous l\'avez fait '+escapeHtml(p.emoji)+'</div>'+
+        '<div class="big">Vous l\'avez fait '+p.emoji+'</div>'+
         '<div class="stats">'+items2.length+' étape'+(items2.length!==1?"s":"")+' accomplie'+(items2.length!==1?"s":"")+'</div>'+
       '</div>';
     } else if(next){
@@ -3706,7 +2806,7 @@
       detailBarHtml = renderItemBar(cat.id);
     } else if(!accompli && multiCategory){
       bodyHtml = ''+
-        '<div class="section-label proj-badge-label">Catégories</div>'+
+        '<div class="section-label">Catégories</div>'+
         '<div class="category-accordion">'+
           p.categories.map(function(cat){ return renderCategoryAccordionItem(p, cat, priorityIds); }).join("")+
         '</div>'+
@@ -3717,7 +2817,7 @@
       detailBarHtml = openCat ? renderItemBar(openCat.id) : renderProjectBar(p);
     } else if(accompli && p.categories.length){
       bodyHtml = multiCategory
-        ? '<div class="section-label proj-badge-label">Catégories</div><div class="category-accordion">'+
+        ? '<div class="section-label">Catégories</div><div class="category-accordion">'+
             p.categories.map(function(cat){ return renderCategoryAccordionItem(p, cat, []); }).join("")+
           '</div>'
         : (p.categories[0]||{items:[]}).items.map(function(it){ return renderItemUnit(it, false); }).join("");
@@ -3733,7 +2833,7 @@
 
     var pc = projectColorVars(p.id);
     var scrollStyle = 'style="--current-proj-card:'+pc.card+';--current-proj-card-faint:'+pc.cardFaint+';--current-proj-badge:'+pc.badge+';--current-proj-solid:'+pc.solid+';--current-proj-priority:'+pc.priority+';--current-proj-btn:'+pc.btn+';--current-proj-next:'+pc.next+';"';
-    return '<div class="detail-screen" id="detail-screen">'+
+    return ''+
     topBarHtml+
     '<div class="detail-scroll" id="detail-scroll" '+scrollStyle+'>'+
       '<div class="detail-inner">'+
@@ -3747,8 +2847,7 @@
     renderNoteModal()+
     renderProjectMenu(p)+
     renderBottomTabBar()+
-    '<div class="toast" id="toast"></div>'+
-    '</div>';
+    '<div class="toast" id="toast"></div>';
   }
 
   /* Catégorie en accordéon : une seule fenêtre pour parcourir un projet, plus de
@@ -3822,10 +2921,7 @@
     // (--proj-*-badge) + la teinte pleine (--proj-*-solid) pour le texte, jamais du blanc.
     var c = projectColorVars(d.id);
     return '<button class="drop-badge'+(toss?' toss':'')+'" data-drop-check="'+d.id+'" '+
-      'style="background:'+c.badge+';color:'+c.solid+';" title="Fait">'+
-      '<span class="drop-badge-check"></span>'+
-      '<span class="drop-badge-label">'+escapeHtml(d.title)+'</span>'+
-    '</button>';
+      'style="background:'+c.badge+';color:'+c.solid+';" title="Fait">'+escapeHtml(d.title)+'</button>';
   }
 
   function renderDropTriageList(){
@@ -3935,6 +3031,7 @@
 
   function renderProjectNotes(p){
     var notes = p.projectNotes||[];
+    if(!notes.length) return '';
     var notesHtml = notes.map(function(n){
       var isOpen = projectNoteOpenId === n.id || projectNoteEditId === n.id;
       var chevron = isOpen
@@ -3967,11 +3064,8 @@
       '</div>';
     }).join('');
     return '<div class="project-notes-section">'+
-      '<div class="proj-notes-header">'+
-        '<span class="proj-notes-label proj-badge-label">Notes</span>'+
-        '<button class="proj-notes-add-btn" data-add-project-note="'+p.id+'" title="Ajouter une note">'+plusIcon()+'</button>'+
-      '</div>'+
-      (notes.length ? notesHtml : '<div class="proj-notes-empty">Aucune note pour l\'instant.</div>')+
+      '<span class="proj-notes-label">Notes</span>'+
+      notesHtml+
     '</div>';
   }
 
@@ -4219,7 +3313,7 @@
     });
     return apiFetch("/api/ai",{
       method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-haiku-4-5-20251001", max_tokens:1800, system:systemText, messages:apiMessages})
+      body:JSON.stringify({model:"claude-haiku-4-5-20251001", max_tokens:600, system:systemText, messages:apiMessages})
     }).then(function(res){return res.json();}).then(function(data){
       return (data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n").trim();
     });
@@ -4339,26 +3433,6 @@
     showToast("Note enregistrée");
   }
 
-  // Note créée à la main (bouton + à côté du badge "Notes") : même structure
-  // qu'une note enregistrée depuis le chat IA (performSaveChatAsNote), mais
-  // vide et ouverte directement en édition puisqu'il n'y a pas de texte de
-  // départ à partir duquel déduire un titre.
-  function performCreateManualNote(projectId){
-    var p = findProject(projectId);
-    if(!p) return;
-    if(!p.projectNotes) p.projectNotes = [];
-    var newNote = {id:uid(), title:'', body:'', catId:null, createdAt:nowIso()};
-    p.projectNotes.push(newNote);
-    projectNoteOpenId = newNote.id;
-    projectNoteEditId = newNote.id;
-    p.updatedAt = nowIso();
-    persist(); render();
-    setTimeout(function(){
-      var ta = document.querySelector('[data-pn-edit-ta="'+newNote.id+'"]');
-      if(ta) ta.focus();
-    }, 30);
-  }
-
   function generateHomeChatResponse(messages){
     var projectsSummary = state.projects.map(function(p){
       var total = allItems(p).length;
@@ -4379,7 +3453,7 @@
     });
     return apiFetch("/api/ai",{
       method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({model:"claude-haiku-4-5-20251001", max_tokens:2100, system:systemText, messages:apiMessages})
+      body:JSON.stringify({model:"claude-haiku-4-5-20251001", max_tokens:700, system:systemText, messages:apiMessages})
     }).then(function(res){return res.json();}).then(function(data){
       return (data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n").trim();
     });
@@ -4557,22 +3631,11 @@
 
   /* ---------- global events ---------- */
 
-  // Le détail projet et l'agenda embarquent chacun leur propre copie de la bottom-tabbar
-  // (voir le commentaire CSS ".detail-screen .bottom-tabbar" plus haut) pendant que celle de
-  // l'accueil reste dans le DOM en dessous. getElementById renverrait alors la copie de
-  // l'accueil (masquée, la première dans l'ordre du document) au lieu de celle réellement
-  // affichée — les taps sur la barre visible ne faisaient donc rien. On prend la dernière
-  // occurrence de l'id, qui est toujours celle de l'écran actuellement au premier plan.
-  function lastById(id){
-    var els = document.querySelectorAll('#'+id);
-    return els.length ? els[els.length-1] : null;
-  }
-
   function bindTabBarEvents(){
-    var homeBtn = lastById('tabbar-home');
-    var listBtn = lastById('tabbar-list');
-    var chatBtn = lastById('tabbar-chat');
-    var calBtn = lastById('tabbar-cal');
+    var homeBtn = document.getElementById('tabbar-home');
+    var listBtn = document.getElementById('tabbar-list');
+    var chatBtn = document.getElementById('tabbar-chat');
+    var calBtn = document.getElementById('tabbar-cal');
 
     if(homeBtn) homeBtn.addEventListener('click', function(){
       currentProjectId = null;
@@ -4762,13 +3825,6 @@
     if(accountBtn) accountBtn.addEventListener("click", function(){
       accountSheetOpen = true; render();
     });
-    var accountProfileBtn = document.getElementById("account-profile-btn");
-    if(accountProfileBtn) accountProfileBtn.addEventListener("click", function(){
-      accountSheetOpen = false; render();
-      // Le profil n'a pas forcément été chargé (compte déjà existant).
-      if(profile) openProfileSheet();
-      else loadProfile().then(openProfileSheet);
-    });
     var accountCloseBtn = document.getElementById("account-close-btn");
     if(accountCloseBtn) accountCloseBtn.addEventListener("click", function(){
       accountSheetOpen = false; render();
@@ -4780,21 +3836,6 @@
     var accountSignoutBtn = document.getElementById("account-signout-btn");
     if(accountSignoutBtn) accountSignoutBtn.addEventListener("click", function(){
       signOut();
-    });
-    var accountDeleteBtn = document.getElementById("account-delete-btn");
-    if(accountDeleteBtn) accountDeleteBtn.addEventListener("click", function(){
-      if(!confirm("Supprimer définitivement ton compte et tous tes projets ? Cette action est irréversible.")) return;
-      accountDeleteBtn.disabled = true;
-      apiFetch("/api/account", {method: "DELETE"}).then(function(res){
-        if(!res.ok) throw new Error("delete-failed");
-        signOut();
-        authInfo = "Ton compte a été supprimé.";
-        renderAuth();
-      }).catch(function(err){
-        if(err && err.message === "unauthorized") return; // signOut a déjà pris la main
-        accountDeleteBtn.disabled = false;
-        showToast("Suppression impossible — réessaie");
-      });
     });
 
     // Task list — barre de saisie
@@ -5060,10 +4101,6 @@
         performDeleteNote(currentProjectId, el.dataset.deleteNoteTask, el.dataset.deleteNote);
       });
     });
-    // Notes projet libres — créer manuellement (bouton + à côté du badge)
-    document.querySelectorAll("[data-add-project-note]").forEach(function(el){
-      el.addEventListener("click", function(){ performCreateManualNote(el.dataset.addProjectNote); });
-    });
     // Notes projet libres — titre (blur)
     document.querySelectorAll("[data-pn-title]").forEach(function(el){
       el.addEventListener("blur", function(){ performUpdateProjectNoteTitle(currentProjectId, el.dataset.pnTitle, el.value); });
@@ -5199,7 +4236,8 @@
   function bootAfterAuth(){
     authBusy = false; authError = ""; authInfo = "";
     render();
-    load(); // enchaîne lui-même questionnaire / visite guidée / notice
+    load();
+    showOnboardingIfNeeded();
     // Rafraîchit le profil en arrière-plan : après un OAuth, le fragment
     // d'URL ne contient pas l'email, seulement les jetons.
     if(!session || !session.user){
@@ -5210,42 +4248,24 @@
   }
 
   function boot(){
-    setupNativeAuthCallback(); // no-op sur le web ; nécessaire une seule fois avant toute connexion Google/Apple
-    document.getElementById("app").innerHTML =
-      '<div class="auth-boot"><div class="loading-spinner"></div></div>';
-
-    fetch("/api/config")
-      .then(function(r){ return r.ok ? r.json() : Promise.reject(new Error("config")); })
-      .then(function(cfg){
-        supa.url = cfg.supabaseUrl;
-        supa.anon = cfg.supabaseAnonKey;
-        if(cfg.providers) supa.providers = cfg.providers;
-        authReady = true;
-
-        var fromOAuth = consumeOAuthRedirect();
-        if(fromOAuth === "recovery"){ renderAuth(); return; } // écran "nouveau mot de passe"
-        if(!fromOAuth) session = loadSession();
-
-        if(!session){ renderAuth(); return; }
-
-        // Session en mémoire : on la valide avant d'afficher quoi que ce soit.
-        return ensureToken().then(function(token){
-          if(!token){ saveSession(null); renderAuth(); return; }
-          bootAfterAuth();
-        });
-      })
-      .catch(function(){
-        document.getElementById("app").innerHTML =
-          '<div class="auth-screen"><div class="auth-box">'+
-            '<div class="auth-logo">🗂️</div>'+
-            '<div class="auth-title">Service indisponible</div>'+
-            '<div class="auth-sub">La configuration du serveur n\'a pas pu être chargée. '+
-            'Vérifie ta connexion et recharge la page.</div>'+
-            '<button class="auth-submit" onclick="location.reload()" style="margin-top:20px;">Recharger</button>'+
-          '</div></div>';
-      });
+    authReady = true;
+    session = {access_token:"test", refresh_token:"test", expires_at: Date.now()+999999999, user:{email:"demo@dropit.app"}};
+    bootAfterAuth();
+    window.__debug = {
+      render: render,
+      getState: function(){ return state; },
+      openProject: function(id){ currentProjectId = id; render(); },
+      goHome: function(){ currentProjectId=null; calendarOpen=false; taskListOpen=false; dropSheetOpen=false; chatProjectOpen=false; chatHomeOpen=false; projectMenuOpen=false; noteOpenId=null; expandedCategoryId=null; render(); },
+      openCalendar: function(){ calendarOpen = true; render(); },
+      openTaskList: function(){ taskListOpen = true; render(); },
+      openDropSheet: function(){ dropSheetOpen = true; render(); },
+      expandCategory: function(catId){ expandedCategoryId = catId; render(); },
+      openChat: function(id, messages){ currentProjectId=id; chatProjectOpen=true; chatState[id] = {messages: messages, loading:false}; render(); },
+      openHomeChat: function(messages){ currentProjectId=null; chatHomeOpen=true; chatState['home'] = {messages: messages, loading:false}; render(); },
+      openProjectMenu: function(id){ currentProjectId=id; projectMenuOpen=true; render(); },
+      openNote: function(itemId){ noteOpenId = itemId; render(); }
+    };
   }
-
   boot();
 })();
 </script>

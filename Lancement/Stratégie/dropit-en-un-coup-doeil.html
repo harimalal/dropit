@@ -1,0 +1,280 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Dropit en un coup d'œil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,440;9..144,560;9..144,680&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#F8F8F9; --surface:#FFFFFF; --ink:#2B2420; --ink-soft:#7A7168; --ink-faint:#B4ABA1;
+    --line:#EFEBE6; --accent:#BF5B44; --accent-soft:#F7E9E4; --accent-ink:#8C4432;
+    --good:#3E8C63; --good-soft:#E7F3EC; --watch:#B08A2E; --watch-soft:#FBF1DD; --absent:#B4544B;
+    --font-display:'Fraunces', Georgia, serif;
+    --font-body:'Public Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --canvas:#1A1817; --surface:#242120; --ink:#EFE9E3; --ink-soft:#AFA69D; --ink-faint:#6E655C;
+      --line:#37322F; --accent:#E0895F; --accent-soft:#3A2A22; --accent-ink:#F0A783;
+      --good:#6BC393; --good-soft:#1B2E24; --watch:#E0C070; --watch-soft:#332C1A; --absent:#E08F86;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --canvas:#1A1817; --surface:#242120; --ink:#EFE9E3; --ink-soft:#AFA69D; --ink-faint:#6E655C;
+    --line:#37322F; --accent:#E0895F; --accent-soft:#3A2A22; --accent-ink:#F0A783;
+    --good:#6BC393; --good-soft:#1B2E24; --watch:#E0C070; --watch-soft:#332C1A; --absent:#E08F86;
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.6;}
+  .page{max-width:780px;margin:0 auto;padding:56px 20px 90px;}
+  h1,h2,h3{font-family:var(--font-display);font-weight:680;text-wrap:balance;margin:0;color:var(--ink);}
+  p{margin:0 0 1em;max-width:66ch;}
+  a{color:var(--accent-ink);}
+  .eyebrow{font-family:var(--font-mono);font-size:11.5px;font-weight:600;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px;}
+
+  header.hero h1{font-size:clamp(2.1rem,6vw,3rem);line-height:1.08;letter-spacing:-.01em;}
+  .dek{font-size:1.12rem;color:var(--ink-soft);max-width:58ch;margin-top:16px;}
+  .status-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px;}
+  .status-chip{font-family:var(--font-mono);font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;
+    background:var(--surface);border:1px solid var(--line);color:var(--ink-soft);white-space:nowrap;}
+  .status-chip strong{color:var(--ink);font-weight:600;}
+
+  .thesis{margin:36px 0 8px;padding:26px 28px;border-radius:4px;background:var(--accent-soft);border-left:3px solid var(--accent);}
+  .thesis p{font-family:var(--font-display);font-size:1.22rem;line-height:1.42;font-weight:560;color:var(--ink);max-width:none;margin:0;}
+  .thesis p em{font-style:normal;color:var(--accent-ink);}
+
+  section{margin-top:58px;}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:20px;}
+  .sec-num{font-family:var(--font-mono);font-size:13px;color:var(--ink-faint);flex-shrink:0;padding-top:4px;}
+  .sec-head h2{font-size:1.48rem;}
+  .lede{color:var(--ink-soft);font-size:1rem;margin-bottom:24px;}
+
+  /* Facts grid (feature status) */
+  .facts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .facts .col{padding:20px 22px;background:var(--surface);}
+  .facts .col + .col{border-left:1px solid var(--line);}
+  .facts h3{font-size:.76rem;font-family:var(--font-mono);letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-bottom:14px;}
+  .facts .col.built h3{color:var(--good);}
+  .facts .col.planned h3{color:var(--accent-ink);}
+  .facts .col.absent h3{color:var(--ink-faint);}
+  .facts ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:11px;}
+  .facts li{font-size:.9rem;line-height:1.5;padding-left:20px;position:relative;color:var(--ink);}
+  .facts .col.absent li{color:var(--ink-soft);}
+  .facts li::before{position:absolute;left:0;top:2px;font-family:var(--font-mono);font-size:12px;}
+  .facts .col.built li::before{content:"✓";color:var(--good);}
+  .facts .col.planned li::before{content:"→";color:var(--accent-ink);}
+  .facts .col.absent li::before{content:"–";color:var(--ink-faint);}
+  @media (max-width:640px){
+    .facts{grid-template-columns:1fr;}
+    .facts .col + .col{border-left:none;border-top:1px solid var(--line);}
+  }
+
+  /* ICP cards */
+  .icp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media (max-width:600px){.icp-grid{grid-template-columns:1fr;}}
+  .icp-card{border:1px solid var(--line);border-radius:10px;padding:18px 20px;background:var(--surface);}
+  .icp-card .tag{font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:8px;display:block;}
+  .icp-card p{font-size:.9rem;color:var(--ink-soft);margin:0;max-width:none;}
+  .icp-card strong{color:var(--ink);}
+  .icp-note{border:1px solid var(--line);border-radius:10px;padding:16px 20px;background:var(--canvas);margin-top:10px;}
+  .icp-note p{font-size:.86rem;color:var(--ink-soft);margin:0;max-width:none;}
+
+  /* Pricing cards */
+  .reco-row{display:flex;flex-direction:column;gap:14px;}
+  .reco{display:flex;gap:24px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:24px 26px;background:var(--surface);flex-wrap:wrap;}
+  .reco.tier2{background:var(--accent-soft);border-color:transparent;}
+  .reco .figure{font-family:var(--font-display);font-weight:680;font-size:2.3rem;color:var(--accent-ink);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .reco .figure small{font-family:var(--font-body);font-weight:600;font-size:.95rem;color:var(--ink-soft);display:block;margin-top:2px;}
+  .reco .detail{flex:1;min-width:220px;font-size:.89rem;color:var(--ink-soft);}
+  .reco .detail strong{color:var(--ink);}
+  .price-note{font-size:.82rem;color:var(--ink-faint);margin-top:12px;}
+
+  /* Simple two-col compare */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}
+  @media (max-width:600px){.compare{grid-template-columns:1fr;}}
+  .compare .block{border:1px solid var(--line);border-radius:10px;padding:16px 18px;background:var(--surface);}
+  .compare .block h3{font-size:.82rem;font-family:var(--font-mono);letter-spacing:.04em;text-transform:uppercase;font-weight:600;color:var(--ink-soft);margin-bottom:10px;}
+  .compare .block ul{margin:0;padding-left:18px;}
+  .compare .block li{font-size:.87rem;color:var(--ink);margin-bottom:6px;line-height:1.45;}
+  .compare .block li span{color:var(--ink-soft);}
+
+  /* Timeline mini */
+  .weeks{display:flex;flex-direction:column;gap:8px;}
+  .wk{display:flex;gap:14px;border:1px solid var(--line);border-radius:10px;padding:13px 16px;background:var(--surface);align-items:baseline;}
+  .wk .wnum{font-family:var(--font-mono);font-size:10.5px;font-weight:600;color:var(--surface);background:var(--accent);border-radius:5px;padding:3px 8px;flex-shrink:0;}
+  .wk p{margin:0;font-size:.87rem;color:var(--ink-soft);}
+  .wk strong{color:var(--ink);}
+
+  .footnote{margin-top:60px;padding-top:22px;border-top:1px solid var(--line);font-size:.82rem;color:var(--ink-faint);}
+</style>
+
+<div class="page">
+
+  <header class="hero">
+    <div class="eyebrow">Note produit interne — septembre 2026</div>
+    <h1>Dropit, en un coup d'œil</h1>
+    <p class="dek">Présentation, proposition de valeur, fonctionnalités, profil client idéal et stratégie de prix — l'essentiel du produit, hors développement.</p>
+    <div class="status-row">
+      <span class="status-chip">Stade&nbsp;: <strong>MVP, pré-lancement</strong></span>
+      <span class="status-chip">Prix aujourd'hui&nbsp;: <strong>gratuit</strong></span>
+      <span class="status-chip">Plateformes&nbsp;: <strong>web (PWA) + Android</strong></span>
+    </div>
+  </header>
+
+  <div class="thesis">
+    <p>La capture reste sans décision et l'IA garde la mémoire de chaque projet — on ne réexplique jamais rien. <em>C'est le seul espace de projet, bientôt partagé, où l'IA connaît déjà tout, sans que personne n'ait à remettre les autres au courant.</em></p>
+  </div>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Présentation</h2></div>
+    <p>Dropit est une application de productivité personnelle assistée par IA. Le principe&nbsp;: une intention exprimée en langage naturel («&nbsp;On aimerait partir à Bali en septembre&nbsp;») devient automatiquement un projet structuré — catégories, tâches, priorités — avec en permanence <strong>une seule prochaine action</strong> mise en avant, plutôt qu'une liste à trier soi-même.</p>
+    <p>Le nom affiché dans le produit est «&nbsp;Drop●It&nbsp;». L'app est aujourd'hui entièrement gratuite, disponible en web (application installable, PWA) et en app Android (bêta) — pas encore sur l'App Store iOS.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Proposition de valeur unique</h2></div>
+    <p class="lede">Deux idées combinées, qu'aucun concurrent ne réunit à la fois.</p>
+    <div class="compare">
+      <div class="block">
+        <h3>Capture sans friction</h3>
+        <ul>
+          <li>La <strong>Drop Zone</strong>&nbsp;: on note une idée en un geste, sans jamais choisir de catégorie ou de projet au moment de l'écrire.</li>
+          <li><span>La décharge mentale est immédiate — zéro décision à prendre pour capturer.</span></li>
+        </ul>
+      </div>
+      <div class="block">
+        <h3>Mémoire IA permanente</h3>
+        <ul>
+          <li>Le chat IA de chaque projet connaît déjà tout&nbsp;: objectif, tâches faites et à faire, notes.</li>
+          <li><span>On ne répète jamais le contexte, contrairement à un assistant générique.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Fonctionnalités</h2></div>
+    <p class="lede">Où en est le produit aujourd'hui&nbsp;: ce qui est construit, ce qui est prévu au palier premium, et ce qui reste hors périmètre.</p>
+    <div class="facts">
+      <div class="col built">
+        <h3>Construit (gratuit)</h3>
+        <ul>
+          <li>Drop Zone — capture libre en un geste.</li>
+          <li>Génération d'un plan structuré à partir d'une phrase.</li>
+          <li>Une seule «&nbsp;Prochaine action&nbsp;» par projet.</li>
+          <li>Écran Aujourd'hui — calendrier, échéances, jalons.</li>
+          <li>Vue Priorités — toutes les tâches importantes, tous projets.</li>
+          <li>Chat IA par projet et à l'accueil, contexte permanent.</li>
+          <li>Notes libres par projet ou attachées à une tâche.</li>
+          <li>Personnalisation par projet (emoji, couleur, échéance).</li>
+          <li>Onboarding personnalisé (adapte le ton de l'IA).</li>
+          <li>Compte, synchronisation, sauvegarde automatique.</li>
+        </ul>
+      </div>
+      <div class="col planned">
+        <h3>Prévu — premium</h3>
+        <ul>
+          <li>Inviter quelqu'un sur un projet.</li>
+          <li>Commentaires et chat de projet partagé.</li>
+          <li>Import de fichiers/documents dans un projet.</li>
+          <li>Calendrier partagé — perso, pro ou familial.</li>
+        </ul>
+      </div>
+      <div class="col absent">
+        <h3>Hors périmètre</h3>
+        <ul>
+          <li>Pas d'app native lourde — une PWA installable + Android.</li>
+          <li>Aucune intégration tierce annoncée (email, Slack…), au-delà du calendrier partagé à venir.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Profil client idéal</h2></div>
+    <p class="lede">Un produit de vie personnelle et de projets perso/pro mélangés — pas un outil de gestion de projet B2B de niche.</p>
+    <div class="icp-grid">
+      <div class="icp-card">
+        <span class="tag">Profil central</span>
+        <p><strong>Quelqu'un qui jongle avec plusieurs projets pro et perso à la fois</strong> et se sent débordé&nbsp;: trop de choses en tête, ne sait pas par où commencer, procrastine, perd le fil, n'arrive pas à prioriser.</p>
+      </div>
+      <div class="icp-card">
+        <span class="tag">Ce que Dropit n'est pas</span>
+        <p>Ni pour les <strong>power users</strong> qui veulent tout configurer eux-mêmes (profil Notion), ni pour ceux qui veulent déléguer tout leur agenda à une IA (profil Motion)&nbsp;: Dropit vise la <strong>simplicité radicale</strong>, pas la puissance de configuration.</p>
+      </div>
+      <div class="icp-card">
+        <span class="tag">Communautés d'acquisition</span>
+        <p>r/productivity, <strong>r/ADHD</strong> (la Drop Zone parle particulièrement à ce public), r/WorkingMoms — de bons proxys du profil visé.</p>
+      </div>
+      <div class="icp-card">
+        <span class="tag">Démographie</span>
+        <p>Public large, <strong>18 à 65+ ans</strong>, segmenté par statut (étudiant, salarié, freelance, entrepreneur, parent), situation familiale et charge de vie perçue — pas une tranche d'âge unique.</p>
+      </div>
+    </div>
+    <div class="icp-note">
+      <p><strong>Deux futurs segments</strong> avec le palier collaboratif&nbsp;: les couples/foyers (organisation familiale, à la Cozi) et les petites équipes/binômes (à la Notion/Todoist Business).</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Stratégie de prix</h2></div>
+    <p class="lede"><strong>Aujourd'hui&nbsp;: 100&nbsp;% gratuit</strong> (MVP, aucune fonctionnalité payante active). Cible recommandée à deux paliers, issue d'une étude comparative de 11&nbsp;concurrents (Motion, Sunsama, Akiflow, Reclaim.ai, Todoist, TickTick, Notion, Structured, Tiimo, Cozi, Ohai).</p>
+    <div class="reco-row">
+      <div class="reco">
+        <div class="figure">6–9&nbsp;€<small>Solo / mois</small></div>
+        <div class="detail"><strong>Palier actuel (MVP)</strong> — Drop Zone et IA illimitées, mono-utilisateur. Positionné comme Todoist Pro, TickTick Premium ou Tiimo Pro — pas comme les planificateurs IA lourds (2 à 3× plus chers) qui vendent une automatisation de calendrier que Dropit ne fait pas.</div>
+      </div>
+      <div class="reco tier2">
+        <div class="figure">12–15&nbsp;€<small>Collab / mois</small></div>
+        <div class="detail"><strong>Nouveau palier</strong>, à l'arrivée de l'invitation, des commentaires, des fichiers et du calendrier partagé (jusqu'à 3-4 comptes). Entre Cozi Max et Notion Business/Ohai — justifié par la mémoire IA qu'aucun outil familial établi n'offre.</div>
+      </div>
+    </div>
+    <p class="price-note">Règle d'or&nbsp;: le palier payant doit arriver comme une <strong>offre nouvelle</strong> (nouvelles fonctionnalités), jamais comme une restriction du gratuit actuel — pour éviter l'effet Cozi (limite ajoutée après coup, très mal vécu).</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Paysage concurrentiel</h2></div>
+    <p class="lede">Deux familles, aucune ne fait exactement la même chose que Dropit.</p>
+    <div class="compare">
+      <div class="block">
+        <h3>Planificateurs &amp; tâches</h3>
+        <ul>
+          <li>Motion, Sunsama, Akiflow, Reclaim.ai <span>— calendrier/IA lourds, 10 à 22&nbsp;$/mois.</span></li>
+          <li>Todoist, TickTick, Notion, Structured, Tiimo <span>— tâches ou pages, 3 à 20&nbsp;$/mois.</span></li>
+        </ul>
+      </div>
+      <div class="block">
+        <h3>Organisateurs familiaux</h3>
+        <ul>
+          <li>Cozi <span>— calendrier familial historique, gratuit avec pub, 3 à 7&nbsp;$/mois sans pub.</span></li>
+          <li>Ohai <span>— assistante IA foyer, 10 à 30&nbsp;$/mois.</span></li>
+        </ul>
+      </div>
+    </div>
+    <p class="price-note">Griefs récurrents chez les concurrents (que Dropit doit éviter)&nbsp;: app mobile en retrait, synchronisations peu fiables, mise en route trop longue, prix qui grimpe avec fonctions verrouillées plus haut, gratuit qui bascule brutalement en payant, support injoignable. Avantage structurel de Dropit&nbsp;: seul acteur gratuit avec zéro configuration pour démarrer.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Stratégie de lancement</h2></div>
+    <p class="lede">Plan sur 30&nbsp;jours&nbsp;: un canal principal exécuté à fond plutôt que plusieurs à moitié.</p>
+    <div class="weeks">
+      <div class="wk"><span class="wnum">S1</span><p><strong>Fondations</strong> — message verrouillé, paquet Android prêt pour le Play Store, contenu SEO comparatif.</p></div>
+      <div class="wk"><span class="wnum">S2</span><p><strong>Lancement discret</strong> — cercle restreint, réseau personnel, Indie Hackers.</p></div>
+      <div class="wk"><span class="wnum">S3</span><p><strong>Lancement public</strong> — Product Hunt, Reddit, micro-créateurs.</p></div>
+      <div class="wk"><span class="wnum">S4</span><p><strong>Amplifier &amp; retenir</strong> — concentrer sur le canal qui a le mieux converti, annoncer le palier collaboratif.</p></div>
+    </div>
+    <p class="price-note">L'App Store iOS est volontairement écarté ce mois-ci&nbsp;: risque de rejet (règle 4.2, «&nbsp;site rhabillé en app&nbsp;») sans fonctions natives ajoutées.</p>
+  </section>
+
+  <div class="footnote">
+    Sources internes&nbsp;: <em>Le prix de Dropit</em> (étude benchmark &amp; prix) et <em>Le sprint de lancement Dropit</em> (plan d'action 30&nbsp;jours), <code>Lancement/Stratégie/</code>.
+  </div>
+
+</div>
+
+</body></html>

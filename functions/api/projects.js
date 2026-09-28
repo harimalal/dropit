@@ -1,59 +1,68 @@
-import { json, supabaseHeaders, requireUser } from "../_lib/auth.js";
+import { json, supabaseHeaders, requireUser, enforceRateLimit } from "../_lib/auth.js";
 
 const TABLE = "dropit_user_data";
-const LEGACY_TABLE = "dropit_projects";
 const EMPTY = { projects: [] };
 
-// Récupère les données de l'ancienne table (clé device_id) pour les rattacher
-// au compte lors de la première connexion. Sans cela, les projets créés avant
-// l'authentification seraient inaccessibles.
-async function claimLegacyData(env, deviceId) {
-  if (!deviceId) return null;
-  const res = await fetch(
-    env.SUPABASE_URL + "/rest/v1/" + LEGACY_TABLE +
-      "?device_id=eq." + encodeURIComponent(deviceId) + "&select=data",
-    { headers: supabaseHeaders(env) }
-  );
-  if (!res.ok) return null;
-  const rows = await res.json();
-  if (!Array.isArray(rows) || rows.length === 0) return null;
-  const data = rows[0].data;
-  if (!data || !Array.isArray(data.projects) || data.projects.length === 0) return null;
-  return data;
-}
+// 30/minute : très large au-dessus de l'usage normal (sauvegarde debouncée à
+// 350ms côté client, jamais plus d'un appel toutes les quelques secondes en
+// usage réel), assez bas pour limiter un bug client qui boucleraient.
+const RATE_LIMIT_PER_MINUTE = 30;
 
-// Un device_id est partagé par tous les comptes créés depuis le même
-// navigateur. Sans suppression après récupération, chaque nouveau compte
-// créé sur ce navigateur re-réclamerait la même ligne et hériterait des
-// projets d'un compte précédent — la ligne doit être consommée une seule fois.
-async function deleteLegacyData(env, deviceId) {
-  await fetch(
-    env.SUPABASE_URL + "/rest/v1/" + LEGACY_TABLE +
-      "?device_id=eq." + encodeURIComponent(deviceId),
-    { method: "DELETE", headers: supabaseHeaders(env) }
-  );
-}
+// Écrit les données, en détectant un conflit multi-appareils quand le client
+// précise sur quelle version (`baseUpdatedAt`) il a basé sa modification.
+// Le PATCH est conditionné sur `updated_at=eq.<baseUpdatedAt>` : c'est une
+// comparaison-puis-écriture atomique côté Postgres (PostgREST ne met à jour
+// que les lignes qui matchent encore le filtre au moment de l'exécution),
+// donc pas de race entre deux requêtes concurrentes. Si 0 ligne matche, c'est
+// qu'un autre appareil a écrit entre-temps : on ne l'écrase pas.
+async function writeUserData(env, userId, data, baseUpdatedAt) {
+  const newUpdatedAt = new Date().toISOString();
 
-async function writeUserData(env, userId, data) {
-  return fetch(env.SUPABASE_URL + "/rest/v1/" + TABLE + "?on_conflict=user_id", {
+  if (baseUpdatedAt) {
+    const patchRes = await fetch(
+      env.SUPABASE_URL + "/rest/v1/" + TABLE +
+        "?user_id=eq." + encodeURIComponent(userId) +
+        "&updated_at=eq." + encodeURIComponent(baseUpdatedAt),
+      {
+        method: "PATCH",
+        headers: { ...supabaseHeaders(env), "Prefer": "return=representation" },
+        body: JSON.stringify({ data: data, updated_at: newUpdatedAt })
+      }
+    );
+    if (!patchRes.ok) return { ok: false, res: patchRes };
+
+    const patched = await patchRes.json();
+    if (Array.isArray(patched) && patched.length > 0) {
+      return { ok: true, updatedAt: newUpdatedAt };
+    }
+    return { ok: true, conflict: true };
+  }
+
+  // Pas de baseUpdatedAt : premier enregistrement du compte, rien à comparer.
+  const insertRes = await fetch(env.SUPABASE_URL + "/rest/v1/" + TABLE + "?on_conflict=user_id", {
     method: "POST",
     headers: { ...supabaseHeaders(env), "Prefer": "resolution=merge-duplicates" },
     body: JSON.stringify({
       user_id: userId,
       data: data,
-      updated_at: new Date().toISOString()
+      updated_at: newUpdatedAt
     })
   });
+  if (!insertRes.ok) return { ok: false, res: insertRes };
+  return { ok: true, updatedAt: newUpdatedAt };
 }
 
 export async function onRequestGet(context) {
-  const { env, request } = context;
+  const { env } = context;
   const { user, error } = await requireUser(context);
   if (error) return error;
 
+  const limited = await enforceRateLimit(env, user.id, "projects", RATE_LIMIT_PER_MINUTE);
+  if (limited) return limited;
+
   const res = await fetch(
     env.SUPABASE_URL + "/rest/v1/" + TABLE +
-      "?user_id=eq." + encodeURIComponent(user.id) + "&select=data",
+      "?user_id=eq." + encodeURIComponent(user.id) + "&select=data,updated_at",
     { headers: supabaseHeaders(env) }
   );
   if (!res.ok) return json({ error: await res.text() }, 500);
@@ -61,20 +70,11 @@ export async function onRequestGet(context) {
   const rows = await res.json();
 
   if (Array.isArray(rows) && rows.length > 0) {
-    return json({ data: rows[0].data || EMPTY });
+    return json({ data: rows[0].data || EMPTY, updatedAt: rows[0].updated_at });
   }
 
-  // Aucune ligne pour ce compte : première connexion.
-  // On tente de récupérer les projets créés en mode device_id.
-  const deviceId = new URL(request.url).searchParams.get("device_id");
-  const legacy = await claimLegacyData(env, deviceId);
-  if (legacy) {
-    await writeUserData(env, user.id, legacy);
-    await deleteLegacyData(env, deviceId);
-    return json({ data: legacy, migrated: true });
-  }
-
-  return json({ data: EMPTY });
+  // Aucune ligne pour ce compte : première connexion, compte tout neuf.
+  return json({ data: EMPTY, updatedAt: null });
 }
 
 // Plafonds larges au-dessus de tout usage réel observé, pour empêcher un
@@ -87,6 +87,9 @@ export async function onRequestPost(context) {
   const { env, request } = context;
   const { user, error } = await requireUser(context);
   if (error) return error;
+
+  const limited = await enforceRateLimit(env, user.id, "projects", RATE_LIMIT_PER_MINUTE);
+  if (limited) return limited;
 
   const contentLength = Number(request.headers.get("content-length") || 0);
   if (contentLength > MAX_BODY_BYTES) {
@@ -118,8 +121,25 @@ export async function onRequestPost(context) {
     return json({ error: "Trop de projets" }, 400);
   }
 
-  const res = await writeUserData(env, user.id, state);
-  if (!res.ok) return json({ error: await res.text() }, 500);
+  const baseUpdatedAt = typeof body.baseUpdatedAt === "string" ? body.baseUpdatedAt : null;
+  const result = await writeUserData(env, user.id, state, baseUpdatedAt);
+  if (!result.ok) return json({ error: await result.res.text() }, 500);
 
-  return json({ ok: true });
+  if (result.conflict) {
+    // Renvoie la version actuelle pour que le client se resynchronise plutôt
+    // que d'écraser silencieusement le travail fait sur un autre appareil.
+    const current = await fetch(
+      env.SUPABASE_URL + "/rest/v1/" + TABLE +
+        "?user_id=eq." + encodeURIComponent(user.id) + "&select=data,updated_at",
+      { headers: supabaseHeaders(env) }
+    );
+    const rows = current.ok ? await current.json() : [];
+    return json({
+      error: "conflict",
+      data: (rows[0] && rows[0].data) || EMPTY,
+      updatedAt: (rows[0] && rows[0].updated_at) || null
+    }, 409);
+  }
+
+  return json({ ok: true, updatedAt: result.updatedAt });
 }

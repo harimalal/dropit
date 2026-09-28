@@ -21,6 +21,12 @@ Repo : https://github.com/harimalal/dropit
 - Commits en français, messages courts, jamais de `git add -A` (risque d'embarquer des fichiers non voulus)
 - Toujours tester dans un vrai navigateur (Playwright) avant de pousser — pas de "ça devrait marcher"
 
+## Workflow git : push direct vs PR
+
+- Modification mineure ou cosmétique (couleur, texte, petit ajustement CSS, petit fix) → push direct sur `main`, comme jusqu'ici.
+- Modification moyenne ou élevée (nouvelle fonctionnalité, refonte, changement de structure de données, chantier de mission) → passer par une branche dédiée + une PR, ne jamais pousser ça directement sur `main`.
+- Dans le doute sur le niveau d'impact, demander avant de choisir.
+
 ## Convention MISSIONS/
 
 Chaque chantier de fond a son dossier `MISSIONS/AAAA-MM-JJ-nom/` avec :
@@ -64,3 +70,13 @@ Landing page carrousel livrée (6 slides, mockups SVG, swipe tactile). Fermée.
 ## Branche active
 
 `feature/ux-navbar-liste-projet` : historique disjoint de `main` (aucun ancêtre commun, ancienne lignée du repo antérieure à la mission en cours). Archivée le 2026-09-12 sous `archive/feature-ux-navbar-liste-projet` (copie complète de l'historique) ; la branche d'origine reste à supprimer manuellement sur GitHub (aucun outil de suppression de branche distante disponible côté session cloud). Ne pas la merger.
+
+## Playbook skill
+
+Disponible dans `.claude/skills/playbook/SKILL.md`.
+Invoquer en début et fin de session pour le logging automatique.
+
+## Convention SESSIONS/
+
+Chaque session (cloud ou CLI) crée un fichier SESSIONS/AAAA-MM-JJ-HHMM-[cloud|cli]-[slug].md.
+Commité en fin de session. Complémentaire aux MISSIONS/ (MISSIONS = cadrage, SESSIONS = exécution).

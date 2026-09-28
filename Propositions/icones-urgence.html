@@ -1,0 +1,223 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>Icônes d'urgence</title>
+<style>
+  :root{
+    --canvas:#F8F8F9; --canvas-card:#FFFFFF;
+    --ink:#2B2420; --ink-soft:#7A7168; --ink-faint:#A79E93; --line:#EFEBE6;
+    --accent:#BF5B44; --accent-soft:#F3E2DC;
+    --ia-accent:#3F8A5C; --ia-accent-soft:#E3EFE6;
+    --amber:#C48A2E; --amber-soft:#F5EBD8;
+    --page-bg:#EFEAE3; --phone-shadow:rgba(43,36,32,0.16);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --canvas:#1C1815; --canvas-card:#252019;
+      --ink:#F2EDE6; --ink-soft:#B9AFA2; --ink-faint:#7A7168; --line:#382F27;
+      --accent:#E07A5F; --accent-soft:#3A2620;
+      --ia-accent:#5FAE7E; --ia-accent-soft:#20302A;
+      --amber:#D6A24E; --amber-soft:#332812;
+      --page-bg:#0F0D0B; --phone-shadow:rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --canvas:#1C1815; --canvas-card:#252019;
+    --ink:#F2EDE6; --ink-soft:#B9AFA2; --ink-faint:#7A7168; --line:#382F27;
+    --accent:#E07A5F; --accent-soft:#3A2620;
+    --ia-accent:#5FAE7E; --ia-accent-soft:#20302A;
+    --amber:#D6A24E; --amber-soft:#332812;
+    --page-bg:#0F0D0B; --phone-shadow:rgba(0,0,0,0.5);
+  }
+  *{box-sizing:border-box;}
+  body{
+    background:var(--page-bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:32px 16px 60px; display:flex; flex-direction:column; align-items:center; gap:28px;
+  }
+  .mono{font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;}
+  .page-head{max-width:390px; text-align:center;}
+  .page-eyebrow{
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+    font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-faint);
+  }
+  .page-title{font-size:20px; font-weight:800; letter-spacing:-0.01em; margin-top:6px; text-wrap:balance;}
+  .page-sub{font-size:13.5px; color:var(--ink-soft); margin-top:8px; line-height:1.5;}
+
+  .phone{
+    width:390px; max-width:100%; background:var(--canvas); border-radius:28px;
+    box-shadow:0 20px 48px var(--phone-shadow); overflow:hidden; border:1px solid var(--line);
+  }
+  .section{padding:20px 18px 22px; border-bottom:1px solid var(--line);}
+  .section:last-child{border-bottom:none;}
+  .section-tag{
+    display:inline-flex; align-items:center; gap:6px; font-size:10.5px; font-weight:700;
+    letter-spacing:0.04em; text-transform:uppercase; color:var(--accent);
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  .section-tag .n{
+    width:16px; height:16px; border-radius:50%; background:var(--accent-soft); color:var(--accent);
+    display:flex; align-items:center; justify-content:center; font-size:9.5px;
+  }
+  .section-title{font-size:14.5px; font-weight:800; margin-top:6px;}
+  .section-desc{font-size:12.5px; color:var(--ink-soft); line-height:1.5; margin-top:4px;}
+
+  .rows{margin-top:14px; border:1px solid var(--line); border-radius:14px; overflow:hidden;}
+  .row{
+    display:flex; align-items:center; gap:11px; padding:11px 13px;
+    background:var(--canvas-card); border-bottom:1px solid var(--line);
+  }
+  .row:last-child{border-bottom:none;}
+  .check{
+    flex-shrink:0; width:22px; height:22px; border-radius:50%; border:1.6px solid var(--ink-faint);
+  }
+  .row-info{flex:1; min-width:0;}
+  .row-title{font-size:13.5px; color:var(--ink); line-height:1.3;}
+  .row-meta{font-size:11px; color:var(--ink-faint); margin-top:2px;}
+
+  /* badge de base (émoji projet) partagé par les 3 options */
+  .badge{position:relative; width:32px; height:32px; flex-shrink:0;}
+  .badge-emoji{
+    position:absolute; inset:2px; border-radius:8px; background:var(--accent-soft);
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+  }
+
+  /* option A — anneau de temps (conic-gradient) */
+  .ring{
+    width:32px; height:32px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ring-safe{background:conic-gradient(var(--ia-accent) var(--pct,30%), var(--line) 0);}
+  .ring-watch{background:conic-gradient(var(--amber) var(--pct,65%), var(--line) 0);}
+  .ring-urgent{background:conic-gradient(var(--accent) var(--pct,92%), var(--line) 0);}
+
+  /* option B — pastille de teinte */
+  .dot-wrap{position:relative;}
+  .dot{
+    position:absolute; top:-2px; right:-2px; width:10px; height:10px; border-radius:50%;
+    border:2px solid var(--canvas-card);
+  }
+  .dot-safe{background:var(--ia-accent);}
+  .dot-watch{background:var(--amber);}
+  .dot-urgent{background:var(--accent);}
+
+  /* option C — étiquette catégorie */
+  .cat-chip{
+    display:inline-flex; align-items:center; gap:5px; margin-top:6px;
+    font-size:10.5px; color:var(--accent); background:var(--accent-soft);
+    border-radius:8px; padding:3px 8px 3px 6px; font-weight:600;
+  }
+  .cat-chip svg{width:10px;height:10px;flex-shrink:0;}
+
+  .legend{
+    display:flex; gap:14px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line);
+    font-size:11px; color:var(--ink-soft); flex-wrap:wrap;
+  }
+  .legend span{display:inline-flex; align-items:center; gap:5px;}
+  .legend i{width:8px; height:8px; border-radius:50%; display:inline-block;}
+
+  .verdict{
+    max-width:390px; background:var(--canvas-card); border:1px solid var(--line); border-radius:16px;
+    padding:16px 18px; font-size:13px; color:var(--ink-soft); line-height:1.6;
+  }
+  .verdict b{color:var(--ink); font-weight:700;}
+</style>
+
+<div class="page-head">
+  <div class="page-eyebrow">Dropit · proposition visuelle</div>
+  <div class="page-title">Voir l'urgence sans ouvrir le projet</div>
+  <div class="page-sub">Trois façons de faire porter l'échéance déjà définie par l'emoji du projet — même structure de ligne partout, seul le badge change.</div>
+</div>
+
+<div class="phone">
+
+  <div class="section">
+    <span class="section-tag"><span class="n">A</span>Anneau de temps</span>
+    <div class="section-title">Le badge se remplit à mesure que l'échéance approche</div>
+    <div class="section-desc">Anneau conique autour de l'emoji : 0% à la création du projet, 100% à l'échéance. La couleur passe du vert à l'ambre puis à la terracotta — même logique que le statut projet existant.</div>
+    <div class="rows">
+      <div class="row">
+        <div class="check"></div>
+        <div class="row-info">
+          <div class="row-title">Réserver le traiteur</div>
+          <div class="row-meta">Anniversaire · échéance dans 5 semaines</div>
+        </div>
+        <div class="badge">
+          <div class="ring ring-safe" style="--pct:28%"><div class="badge-emoji">🎂</div></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="check"></div>
+        <div class="row-info">
+          <div class="row-title">Envoyer le dossier fiscal</div>
+          <div class="row-meta">Impôts · échéance dans 4 jours</div>
+        </div>
+        <div class="badge">
+          <div class="ring ring-urgent" style="--pct:94%"><div class="badge-emoji">📎</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--ia-accent)"></i>Large avance</span>
+      <span><i style="background:var(--amber)"></i>Ça se rapproche</span>
+      <span><i style="background:var(--accent)"></i>Proche / dépassé</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <span class="section-tag"><span class="n">B</span>Pastille de teinte</span>
+    <div class="section-title">Un simple point coloré, pas de calcul de temps</div>
+    <div class="section-desc">Couleur fixée directement par l'échéance choisie (1 sem./2 sem. = terracotta, 1-3 mois = ambre, 6 mois-1 an = vert). Plus discret, plus rapide à lire d'un coup d'œil, mais sans le côté "compte à rebours".</div>
+    <div class="rows">
+      <div class="row">
+        <div class="check"></div>
+        <div class="row-info">
+          <div class="row-title">Réserver le traiteur</div>
+          <div class="row-meta">Anniversaire · échéance 1 an</div>
+        </div>
+        <div class="badge dot-wrap">
+          <div class="badge-emoji" style="position:static;width:100%;height:100%;">🎂</div>
+          <span class="dot dot-safe"></span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="check"></div>
+        <div class="row-info">
+          <div class="row-title">Envoyer le dossier fiscal</div>
+          <div class="row-meta">Impôts · échéance 1 semaine</div>
+        </div>
+        <div class="badge dot-wrap">
+          <div class="badge-emoji" style="position:static;width:100%;height:100%;">📎</div>
+          <span class="dot dot-urgent"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <span class="section-tag"><span class="n">C</span>Étiquette catégorie</span>
+    <div class="section-title">En bonus sur les projets courts : la prochaine catégorie</div>
+    <div class="section-desc">Se combine avec A ou B. Uniquement pour les échéances courtes (1-2 semaines), où savoir QUOI attaquer compte plus que juste "c'est urgent". Aucun nouvel écran : une étiquette de plus sous la ligne existante.</div>
+    <div class="rows">
+      <div class="row" style="align-items:flex-start;">
+        <div class="check" style="margin-top:2px;"></div>
+        <div class="row-info">
+          <div class="row-title">Envoyer le dossier fiscal</div>
+          <div class="row-meta">Impôts · échéance dans 4 jours</div>
+          <div class="cat-chip">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M4 10h9M9 5l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Suite : Rassembler les justificatifs
+          </div>
+        </div>
+        <div class="badge">
+          <div class="ring ring-urgent" style="--pct:94%; margin-top:2px;"><div class="badge-emoji">📎</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="verdict">
+  <b>Mon avis :</b> A + C combinés. L'anneau ne demande aucune nouvelle donnée (échéance déjà stockée par projet) et se lit avant même de regarder le titre. L'étiquette catégorie répond directement à l'idée "être piloté, pas juste alerté" sans écran en plus. B seul est plus simple à coder mais perd l'effet compte-à-rebours qui fait tout l'intérêt sur les projets courts.
+</div>
+
+</body></html>

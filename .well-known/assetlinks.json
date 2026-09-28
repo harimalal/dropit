@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.dropit.app",
+      "sha256_cert_fingerprints": [
+        "63:AB:33:E4:26:98:BB:7B:9A:59:3A:1E:66:F3:2A:B3:26:42:21:37:87:46:22:50:A6:52:44:0A:ED:45:AA:2D"
+      ]
+    }
+  }
+]

@@ -47,3 +47,29 @@ export async function requireUser(context) {
   }
   return { user, error: null };
 }
+
+// Limite de débit par utilisateur et par endpoint (voir migration
+// add_rate_limiting : incrément atomique côté Postgres, fenêtre d'1 minute).
+// Un échec de l'appel lui-même (Supabase indisponible) ne doit jamais bloquer
+// l'utilisateur : on se contente alors de laisser passer, comme pour tout
+// autre bonus de robustesse dans ce fichier.
+export async function checkRateLimit(env, userId, endpoint, max) {
+  try {
+    const res = await fetch(env.SUPABASE_URL + "/rest/v1/rpc/dropit_check_rate_limit", {
+      method: "POST",
+      headers: supabaseHeaders(env),
+      body: JSON.stringify({ p_user_id: userId, p_endpoint: endpoint, p_max: max })
+    });
+    if (!res.ok) return true;
+    return await res.json();
+  } catch {
+    return true;
+  }
+}
+
+// Réponse prête à retourner si la limite est dépassée, sinon null.
+export async function enforceRateLimit(env, userId, endpoint, max) {
+  const allowed = await checkRateLimit(env, userId, endpoint, max);
+  if (allowed) return null;
+  return json({ error: "Trop de requêtes, réessaie dans un instant." }, 429);
+}

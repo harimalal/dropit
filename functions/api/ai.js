@@ -1,4 +1,11 @@
-import { json, requireUser } from "../_lib/auth.js";
+import { json, requireUser, enforceRateLimit } from "../_lib/auth.js";
+import { fetchProfileAnswers, profileContext } from "../_lib/profile.js";
+
+// 20/minute couvre largement le chat + suggestions + génération de projet en
+// usage normal (aucun de ces flux n'appelle /api/ai en boucle serrée côté
+// client) — assez bas pour limiter un abus ou un bug client qui spammerait,
+// sans jamais gêner un utilisateur normal.
+const AI_RATE_LIMIT_PER_MINUTE = 20;
 
 // Seuls les modèles réellement utilisés par l'app sont autorisés à passer
 // par ce proxy. Sans ça, un appel direct à /api/ai (n'importe quel compte
@@ -8,15 +15,18 @@ const ALLOWED_MODELS = new Set([
   "claude-haiku-4-5-20251001",
   "claude-sonnet-4-6"
 ]);
-const MAX_TOKENS_CAP = 1024; // le plus haut usage réel de l'app est 800
+const MAX_TOKENS_CAP = 2200; // le plus haut usage réel de l'app est le chat (2100, triplé depuis 700)
 
 export async function onRequestPost(context) {
   const { env, request } = context;
 
   // Endpoint authentifié : sans cela n'importe qui pourrait consommer
   // le quota Anthropic en appelant /api/ai directement.
-  const { error } = await requireUser(context);
+  const { user, error } = await requireUser(context);
   if (error) return error;
+
+  const limited = await enforceRateLimit(env, user.id, "ai", AI_RATE_LIMIT_PER_MINUTE);
+  if (limited) return limited;
 
   if (!env.ANTHROPIC_API_KEY) {
     return json({ error: "ANTHROPIC_API_KEY not set" }, 500);
@@ -34,6 +44,13 @@ export async function onRequestPost(context) {
   }
   if (typeof body.max_tokens !== "number" || body.max_tokens <= 0 || body.max_tokens > MAX_TOKENS_CAP) {
     return json({ error: "max_tokens invalide" }, 400);
+  }
+
+  // Personnalisation : le profil est injecté ici plutôt qu'à chacun des sept
+  // points d'appel côté client — un seul endroit, impossible à contourner.
+  const profileBlock = profileContext(await fetchProfileAnswers(env, user.id));
+  if (profileBlock) {
+    body.system = body.system ? profileBlock + "\n\n" + body.system : profileBlock;
   }
 
   const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
