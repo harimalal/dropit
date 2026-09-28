@@ -37,8 +37,14 @@ export async function onRequestGet(context) {
   const q = (url.searchParams.get("q") || "").trim().slice(0, MAX_QUERY_LENGTH);
   if (!q) return json({ error: "q required" }, 400);
 
+  // "wallpaper" oriente Pexels vers des compositions pensées pour occuper tout le cadre
+  // (plus atmosphériques, moins de sujet isolé sur fond neutre) — cohérent avec l'usage en
+  // fond de tuile. size=large exige une résolution source d'au moins ~24MP côté Pexels,
+  // pour rester net en HD/2K/4K même sur les tuiles les plus grandes ou en écran haute
+  // densité (le src.large2x renvoyé au client est ensuite ~1880px de large).
   const pexelsRes = await fetch(
-    "https://api.pexels.com/v1/search?per_page=" + RESULTS_PER_QUERY + "&query=" + encodeURIComponent(q),
+    "https://api.pexels.com/v1/search?per_page=" + RESULTS_PER_QUERY +
+      "&size=large&query=" + encodeURIComponent(q + " wallpaper"),
     { headers: { Authorization: env.PEXELS_API_KEY } }
   );
   if (!pexelsRes.ok) {
@@ -53,7 +59,7 @@ export async function onRequestGet(context) {
   }
 
   return json({
-    url: (photo.src && photo.src.large) || null,
+    url: (photo.src && (photo.src.large2x || photo.src.large)) || null,
     photographer: photo.photographer || "",
     photographerUrl: photo.photographer_url || "",
     pexelsId: photo.id,
