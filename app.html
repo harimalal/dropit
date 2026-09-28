@@ -130,9 +130,9 @@
   #home-treemap-zone{flex:1;position:relative;min-height:0;overflow:hidden;}
   .home-treemap-inner{position:relative;width:100%;}
   .tile{
-    position:absolute;border-radius:var(--radius-lg);padding:2.5px;box-sizing:border-box;
+    position:absolute;border-radius:var(--radius-lg);padding:3.75px;box-sizing:border-box;
     /* anneau conic-gradient conservé : encode statut (couleur) ET progression (longueur d'arc) —
-       fonctionnalité existante, seul son épaisseur diminue (padding 4px->2.5px, plus fin, moins "diagramme") */
+       fonctionnalité existante ; épaisseur +50% (2.5px->3.75px) pour rester lisible sur les photos. */
     background:conic-gradient(var(--ring-color,var(--line)) calc(var(--pct,0)*1%), var(--line) 0);
   }
   @media (prefers-reduced-motion:no-preference){.tile{transition:filter .12s ease;}}
@@ -186,11 +186,21 @@
   }
   .tile-title{font-weight:700;letter-spacing:-0.01em;line-height:1.25;color:var(--ink);margin-top:8px;
     display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
-    width:100%;word-break:break-word;overflow-wrap:break-word;}
+    width:100%;word-break:break-word;overflow-wrap:break-word;
+    /* Sans ça, le rétrécissement flex par défaut (.tile-body est display:flex) écrase le
+       titre bien en dessous de ses 2 lignes autorisées dès que le contenu total de la tuile
+       est un peu juste — le clamp ne servait plus à rien, le texte était coupé bien avant.
+       flex-shrink:0 force le titre à garder sa hauteur voulue ; c'est titleFontSizeFor() qui
+       est responsable d'éviter le débordement, pas le rétrécissement flex. */
+    flex-shrink:0;}
   .tile-meta{margin-top:8px;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);font-weight:600;}
   .tile.size-tiny .tile-body{padding:8px;}
   .tile.size-tiny .tile-emoji{width:32px;height:32px;font-size:22px;}
-  .tile.size-tiny .tile-title{-webkit-line-clamp:1;margin-top:5px;font-size:12px;}
+  /* Reste à 1 ligne (pas 2 comme les autres tailles) : sur une tuile aussi petite,
+     l'icône seule occupe déjà presque toute la hauteur disponible — 2 lignes de texte
+     déborderaient physiquement. La taille de police s'adapte quand même pour éviter
+     la troncature (voir titleFontSizeFor), juste sur une seule ligne ici. */
+  .tile.size-tiny .tile-title{-webkit-line-clamp:1;margin-top:3px;}
   .tile.size-tiny .tile-meta{display:none;}
   .tile.size-tiny.has-photo .tile-emoji{width:22px;height:22px;top:5px;right:5px;}
   .tile.has-photo .tile-title{margin-top:0;}
@@ -2895,10 +2905,79 @@
     if(area < 42000) return "size-medium";
     return "size-large";
   }
-  function titleFontSizeFor(w,h){
+  var _titleMeasureCtx = null;
+  function measuredTextWidth(text, fontPx){
+    if(!_titleMeasureCtx) _titleMeasureCtx = document.createElement("canvas").getContext("2d");
+    _titleMeasureCtx.font = "700 " + fontPx + "px " + "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif";
+    return _titleMeasureCtx.measureText(text).width;
+  }
+  // Simule le retour à la ligne par mot (comme le fait réellement le navigateur) pour
+  // savoir combien de lignes le titre occupe à une taille de police donnée — plus fiable
+  // qu'un ratio largeur-totale/nombre-de-lignes, qui suppose un remplissage parfait alors
+  // que le découpage par mot laisse toujours un peu de place perdue en fin de ligne.
+  function linesNeededAt(text, fontPx, availableWidth){
+    var words = text.split(/\s+/).filter(Boolean);
+    if(!words.length) return 0;
+    var spaceWidth = measuredTextWidth(" ", fontPx);
+    var lines = 1, currentWidth = -1;
+    words.forEach(function(word){
+      var wWidth = measuredTextWidth(word, fontPx);
+      // Un mot à lui seul plus large que la largeur dispo est coupé en plein milieu
+      // (word-break/overflow-wrap:break-word sur .tile-title) plutôt que débordé : on
+      // compte le nombre de "morceaux" qu'il occupe, sinon on sous-estime le nombre
+      // de lignes réel pour les mots longs (ex: un titre à un seul mot sur une tuile étroite).
+      if(wWidth > availableWidth){
+        if(currentWidth > 0) lines++;
+        var chunks = Math.ceil(wWidth / availableWidth);
+        lines += chunks - 1;
+        currentWidth = wWidth - (chunks-1)*availableWidth;
+        return;
+      }
+      if(currentWidth < 0){
+        currentWidth = wWidth;
+      } else if(currentWidth + spaceWidth + wWidth <= availableWidth){
+        currentWidth += spaceWidth + wWidth;
+      } else {
+        lines++;
+        currentWidth = wWidth;
+      }
+    });
+    return lines;
+  }
+  function titleFontSizeFor(w,h,title,hasPhoto){
     var s = Math.sqrt(w*h);
     var fs = 11 + (s-70) * (22-11) / (547-70);
-    return Math.round(Math.max(11, Math.min(22, fs)) * 10) / 10;
+    fs = Math.max(11, Math.min(22, fs));
+    // La taille ci-dessus est un plafond lisible pour la tuile, pas une garantie que le
+    // titre tienne sur 2 lignes sans être coupé (le "…" du -webkit-line-clamp). On réduit
+    // au besoin jusqu'à ce que le titre tienne réellement, jamais en dessous d'un plancher
+    // de lisibilité — simulation réelle du retour à la ligne (Canvas measureText mot par
+    // mot) plutôt qu'une estimation globale : la police est en gras et contient des
+    // caractères accentués, dont la largeur varie trop pour qu'un simple ratio fixe reste
+    // fiable dans tous les cas.
+    var text = String(title || "");
+    if(text.length > 0){
+      var isTiny = sizeClassFor(w,h) === "size-tiny";
+      // Tuile "tiny" : reste à 1 ligne (l'icône seule y occupe déjà presque toute la
+      // hauteur disponible, 2 lignes déborderaient) ; les autres tailles ont la place
+      // pour 2 lignes, cf. -webkit-line-clamp:2 sur .tile-title.
+      var maxLines = isTiny ? 1 : 2;
+      // Marge horizontale réelle entre le bord de la tuile et le texte : le padding de
+      // .tile-body (8/14px) ne suffit pas seul, il faut aussi compter le padding de l'anneau
+      // de progression (3.75px, sur .tile) et, en mode photo, celui du "chip" de titre
+      // (3px 8px sur .tile.has-photo .tile-title) — absent sans photo, donc compté
+      // seulement si la tuile en a une (sinon on rétrécit le texte pour rien).
+      var ringPadding = 3.75;
+      var bodyPadding = isTiny ? 8 : 14;
+      var chipPadding = hasPhoto ? 8 : 0;
+      var padding = ringPadding + bodyPadding + chipPadding;
+      var availableWidth = Math.max(20, w - padding*2);
+      while(fs > 8 && linesNeededAt(text, fs, availableWidth) > maxLines){
+        fs -= 0.5;
+      }
+      fs = Math.max(8, fs);
+    }
+    return Math.round(fs * 10) / 10;
   }
 
   /* ---------- icons ---------- */
@@ -3380,13 +3459,13 @@
       var p = r.item.project;
       var x=r.x+gutter, y=r.y+gutter, w=Math.max(0,r.w-gutter*2), h=Math.max(0,r.h-gutter*2);
       var sizeClass = sizeClassFor(w,h);
-      var titleFontSize = titleFontSizeFor(w,h);
+      var hasPhoto = !!(p.photo && p.photo.url);
+      var titleFontSize = titleFontSizeFor(w,h,p.title,hasPhoto);
       var pct = progressPct(p);
       var status = activityStatus(p);
       var showMeta = sizeClass !== "size-tiny";
       var pc = projectColorVars(p.id);
       var doneClass = status === "accompli" ? " is-done" : "";
-      var hasPhoto = !!(p.photo && p.photo.url);
       var photoClass = hasPhoto ? " has-photo" : "";
       var iconSize = hasPhoto ? (sizeClass==='size-tiny'?14:20) : (sizeClass==='size-tiny'?22:31);
       return ''+
