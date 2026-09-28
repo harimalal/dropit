@@ -39,26 +39,25 @@
     --status-accompli:#BF5B44;
     --status-accompli-soft:#F3E2DC;
 
-    /* Projet — 8 teintes, une base par teinte → voile 15% (carte, recalibré v13 sur la référence) + voile 28% (badge plat) + solide (checkbox) */
-    --proj-terracotta-card:#FAE8E4; --proj-terracotta-badge:#F5D4CD; --proj-terracotta-solid:#D25C41;
-    --proj-corail-card:#FAE4E9;     --proj-corail-badge:#F5CDD7;     --proj-corail-solid:#D24165;
-    --proj-ambre-card:#FAF1E4;      --proj-ambre-badge:#F5E4CD;      --proj-ambre-solid:#C6872F;
-    --proj-emeraude-card:#E4FAF1;   --proj-emeraude-badge:#CDF5E4;   --proj-emeraude-solid:#27A571;
-    --proj-sarcelle-card:#E4FAFA;   --proj-sarcelle-badge:#CDF5F5;   --proj-sarcelle-solid:#26A1A1;
-    --proj-azur-card:#E4F1FA;       --proj-azur-badge:#CDE4F5;       --proj-azur-solid:#4196D2;
-    --proj-indigo-card:#E6E4FA;     --proj-indigo-badge:#D0CDF5;     --proj-indigo-solid:#4D41D2;
-    --proj-mure-card:#F4E4FA;       --proj-mure-badge:#EBCDF5;       --proj-mure-solid:#AE41D2;
+    /* Projet — 8 teintes, une base par teinte → voile 15% (carte, recalibré v13 sur la référence) + voile 20% (badge plat) + solide (checkbox) */
+    /* Voile du badge abaissé de 28% à 20% : le texte du badge est toujours la teinte pleine
+       (--proj-*-solid) posée dessus, un fond plus pâle creuse donc l'écart de contraste. */
+    --proj-terracotta-card:#FAE8E4; --proj-terracotta-badge:#F8E0DB; --proj-terracotta-solid:#D25C41;
+    --proj-corail-card:#FAE4E9;     --proj-corail-badge:#F8DBE2;     --proj-corail-solid:#D24165;
+    --proj-ambre-card:#FAF1E4;      --proj-ambre-badge:#F8ECDB;      --proj-ambre-solid:#C6872F;
+    --proj-emeraude-card:#E4FAF1;   --proj-emeraude-badge:#DBF8EC;   --proj-emeraude-solid:#27A571;
+    --proj-sarcelle-card:#E4FAFA;   --proj-sarcelle-badge:#DBF8F8;   --proj-sarcelle-solid:#26A1A1;
+    --proj-azur-card:#E4F1FA;       --proj-azur-badge:#DBECF8;       --proj-azur-solid:#4196D2;
+    --proj-indigo-card:#E6E4FA;     --proj-indigo-badge:#DDDBF8;     --proj-indigo-solid:#4D41D2;
+    --proj-mure-card:#F4E4FA;       --proj-mure-badge:#F1DBF8;       --proj-mure-solid:#AE41D2;
 
-    /* Badge "effet verre" — voile translucide (alpha 0.55) + reflet en dégradé, SANS backdrop-filter
-       (le flou d'arrière-plan produisait un halo gris-beige aux coins arrondis — bug de rendu connu) */
-    --proj-terracotta-glass:rgba(221,102,75,0.55); --proj-corail-glass:rgba(221,75,111,0.55); --proj-ambre-glass:rgba(221,160,75,0.55);
-    --proj-emeraude-glass:rgba(75,221,160,0.55);   --proj-sarcelle-glass:rgba(75,221,221,0.55); --proj-azur-glass:rgba(75,160,221,0.55);
-    --proj-indigo-glass:rgba(87,75,221,0.55);      --proj-mure-glass:rgba(184,75,221,0.55);
-
-    /* Anneau du treemap — 65% (moins "pur" que le solide 100% du tour précédent, reste net) */
-    --proj-terracotta-ring:#E99C8A; --proj-corail-ring:#E98AA1; --proj-ambre-ring:#E9C18A;
-    --proj-emeraude-ring:#8AE9C1;   --proj-sarcelle-ring:#8AE9E9; --proj-azur-ring:#8AC1E9;
-    --proj-indigo-ring:#928AE9;     --proj-mure-ring:#D18AE9;
+    /* Badge "effet verre" — voile translucide (alpha 0.40) + reflet en dégradé, SANS backdrop-filter
+       (le flou d'arrière-plan produisait un halo gris-beige aux coins arrondis — bug de rendu connu).
+       Abaissé de 0.55 à 0.40 : sur une tuile photo le voile trop dense écrasait le texte blanc
+       du titre, qui s'appuie maintenant sur le scrim + une ombre portée plutôt que sur la teinte. */
+    --proj-terracotta-glass:rgba(221,102,75,0.40); --proj-corail-glass:rgba(221,75,111,0.40); --proj-ambre-glass:rgba(221,160,75,0.40);
+    --proj-emeraude-glass:rgba(75,221,160,0.40);   --proj-sarcelle-glass:rgba(75,221,221,0.40); --proj-azur-glass:rgba(75,160,221,0.40);
+    --proj-indigo-glass:rgba(87,75,221,0.40);      --proj-mure-glass:rgba(184,75,221,0.40);
 
     /* Voile carte de CATÉGORIE spécifiquement — 6% (recalibré, était trop pâle à 1.5%) */
     --proj-terracotta-card-faint:#FDF6F4; --proj-corail-card-faint:#FDF4F6; --proj-ambre-card-faint:#FDF9F4;
@@ -87,6 +86,10 @@
 
     /* Relief léger (v5) */
     --shadow-card:0 2px 10px rgba(43,36,32,.07);
+
+    /* Violet de la Drop Zone — repris de la landing, propre à cette identité (pas une
+       des 8 teintes de projet, qui sont assignées automatiquement). */
+    --dropzone-violet:#5B3FE8;
 
     --font-display:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --font-mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
@@ -129,11 +132,10 @@
   }
   #home-treemap-zone{flex:1;position:relative;min-height:0;overflow:hidden;}
   .home-treemap-inner{position:relative;width:100%;}
+  /* Plus d'anneau conic-gradient autour de la tuile : la progression est désormais lue sur
+     une vraie barre sous le titre (.tile-progress), plus explicite qu'un arc à décoder. */
   .tile{
-    position:absolute;border-radius:var(--radius-lg);padding:3.75px;box-sizing:border-box;
-    /* anneau conic-gradient conservé : encode statut (couleur) ET progression (longueur d'arc) —
-       fonctionnalité existante ; épaisseur +50% (2.5px->3.75px) pour rester lisible sur les photos. */
-    background:conic-gradient(var(--ring-color,var(--line)) calc(var(--pct,0)*1%), var(--line) 0);
+    position:absolute;border-radius:var(--radius-lg);box-sizing:border-box;
   }
   @media (prefers-reduced-motion:no-preference){.tile{transition:filter .12s ease;}}
   .tile:hover{filter:brightness(0.98);}
@@ -161,27 +163,32 @@
   .tile.has-photo .tile-body{align-items:flex-start;justify-content:flex-end;text-align:left;}
   .tile.has-photo .tile-title{
     position:relative;z-index:1;color:#fff;
-    padding:3px 8px;border-radius:var(--radius-sm);
+    /* Aucun padding vertical, la respiration du chip vient de line-height : avec un padding
+       haut/bas, -webkit-line-clamp coupe au bord de la boîte de padding et laisse dépasser
+       une lichette de la ligne suivante sous le chip. */
+    padding:0 8px;line-height:1.55;border-radius:var(--radius-sm);
     /* Même traitement (couleur + opacité) que le badge de l'icône, pour que titre et icône
        lisent comme un seul système plutôt que deux styles différents sur la même tuile. */
     background:
       linear-gradient(135deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,.12) 40%, rgba(255,255,255,0) 65%),
       var(--tile-badge-glass,var(--accent-soft));
     width:fit-content;max-width:100%;box-decoration-break:clone;-webkit-box-decoration-break:clone;
+    /* Le voile coloré ayant été allégé (0.55 -> 0.40), c'est cette ombre qui garantit le
+       contraste du texte blanc quand la photo dessous est claire. */
+    text-shadow:0 1px 3px rgba(20,14,10,.45);
   }
-  .tile.has-photo .tile-meta{position:relative;z-index:1;color:rgba(255,255,255,.88);}
   .tile.has-photo .tile-emoji{
-    position:absolute;top:8px;right:8px;z-index:2;width:30px;height:30px;
-    box-shadow:0 1px 4px rgba(0,0,0,.25);
+    position:absolute;top:8px;right:8px;z-index:2;
+    /* Plus de cadre coloré : sur une photo, seule une ombre portée (qui épouse le glyphe,
+       contrairement à box-shadow qui suivrait la boîte transparente) garde l'icône lisible. */
+    filter:drop-shadow(0 1px 3px rgba(0,0,0,.45));
   }
+  /* Icône nue, sans cadre de couleur : la teinte du projet ne vit plus que dans le badge
+     du titre et la barre de progression. Taille posée en ligne (voir layoutHomeTreemap),
+     proportionnelle à la taille de la tuile. */
   .tile-emoji{
-    line-height:1;width:44px;height:44px;border-radius:var(--radius-sm);font-size:31px;
-    /* Effet verre fiable : voile translucide + reflet en dégradé, sans backdrop-filter
-       (le flou produisait un halo gris-beige aux coins arrondis — bug de rendu écarté) */
-    background:
-      linear-gradient(135deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,.12) 40%, rgba(255,255,255,0) 65%),
-      var(--tile-badge-glass,var(--accent-soft));
-    border:none;box-shadow:none;overflow:hidden;
+    line-height:1;font-size:22px;width:auto;height:auto;
+    background:none;border:none;box-shadow:none;border-radius:0;overflow:visible;
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
   }
   .tile-title{font-weight:700;letter-spacing:-0.01em;line-height:1.25;color:var(--ink);margin-top:8px;
@@ -193,16 +200,38 @@
        flex-shrink:0 force le titre à garder sa hauteur voulue ; c'est titleFontSizeFor() qui
        est responsable d'éviter le débordement, pas le rétrécissement flex. */
     flex-shrink:0;}
-  .tile-meta{margin-top:8px;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);font-weight:600;}
+  /* Progression de la tuile : barre + pourcentage + chevron, tous sur la même ligne sous
+     le titre. La barre reprend exactement la teinte du badge du titre, posée sur du blanc
+     opaque pour qu'un voile translucide reste lisible aussi bien sur une carte pâle que
+     sur une photo. */
+  .tile-progress{display:flex;align-items:center;gap:6px;width:100%;margin-top:7px;flex-shrink:0;}
+  .tile-progress-track{
+    flex:1;min-width:0;height:5px;border-radius:3px;overflow:hidden;background:rgba(43,36,32,.10);
+  }
+  .tile-progress-fill{
+    height:100%;border-radius:3px;
+    /* Deux fois le même voile empilé sur du blanc : garde exactement la teinte du badge,
+       mais assez dense (≈0.64 au lieu de 0.40) pour que la barre se lise sur la carte,
+       elle-même déjà teintée de la même couleur. */
+    background:
+      linear-gradient(var(--tile-badge-glass,var(--accent-soft)),var(--tile-badge-glass,var(--accent-soft))),
+      linear-gradient(var(--tile-badge-glass,var(--accent-soft)),var(--tile-badge-glass,var(--accent-soft))),
+      #fff;
+  }
+  .tile-progress-pct{font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--ink-soft);flex-shrink:0;}
+  .tile-progress-chevron{width:11px;height:11px;flex-shrink:0;color:var(--ink-faint);}
+  .tile.has-photo .tile-progress{position:relative;z-index:1;}
+  .tile.has-photo .tile-progress-track{background:rgba(255,255,255,.38);}
+  .tile.has-photo .tile-progress-pct{color:#fff;}
+  .tile.has-photo .tile-progress-chevron{color:rgba(255,255,255,.9);}
   .tile.size-tiny .tile-body{padding:8px;}
-  .tile.size-tiny .tile-emoji{width:32px;height:32px;font-size:22px;}
   /* Reste à 1 ligne (pas 2 comme les autres tailles) : sur une tuile aussi petite,
      l'icône seule occupe déjà presque toute la hauteur disponible — 2 lignes de texte
      déborderaient physiquement. La taille de police s'adapte quand même pour éviter
      la troncature (voir titleFontSizeFor), juste sur une seule ligne ici. */
   .tile.size-tiny .tile-title{-webkit-line-clamp:1;margin-top:3px;}
-  .tile.size-tiny .tile-meta{display:none;}
-  .tile.size-tiny.has-photo .tile-emoji{width:22px;height:22px;top:5px;right:5px;}
+  .tile.size-tiny .tile-progress{display:none;}
+  .tile.size-tiny.has-photo .tile-emoji{top:5px;right:5px;}
   .tile.has-photo .tile-title{margin-top:0;}
 
   .empty-state{
@@ -236,14 +265,63 @@
      position:absolute (voir .top-bar juste au-dessus pour le pourquoi). */
   .detail-scroll{position:absolute;inset:0;background:var(--canvas);overflow-y:auto;}
   .detail-inner{max-width:600px;margin:0 auto;padding:50px 20px calc(90px + var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));}
-  .detail-header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;margin-bottom:12px;}
-  .detail-emoji{font-size:32px;line-height:1;}
+  /* En-tête en rangée : icône du projet en badge carré à gauche, titre et sous-titre
+     alignés à gauche à côté — le bloc centré précédent perdait beaucoup de hauteur en
+     haut d'écran sans rien apporter à la lecture. */
+  .detail-header{display:flex;flex-direction:row;align-items:center;text-align:left;gap:13px;margin-bottom:14px;}
+  .detail-emoji-badge{
+    flex-shrink:0;width:54px;height:54px;border-radius:16px;font-size:30px;line-height:1;
+    background:var(--current-proj-badge, var(--accent-soft));
+    display:flex;align-items:center;justify-content:center;
+  }
+  .detail-headings{min-width:0;display:flex;flex-direction:column;gap:3px;}
   .detail-title{font-size:19px;font-weight:800;letter-spacing:-0.01em;}
-  .detail-summary{font-size:13px;color:var(--ink-soft);max-width:440px;line-height:1.4;}
+  .detail-summary{font-size:13px;color:var(--ink-soft);line-height:1.4;}
 
+  .detail-progress-row{display:flex;align-items:center;gap:10px;margin:0 0 14px;}
+  .detail-progress-row .progress-track{flex:1;min-width:0;margin:0;}
+  .detail-progress-pct{
+    flex-shrink:0;font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--ink-soft);
+  }
   .progress-track{height:6px;border-radius:4px;background:var(--line);overflow:hidden;margin:10px 0 14px;}
   .progress-fill{height:100%;border-radius:4px;background:var(--current-proj-solid, var(--accent));}
   @media (prefers-reduced-motion:no-preference){.progress-fill{transition:width .3s ease;}}
+
+  /* Bande d'étapes : la ligne qui relie les pastilles EST la barre de progression —
+     remplie jusqu'à l'étape en cours, vide après. Indicateur seulement (des div, pas des
+     boutons) : on voit où on en est, on n'y navigue pas. Défilement horizontal pour tenir
+     quel que soit le nombre d'étapes, recentré sur l'étape en cours après chaque rendu. */
+  .steps-strip{margin:0 -20px 18px;padding:0 20px;overflow-x:auto;scrollbar-width:none;}
+  .steps-strip::-webkit-scrollbar{display:none;}
+  .steps-row{display:flex;align-items:flex-start;min-width:min-content;}
+  .step-node{flex:0 0 auto;width:74px;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .step-node-top{display:flex;align-items:center;width:100%;}
+  .step-link{flex:1;height:3px;background:var(--line);}
+  .step-link.filled{background:var(--current-proj-solid, var(--accent));}
+  .step-link.is-edge{visibility:hidden;}
+  .step-dot{
+    flex-shrink:0;width:30px;height:30px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:800;line-height:1;
+    background:var(--canvas-card);border:2px solid var(--line);color:var(--ink-faint);
+  }
+  .step-node.is-done .step-dot{
+    background:var(--current-proj-solid, var(--accent));
+    border-color:var(--current-proj-solid, var(--accent));color:#fff;
+  }
+  .step-node.is-current .step-dot{
+    background:var(--current-proj-badge, var(--accent-soft));
+    border-color:var(--current-proj-solid, var(--accent));
+    color:var(--current-proj-solid, var(--accent));
+  }
+  .step-label{
+    font-size:10.5px;font-weight:700;line-height:1.25;text-align:center;color:var(--ink-faint);
+    width:100%;word-break:break-word;overflow-wrap:break-word;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+  }
+  .step-node.is-done .step-label{color:var(--ink-soft);}
+  .step-node.is-current .step-label{color:var(--ink);}
+  .step-count{font-family:var(--font-mono);font-size:9.5px;color:var(--ink-faint);}
 
   /* Composants colorés par l'identité du projet (--current-proj-*, posé sur .detail-scroll) — design system v5 */
   .next-action-card{
@@ -568,35 +646,47 @@
   .chat-close-btn{border:none;background:none;font-size:22px;color:var(--ink-faint);line-height:1;padding:0 2px;}
   .chat-close-btn:hover{color:var(--ink);}
 
-  /* Bouton flottant Drop it — accès unique à la capture rapide et à la Drop Zone,
-     visible sur tous les écrans, au-dessus de la barre de navigation. */
-  .drop-fab{
-    position:fixed;left:50%;transform:translateX(-50%);
-    /* 59px = hauteur des barres de saisie fixes (.compose-bar/.tl-compose-bar/.detail-fixed-bar),
-       toutes ancrées sur --tabbar-h — sans cette marge le bouton flottant se superpose
-       à leur contenu au lieu de flotter au-dessus. */
-    bottom:calc(var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) + 59px + 14px);
-    /* 61 : au-dessus de .tasklist-screen (60, l'écran Liste plein écran) pour rester
-       visible sur les 4 écrans de nav, mais sous les vraies fenêtres modales
-       (chat 50, notes 55, menu projet/compte 70) où il n'a rien à faire. */
-    z-index:61;
-    display:flex;align-items:center;gap:5px;padding:11px 18px;border:none;border-radius:999px;
-    background:#fff;box-shadow:0 4px 16px rgba(43,36,32,0.22);
-    font-size:13px;font-weight:700;letter-spacing:0.02em;color:var(--ink);
+  /* Bouton Drop it — au centre de la barre de navigation plutôt qu'en bouton flottant
+     par-dessus le contenu. Il garde une identité de bouton (pilule pleine, relief, léger
+     débord vers le haut) pour ne pas se fondre dans la rangée d'icônes autour. */
+  .tabbar-drop-slot{
+    flex:1.15;display:flex;align-items:center;justify-content:center;position:relative;
   }
-  .drop-fab-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;}
-  .drop-fab-badge{
+  .drop-tab-btn{
+    position:relative;display:flex;align-items:center;justify-content:center;gap:4px;
+    border:none;border-radius:999px;padding:10px 12px;
+    background:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(191,91,68,0.38);
+    font-size:11.5px;font-weight:800;letter-spacing:0.02em;white-space:nowrap;
+    /* Remonté au-dessus de la ligne des autres onglets : c'est ce débord qui le fait lire
+       comme un bouton d'action et non comme un cinquième onglet. */
+    transform:translateY(-8px);
+  }
+  .drop-tab-dot{width:5px;height:5px;border-radius:50%;background:#fff;flex-shrink:0;}
+  .drop-tab-badge{
     position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;
-    background:var(--accent);color:#fff;font-size:10.5px;font-weight:700;line-height:18px;text-align:center;
-    box-shadow:0 0 0 2px #fff;
+    background:var(--ink);color:#fff;font-size:10.5px;font-weight:700;line-height:18px;text-align:center;
+    box-shadow:0 0 0 2px var(--canvas-card);
   }
 
   /* Fenêtre Drop Zone — même gabarit que la fenêtre de chat (.chat-modal-box : 72vh,
      liste scrollable en corps, saisie fixée en bas), pour une identité visuelle cohérente. */
   .drop-sheet{position:fixed;inset:0;z-index:62;display:flex;align-items:flex-end;justify-content:center;background:rgba(43,36,32,0.38);}
   .drop-sheet-box{width:100%;max-width:620px;height:72vh;background:var(--canvas-card);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 32px rgba(43,36,32,0.18);}
-  .drop-sheet-header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;}
-  .drop-sheet-title{font-size:19px;font-weight:800;color:var(--ink);text-align:center;}
+  .drop-sheet-header{padding:16px 18px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;}
+  /* En-tête repris de la landing (slide Drop Zone) : icône, titre bicolore DROP/ZONE et
+     sous-titre en pilule — même identité visuelle entre la page publique et l'app. */
+  .drop-zone-brand{display:flex;flex-direction:column;align-items:center;gap:6px;max-width:100%;}
+  .drop-zone-icon{font-size:30px;line-height:1;}
+  .drop-zone-title{
+    font-family:var(--font-display);font-size:27px;font-weight:900;letter-spacing:0.06em;
+    color:var(--ink);line-height:1;text-align:center;
+  }
+  .drop-zone-title span{color:var(--dropzone-violet);}
+  .drop-zone-pill{
+    background:rgba(91,63,232,0.10);border-radius:999px;padding:5px 13px;text-align:center;
+    font-size:11.5px;font-weight:600;color:var(--ink-soft);
+  }
+  .drop-zone-pill b{color:var(--dropzone-violet);font-weight:800;}
   .drop-sheet-header .chat-close-btn{position:absolute;right:18px;top:50%;transform:translateY(-50%);}
   .drop-sheet-body{flex:1;overflow-y:auto;padding:14px 18px;}
   .drop-sheet-compose{flex-shrink:0;padding:12px 18px calc(12px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));border-top:1px solid var(--line);}
@@ -693,7 +783,7 @@
   }
   .tl-filter-row::-webkit-scrollbar{display:none;}
   .tl-proj-chip{
-    flex-shrink:0;font-size:28px;width:40px;height:40px;border-radius:50%;
+    flex-shrink:0;font-size:28px;width:40px;height:40px;border-radius:12px;
     border:2px solid transparent;background:var(--canvas);display:flex;align-items:center;
     justify-content:center;transition:border-color .12s,background .12s;
   }
@@ -2398,8 +2488,7 @@
       priority:  "var(--proj-"+name+"-priority)",
       btn:       "var(--proj-"+name+"-btn)",
       next:      "var(--proj-"+name+"-next)",
-      glass:     "var(--proj-"+name+"-glass)",
-      ring:      "var(--proj-"+name+"-ring)"
+      glass:     "var(--proj-"+name+"-glass)"
     };
   }
   function escapeHtml(s){
@@ -2963,14 +3052,12 @@
       // pour 2 lignes, cf. -webkit-line-clamp:2 sur .tile-title.
       var maxLines = isTiny ? 1 : 2;
       // Marge horizontale réelle entre le bord de la tuile et le texte : le padding de
-      // .tile-body (8/14px) ne suffit pas seul, il faut aussi compter le padding de l'anneau
-      // de progression (3.75px, sur .tile) et, en mode photo, celui du "chip" de titre
-      // (3px 8px sur .tile.has-photo .tile-title) — absent sans photo, donc compté
-      // seulement si la tuile en a une (sinon on rétrécit le texte pour rien).
-      var ringPadding = 3.75;
+      // .tile-body (8/14px) et, en mode photo, celui du "chip" de titre (3px 8px sur
+      // .tile.has-photo .tile-title) — absent sans photo, donc compté seulement si la
+      // tuile en a une (sinon on rétrécit le texte pour rien).
       var bodyPadding = isTiny ? 8 : 14;
       var chipPadding = hasPhoto ? 8 : 0;
-      var padding = ringPadding + bodyPadding + chipPadding;
+      var padding = bodyPadding + chipPadding;
       var availableWidth = Math.max(20, w - padding*2);
       while(fs > 8 && linesNeededAt(text, fs, availableWidth) > maxLines){
         fs -= 0.5;
@@ -2999,16 +3086,24 @@
   function calendarIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M7 3v4M13 3v4M3 9h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>'; }
   function homeIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M3 9.5 10 3l7 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 8.5V17h10V8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function dotsMenuIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="4.5" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="10" cy="15.5" r="1.6"/></svg>'; }
+  function tileChevronIcon(){ return '<svg class="tile-progress-chevron" viewBox="0 0 20 20" fill="none"><path d="M8 4l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
 
   function renderBottomTabBar(){
     var onHome = !currentProjectId && !taskListOpen && !calendarOpen;
     var onList = !!taskListOpen;
     var onCal = !!calendarOpen;
+    var dropCount = dropZoneCount();
     return '<div class="bottom-tabbar" id="bottom-tabbar">'+
       '<button class="tabbar-item'+(onHome?' active':'')+'" id="tabbar-home" title="Accueil">'+
         homeIcon()+'<span class="tabbar-item-label">Accueil</span></button>'+
       '<button class="tabbar-item'+(onList?' active':'')+'" id="tabbar-list" title="Liste">'+
         listIcon()+'<span class="tabbar-item-label">Liste</span></button>'+
+      '<div class="tabbar-drop-slot">'+
+        '<button class="drop-tab-btn" id="drop-tab-btn" title="Drop it">'+
+          'DROP<span class="drop-tab-dot"></span>IT'+
+          (dropCount > 0 ? '<span class="drop-tab-badge">'+dropCount+'</span>' : '')+
+        '</button>'+
+      '</div>'+
       '<button class="tabbar-item" id="tabbar-chat" title="Chat IA">'+
         chatIcon()+'<span class="tabbar-item-label">Chat IA</span></button>'+
       '<button class="tabbar-item'+(onCal?' active':'')+'" id="tabbar-cal" title="Aujourd\'hui">'+
@@ -3115,6 +3210,7 @@
     if(project){
       app.insertAdjacentHTML('beforeend', renderDetail(project));
       slideScreenIn('detail-screen', detailWasOpen);
+      scrollStepsToCurrent();
     }
 
     if(calendarOpen){
@@ -3122,9 +3218,9 @@
       slideScreenIn('calendar-screen', calWasOpen);
     }
 
-    // Bouton flottant Drop it + sa fenêtre : présents sur tous les écrans de l'app
-    // authentifiée, un seul point d'injection plutôt que de le répéter par écran.
-    app.insertAdjacentHTML('beforeend', renderDropFab() + renderDropSheet());
+    // Fenêtre Drop Zone : un seul point d'injection, quel que soit l'écran affiché (le
+    // bouton qui l'ouvre, lui, vit maintenant dans la barre de navigation de chaque écran).
+    app.insertAdjacentHTML('beforeend', renderDropSheet());
     if(dropSheetOpen){
       var dsInput = document.getElementById('drop-sheet-input');
       if(dsInput) dsInput.focus();
@@ -3359,11 +3455,16 @@
     return first.charAt(0).toUpperCase() + first.slice(1);
   }
 
+  // Emoji d'encouragement tiré au hasard, mais une seule fois par session : le faire à
+  // chaque render() le ferait clignoter à chaque tâche cochée.
+  var GREETING_EMOJIS = ["✨","💪","🚀","🌟","🙌","👊","🎯","☀️","👏","🤩"];
+  var greetingEmoji = GREETING_EMOJIS[Math.floor(Math.random()*GREETING_EMOJIS.length)];
+
   function renderHome(){
     var hasProjects = state.projects.length > 0;
     var firstName = accountFirstName();
     var greetingHtml = '<div class="home-greeting" id="home-greeting">'+
-      "Let's Go" + (firstName ? " ! "+escapeHtml(firstName) : " !") + ' 🔥</div>';
+      "C'est parti" + (firstName ? " ! "+escapeHtml(firstName) : " !") + ' '+greetingEmoji+'</div>';
     var bodyHtml = hasProjects
       ? '<div id="home-treemap-zone"></div>'
       : '<div class="empty-state"><b>Dis ce que tu veux réaliser.</b><span>Écris une intention en bas — l\'IA construit le projet pour toi.</span></div>';
@@ -3377,7 +3478,9 @@
     // Quand la liste est ouverte, elle embarque déjà sa propre bottom-tabbar (voir
     // renderTaskList) : ne pas en émettre une seconde ici, sous peine d'un doublon
     // d'id dont seule la copie masquée de l'accueil recevrait les clics.
-    (hasProjects && !taskListOpen ? renderBottomTabBar() : '')+
+    // Affichée même sans projet : depuis que le bouton Drop it y vit, la masquer priverait
+    // un compte tout neuf du seul accès à la Drop Zone.
+    (!taskListOpen ? renderBottomTabBar() : '')+
     '<div class="toast" id="toast"></div>';
   }
 
@@ -3463,21 +3566,29 @@
       var titleFontSize = titleFontSizeFor(w,h,p.title,hasPhoto);
       var pct = progressPct(p);
       var status = activityStatus(p);
-      var showMeta = sizeClass !== "size-tiny";
+      var showProgress = sizeClass !== "size-tiny";
       var pc = projectColorVars(p.id);
       var doneClass = status === "accompli" ? " is-done" : "";
       var photoClass = hasPhoto ? " has-photo" : "";
-      var iconSize = hasPhoto ? (sizeClass==='size-tiny'?14:20) : (sizeClass==='size-tiny'?22:31);
+      // Icônes réduites de 30% depuis que le cadre coloré a disparu : sans fond à remplir,
+      // un glyphe aussi gros écrasait le reste de la tuile.
+      var iconSize = hasPhoto ? (sizeClass==='size-tiny'?10:14) : (sizeClass==='size-tiny'?15:22);
       return ''+
       '<div class="tile '+sizeClass+doneClass+photoClass+'" data-project-id="'+p.id+'" '+
-        'style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;--pct:'+pct+';--ring-color:'+pc.ring+';'+
+        'style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;'+
           '--tile-card-bg:'+pc.card+';--tile-badge-glass:'+pc.glass+';" '+
         'role="button" tabindex="0">'+
         '<div class="tile-body">'+
           (hasPhoto ? '<div class="tile-photo"></div><div class="tile-scrim"></div>' : '')+
           '<div class="tile-emoji" style="font-size:'+iconSize+'px;">'+escapeHtml(p.emoji)+'</div>'+
           '<div class="tile-title" style="font-size:'+titleFontSize+'px;">'+escapeHtml(p.title)+'</div>'+
-          (showMeta ? '<div class="tile-meta">'+pct+'%</div>' : '')+
+          (showProgress
+            ? '<div class="tile-progress">'+
+                '<div class="tile-progress-track"><div class="tile-progress-fill" style="width:'+pct+'%;"></div></div>'+
+                '<span class="tile-progress-pct">'+pct+'%</span>'+
+                tileChevronIcon()+
+              '</div>'
+            : '')+
         '</div>'+
       '</div>';
     }).join("");
@@ -3909,6 +4020,60 @@
     '</div>';
   }
 
+  /* Étapes du projet : les catégories quand il y en a plusieurs (elles jouent déjà ce rôle),
+     sinon les tâches de l'unique catégorie — dans les deux cas, la séquence que l'utilisateur
+     parcourt réellement. */
+  function projectSteps(p){
+    if(p.categories.length > 1){
+      return p.categories.map(function(cat){
+        var total = cat.items.length;
+        var doneCount = cat.items.filter(function(it){ return it.done; }).length;
+        return {label: cat.title, done: total > 0 && doneCount === total};
+      });
+    }
+    var cat = p.categories[0];
+    if(!cat) return [];
+    return cat.items.map(function(it){ return {label: it.title, done: !!it.done}; });
+  }
+
+  function renderStepsStrip(p){
+    var steps = projectSteps(p);
+    // Une seule étape (ou aucune) : la barre de progression au-dessus dit déjà tout,
+    // une bande d'étapes n'ajouterait qu'une pastille isolée.
+    if(steps.length < 2) return '';
+    var currentIdx = -1;
+    for(var i=0; i<steps.length; i++){ if(!steps[i].done){ currentIdx = i; break; } }
+    var n = steps.length;
+    var nodes = steps.map(function(s, idx){
+      var cls = s.done ? 'is-done' : (idx === currentIdx ? 'is-current' : 'is-todo');
+      // Le trait à gauche d'une pastille est rempli dès que l'étape précédente est faite,
+      // celui de droite dès que l'étape elle-même l'est : la ligne se remplit donc en
+      // continu jusqu'à l'étape en cours.
+      var leftCls = idx === 0 ? ' is-edge' : (steps[idx-1].done ? ' filled' : '');
+      var rightCls = idx === n-1 ? ' is-edge' : (s.done ? ' filled' : '');
+      return '<div class="step-node '+cls+'">'+
+        '<div class="step-node-top">'+
+          '<span class="step-link'+leftCls+'"></span>'+
+          '<span class="step-dot">'+(s.done ? '✓' : (idx+1))+'</span>'+
+          '<span class="step-link'+rightCls+'"></span>'+
+        '</div>'+
+        '<div class="step-label">'+escapeHtml(s.label)+'</div>'+
+        '<div class="step-count">'+(idx+1)+'/'+n+'</div>'+
+      '</div>';
+    }).join('');
+    return '<div class="steps-strip" id="steps-strip"><div class="steps-row">'+nodes+'</div></div>';
+  }
+
+  // Recentre la bande sur l'étape en cours après chaque rendu : sur un projet à 12 étapes,
+  // celle qui compte est sinon hors champ à droite.
+  function scrollStepsToCurrent(){
+    var strip = document.getElementById('steps-strip');
+    if(!strip) return;
+    var current = strip.querySelector('.step-node.is-current');
+    if(!current) return;
+    strip.scrollLeft = Math.max(0, current.offsetLeft - (strip.clientWidth - current.offsetWidth)/2);
+  }
+
   function renderDetail(p){
     var pct = progressPct(p);
     var accompli = isAccompli(p);
@@ -3931,12 +4096,18 @@
 
     var headerHtml = ''+
     '<div class="detail-header">'+
-      '<div class="detail-emoji">'+escapeHtml(p.emoji)+'</div>'+
-      '<div class="detail-title">'+escapeHtml(p.title)+'</div>'+
-      (p.summary ? '<div class="detail-summary">'+escapeHtml(p.summary)+'</div>' : '')+
-      (p.dna ? '<div class="project-dna">'+escapeHtml(p.dna)+'</div>' : '')+
+      '<div class="detail-emoji-badge">'+escapeHtml(p.emoji)+'</div>'+
+      '<div class="detail-headings">'+
+        '<div class="detail-title">'+escapeHtml(p.title)+'</div>'+
+        (p.summary ? '<div class="detail-summary">'+escapeHtml(p.summary)+'</div>' : '')+
+        (p.dna ? '<div class="project-dna">'+escapeHtml(p.dna)+'</div>' : '')+
+      '</div>'+
     '</div>'+
-    '<div class="progress-track"><div class="progress-fill" style="width:'+pct+'%;"></div></div>';
+    '<div class="detail-progress-row">'+
+      '<div class="progress-track"><div class="progress-fill" style="width:'+pct+'%;"></div></div>'+
+      '<span class="detail-progress-pct">'+pct+'%</span>'+
+    '</div>'+
+    renderStepsStrip(p);
 
     var mainActionHtml = "";
     if(accompli){
@@ -4081,20 +4252,12 @@
     '</div>';
   }
 
-  /* ---------- Drop it : bouton flottant + fenêtre de capture / tri de la Drop Zone ---------- */
+  /* ---------- Drop it : bouton de la barre de navigation + fenêtre de capture / tri ---------- */
 
   function dropZoneCount(){ return state.dropZone.length; }
 
-  function renderDropFab(){
-    var count = dropZoneCount();
-    return '<button class="drop-fab" id="drop-fab" title="Drop it">'+
-      'DROP<span class="drop-fab-dot"></span>IT'+
-      (count > 0 ? '<span class="drop-fab-badge">'+count+'</span>' : '')+
-    '</button>';
-  }
-
   function renderDropBadge(d, toss){
-    // Même charte que les badges de projet ailleurs dans l'app : voile 28% en fond
+    // Même charte que les badges de projet ailleurs dans l'app : voile de couleur en fond
     // (--proj-*-badge) + la teinte pleine (--proj-*-solid) pour le texte, jamais du blanc.
     var c = projectColorVars(d.id);
     return '<button class="drop-badge'+(toss?' toss':'')+'" data-drop-check="'+d.id+'" '+
@@ -4113,16 +4276,20 @@
       : '<div class="drop-triage-empty">Rien à trier — la Drop Zone est vide.</div>';
   }
 
-  function updateDropFabBadgeCount(){
-    var fab = document.getElementById('drop-fab');
-    if(!fab) return;
-    var badge = fab.querySelector('.drop-fab-badge');
-    if(state.dropZone.length > 0){
-      if(badge) badge.textContent = state.dropZone.length;
-      else fab.insertAdjacentHTML('beforeend', '<span class="drop-fab-badge">'+state.dropZone.length+'</span>');
-    } else if(badge){
-      badge.remove();
-    }
+  // Plusieurs barres de navigation coexistent dans le DOM (l'accueil garde la sienne sous
+  // l'écran projet/liste/agenda qui se pose par-dessus) : le compteur doit être mis à jour
+  // sur toutes les copies, pas seulement la première trouvée.
+  function updateDropTabBadgeCount(){
+    var count = state.dropZone.length;
+    document.querySelectorAll('#drop-tab-btn').forEach(function(btn){
+      var badge = btn.querySelector('.drop-tab-badge');
+      if(count > 0){
+        if(badge) badge.textContent = count;
+        else btn.insertAdjacentHTML('beforeend', '<span class="drop-tab-badge">'+count+'</span>');
+      } else if(badge){
+        badge.remove();
+      }
+    });
   }
 
   function renderDropSheet(){
@@ -4131,7 +4298,11 @@
     return '<div class="drop-sheet" id="drop-sheet">'+
       '<div class="drop-sheet-box">'+
         '<div class="drop-sheet-header">'+
-          '<div class="drop-sheet-title">👇 La Drop Zone 👇</div>'+
+          '<div class="drop-zone-brand">'+
+            '<div class="drop-zone-icon">📥</div>'+
+            '<div class="drop-zone-title">DROP <span>ZONE</span></div>'+
+            '<div class="drop-zone-pill">Ton espace de « décharge mentale » <b>en 1 clic.</b></div>'+
+          '</div>'+
           '<button class="chat-close-btn" id="drop-sheet-close-btn">×</button>'+
         '</div>'+
         '<div class="drop-sheet-body" id="drop-sheet-body">'+renderDropTriageList()+'</div>'+
@@ -4170,7 +4341,7 @@
       var newBadge = badgesEl.lastElementChild;
       if(newBadge) newBadge.addEventListener('click', function(){ performDropCheck(entry.id); });
     }
-    updateDropFabBadgeCount();
+    updateDropTabBadgeCount();
     showToast('Envoyé dans la Drop Zone');
   }
 
@@ -4189,7 +4360,7 @@
       var body = document.getElementById('drop-sheet-body');
       if(body) body.innerHTML = '<div class="drop-triage-empty">Rien à trier — la Drop Zone est vide.</div>';
     }
-    updateDropFabBadgeCount();
+    updateDropTabBadgeCount();
   }
 
   function renderNoteModal(){
@@ -4913,9 +5084,11 @@
   function bindGlobalEvents(){
     bindTabBarEvents();
 
-    // Drop it — bouton flottant, capture rapide et tri de la Drop Zone
-    var dropFabBtn = document.getElementById("drop-fab");
-    if(dropFabBtn) dropFabBtn.addEventListener("click", function(){
+    // Drop it — bouton de la barre de navigation, capture rapide et tri de la Drop Zone.
+    // lastById : même raison que pour les onglets, plusieurs barres coexistent dans le DOM
+    // et seule la dernière appartient à l'écran réellement au premier plan.
+    var dropTabBtn = lastById("drop-tab-btn");
+    if(dropTabBtn) dropTabBtn.addEventListener("click", function(){
       dropSheetOpen = true;
       render();
     });
