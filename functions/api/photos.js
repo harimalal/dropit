@@ -8,10 +8,13 @@ const MAX_QUERY_LENGTH = 80;
 const RESULTS_PER_QUERY = 6;
 
 // Filtre "ranking basique" (MVP) : le prompt de génération de photoQuery demande déjà à
-// l'IA d'éviter toute personne, mais reste un filet de secours ici (photoQuery absente sur
+// l'IA d'éviter les visages, mais reste un filet de secours ici (photoQuery absente sur
 // les vieux projets, requête de repli sur le titre, ou l'IA n'a pas suivi la consigne) —
-// Pexels n'offrant pas de filtre "sans personne", on écarte via le texte alt du résultat.
-const PEOPLE_PATTERN = /\b(person|people|man|men|woman|women|boy|girl|child|children|kid|kids|family|portrait|face|faces|couple|friends|selfie|smiling|guy|lady|human|group of)\b/i;
+// Pexels n'offrant pas de filtre "sans visage", on écarte via le texte alt du résultat.
+// Contrainte précisée : une silhouette, des mains, une forme humaine de dos ou en action
+// restent acceptables (donnent vie à la photo) — seul un visage / portrait / personne qui
+// pose face à la caméra est écarté, pas toute présence humaine.
+const PEOPLE_PATTERN = /\b(face|faces|portrait|portraits|headshot|headshots|selfie|selfies|smiling|smile|smiles|looking at camera|posing)\b/i;
 
 function pickPhoto(photos) {
   return photos.find((p) => !PEOPLE_PATTERN.test(p.alt || "")) || photos[0];
