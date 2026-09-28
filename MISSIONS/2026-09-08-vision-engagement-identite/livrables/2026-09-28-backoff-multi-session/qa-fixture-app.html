@@ -5457,7 +5457,24 @@
       });
   }
 
-  boot();
+  session = {access_token:"test-token", expires_at: Date.now()+3600000, user:{id:"test-user", email:"test@example.com"}};
+  var _origFetch = window.fetch.bind(window);
+  window.fetch = function(url, opts){
+    var u = String(url);
+    if(u.indexOf("/api/photos") === 0){
+      var q = decodeURIComponent((u.split("q=")[1]||"").split("&")[0]);
+      return new Promise(function(resolve){
+        setTimeout(function(){
+          resolve(new Response(JSON.stringify({
+            url: "https://images.pexels.com/photos/x/"+encodeURIComponent(q)+".jpeg",
+            photographer:"T", photographerUrl:"", pexelsId: q.length, pageUrl:""
+          }), {status:200}));
+        }, 80); // même délai pour toutes les sessions : maximise le chevauchement
+      });
+    }
+    return _origFetch(url, opts);
+  };
+  bootAfterAuth();
 })();
 </script>
 </body>
