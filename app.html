@@ -186,14 +186,14 @@
     position:absolute;top:8px;right:8px;z-index:2;
     box-shadow:0 1px 4px rgba(0,0,0,.28);
   }
-  /* Icône dans un encadré carré à fond blanc : lisible sur n'importe quelle couleur de carte
+  /* Icône dans un cercle à fond blanc : lisible sur n'importe quelle couleur de carte
      comme sur n'importe quelle photo, sans reprendre la teinte du projet (qui ne vit que dans
      le badge du titre et la barre de progression). Côté de l'encadré et taille du glyphe
      posés en ligne (voir layoutHomeTreemap), proportionnels à la taille de la tuile. */
   .tile-emoji{
     line-height:1;font-size:22px;
     width:var(--emoji-box,38px);height:var(--emoji-box,38px);
-    background:#fff;border:none;box-shadow:0 1px 3px rgba(43,36,32,.12);border-radius:calc(var(--emoji-box,38px) * .28);overflow:hidden;
+    background:#fff;border:none;box-shadow:0 1px 3px rgba(43,36,32,.12);border-radius:50%;overflow:hidden;
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
   }
   .tile-title{font-weight:700;letter-spacing:-0.01em;line-height:1.25;color:var(--ink);margin-top:8px;
@@ -2621,11 +2621,11 @@
   }
 
   // ---------- Photo engine (Chantier 8 révisé : banque Pexels, pas de génération IA) ----------
-  // Taxonomie visuelle : l'IA classe chaque projet dans un domaine fermé, qui ancre à la
-  // fois l'icône suggérée et les mots-clés de la recherche photo — l'objet de la photo
-  // reste donc toujours lié au même domaine que l'icône, au lieu de deux champs libres
-  // générés indépendamment (emoji et photoQuery) qui pourraient diverger. Extensible sans
-  // toucher à l'architecture : ajouter une entrée suffit (ex: cuisine, bien-être...).
+  // Taxonomie visuelle : 7 domaines fermés, chacun avec ses icônes types et des mots-clés
+  // génériques. Le titre et l'icône d'un projet (exclusivement) les relient à un sujet
+  // concret pour la recherche de photo ; les mots-clés du domaine ne servent que de repli
+  // quand aucun sujet n'a pu être déduit. Extensible sans toucher à l'architecture : ajouter
+  // une entrée suffit (ex: cuisine, bien-être...).
   var PHOTO_ICON_TAXONOMY = {
     famille: {icons:["👨‍👩‍👧","👪","❤️","🎈"], keywords:"family home warmth cozy"},
     voyage: {icons:["✈️","🧳","🌴","🗺️"], keywords:"travel vacation landscape scenic"},
@@ -2635,38 +2635,68 @@
     creativite: {icons:["🎨","📷","🎵","✍️"], keywords:"creative art craft inspiring"},
     apprentissage: {icons:["📚","🎓","💻","🔬"], keywords:"books study education cozy"}
   };
-  // Combine les mots-clés fixes du domaine (garantit le lien avec l'icône) et le
-  // descripteur spécifique de l'IA (garantit la pertinence au projet précis) — le
-  // "renforcement" tient au fait que les mots-clés de domaine sont toujours présents,
-  // pas seulement suggérés dans le prompt.
+  // Sujet de la photo = l'OBJET que représente l'icône, dans le contexte du titre — et rien
+  // d'autre (ni résumé, ni intention de départ). Les mots-clés génériques du domaine
+  // (« travel vacation landscape scenic »…) ne sont PAS ajoutés devant : ils noyaient le sujet
+  // et ramenaient des paysages sans rapport avec le projet. Ils ne servent que de repli.
+  function cleanSubject(raw){
+    return String(raw || "").toLowerCase().replace(/[^a-z0-9 ]+/g, " ").trim().split(/\s+/).slice(0, 3).join(" ");
+  }
   function buildPhotoQuery(result){
+    var subject = cleanSubject(result && result.subject);
+    if(subject) return subject;
     var domain = result && PHOTO_ICON_TAXONOMY[result.domain];
-    var specific = String((result && result.photoQuery) || "").trim();
-    if(domain) return (domain.keywords + (specific ? " " + specific : "")).trim();
-    return specific || null;
+    return domain ? domain.keywords : null;
+  }
+  // Repli fondé sur l'icône seule (taxonomie), quand la classification n'a donné ni sujet ni
+  // domaine exploitable. Comparaison sans le sélecteur de variante (U+FE0F) : « ❤️ » et « ❤ »
+  // sont la même icône.
+  function iconDomainQuery(emoji){
+    var strip = function(e){ return String(e || "").replace(/️/g, ""); };
+    var target = strip(emoji);
+    var keys = Object.keys(PHOTO_ICON_TAXONOMY);
+    for(var i = 0; i < keys.length; i++){
+      var d = PHOTO_ICON_TAXONOMY[keys[i]];
+      if(d.icons.some(function(ic){ return strip(ic) === target; })) return d.keywords;
+    }
+    return null;
   }
   // Une recherche par projet maximum par session : au-delà, on laisse la tuile dans son état
   // actuel (couleur + emoji) plutôt que de marteler /api/photos. Un projet sans photo est
   // retenté naturellement à la prochaine visite (cette map n'est pas persistée).
   var photoFetchAttempted = {};
+  var photoSeen = {}; // projet -> identifiants Pexels déjà proposés dans cette session
   // Fait l'appel réseau sans aucune garde (utilisé aussi bien par le backfill automatique,
   // déjà gardé par l'appelant, que par regeneratePhoto() qui doit pouvoir forcer un nouvel
   // essai même si photoFetchAttempted est déjà posé).
   // `done(true|false)` (facultatif) dit si une photo a effectivement été posée : le backfill
   // automatique s'en passe (échec silencieux), le bouton "Changer la photo" en a besoin pour
   // prévenir quand rien de convenable n'a été trouvé.
-  function fetchProjectPhoto(p, query, done){
+  // `exclude` : identifiants Pexels à ne pas reproposer (photos déjà vues pour ce projet), pour
+  // que « Changer la photo » change vraiment de photo au lieu de renvoyer toujours la première.
+  function fetchProjectPhoto(p, query, done, exclude){
     query = String(query || "").trim();
     if(!p || !query){ if(done) done(false); return; }
-    apiFetch("/api/photos?q=" + encodeURIComponent(query)).then(function(res){
+    var url = "/api/photos?q=" + encodeURIComponent(query);
+    if(exclude && exclude.length) url += "&exclude=" + exclude.join(",");
+    apiFetch(url).then(function(res){
+      // 404 = le serveur a cherché et rien de convenable (fond d'écran HD, en rapport avec le
+      // sujet) n'existe : ce n'est pas une panne, et ça ne se réglera pas en réessayant tout de suite.
+      if(res.status === 404) return {none: true};
       if(!res.ok) return Promise.reject(new Error("photo-fetch-failed"));
       return res.json();
     }).then(function(data){
+      if(data && data.none){ if(done) done(false, "none"); return; }
       if(!data || !data.url){ if(done) done(false); return; }
       p.photo = {
         url: data.url, photographer: data.photographer || "", photographerUrl: data.photographerUrl || "",
         pexelsId: data.pexelsId || null, pageUrl: data.pageUrl || "", query: query, fetchedAt: nowIso()
       };
+      if(data.pexelsId){
+        var seen = photoSeen[p.id] || (photoSeen[p.id] = []);
+        if(seen.indexOf(data.pexelsId) < 0) seen.push(data.pexelsId);
+      }
+      clearPhotoMiss(p);
       rememberPendingPhoto(p);
       persist();
       if(!currentProjectId) layoutHomeTreemap();
@@ -2677,33 +2707,82 @@
       if(done) done(false);
     });
   }
-  function ensureProjectPhoto(p, queryOverride){
-    if(!p || p.photo || photoFetchAttempted[p.id]) return;
-    photoFetchAttempted[p.id] = true;
-    fetchProjectPhoto(p, queryOverride || p.title);
+  // Un seul chemin pour la création, le rattrapage des vieux projets et le bouton : la requête
+  // vient toujours de l'icône et du titre, jamais du titre brut (français, donc mal compris
+  // par Pexels) ni d'un texte plus long. Si la classification échoue (IA indisponible, limite
+  // de débit), on ne pose PAS de photo maintenant : une photo posée sur une requête pauvre
+  // ne serait jamais retentée, alors qu'un projet sans photo l'est à la prochaine visite.
+  function resolvePhotoQuery(p){
+    return classifyPhotoDomain(p).then(function(result){
+      return buildPhotoQuery(result) || iconDomainQuery(p.emoji);
+    }).catch(function(){ return null; });
+  }
+  /* « Aucune photo convenable » mémorisé 24 h par projet. Le filtre est strict (fond d'écran HD
+     en rapport avec le sujet) : certains projets n'auront rien, et sans cette mémoire chaque
+     rechargement relancerait une classification IA et une recherche Pexels pour rien, en grillant
+     le quota gratuit de Pexels (200 requêtes par heure) et la limite d'appels IA. La clé inclut
+     le titre et l'icône : les modifier relance une recherche tout de suite. */
+  var PHOTO_MISS_TTL_MS = 24 * 3600 * 1000;
+  function photoMissKey(){ return "dropit.photoMiss." + ((session && session.user && session.user.id) || "anon"); }
+  function photoMissId(p){ return p.title + "|" + p.emoji; }
+  function readPhotoMisses(){
+    try{ var m = JSON.parse(localStorage.getItem(photoMissKey()) || "{}"); return (m && typeof m === "object") ? m : {}; }
+    catch(e){ return {}; }
+  }
+  function writePhotoMisses(m){
+    try{ if(Object.keys(m).length) localStorage.setItem(photoMissKey(), JSON.stringify(m)); else localStorage.removeItem(photoMissKey()); }
+    catch(e){}
+  }
+  function photoMissRecent(p){
+    var r = readPhotoMisses()[p.id];
+    return !!(r && r.id === photoMissId(p) && (Date.now() - r.at) < PHOTO_MISS_TTL_MS);
+  }
+  function recordPhotoMiss(p){
+    var m = readPhotoMisses();
+    m[p.id] = {id: photoMissId(p), at: Date.now()};
+    writePhotoMisses(m);
+  }
+  function clearPhotoMiss(p){
+    var m = readPhotoMisses();
+    if(m[p.id]){ delete m[p.id]; writePhotoMisses(m); }
   }
 
-  // Classification à la demande (bouton "Changer la photo") pour un projet existant qui n'a
-  // pas de domain/photoQuery stockés (créé avant la taxonomie, ou sur lequel on veut une
-  // nouvelle photo) — l'icône actuelle du projet ne change pas, elle sert de référence pour
-  // que le domaine déduit (et donc l'objet principal de la photo) reste cohérent avec elle.
+  function ensureProjectPhoto(p){
+    if(!p || p.photo || photoFetchAttempted[p.id]) return;
+    photoFetchAttempted[p.id] = true;
+    if(photoMissRecent(p)) return;
+    resolvePhotoQuery(p).then(function(query){
+      fetchProjectPhoto(p, query, function(ok, reason){
+        if(!ok && reason === "none") recordPhotoMiss(p);
+      });
+    });
+  }
+
+  // Classification (création, rattrapage, bouton "Changer la photo") à partir du TITRE et de
+  // l'ICÔNE du projet, exclusivement : ni le résumé, ni l'intention de départ. L'icône ne
+  // change jamais, elle sert de référence pour que l'objet principal de la photo reste celui
+  // qu'elle représente.
   function classifyPhotoDomain(p){
     var domainKeys = Object.keys(PHOTO_ICON_TAXONOMY).join("|");
     var promptText = ""+
-      "Projet : \""+p.title+"\" — icône actuelle : "+p.emoji+" — résumé : \""+(p.summary||"")+"\"\n\n"+
+      "Projet : \""+p.title+"\" — icône : "+p.emoji+"\n\n"+
       "Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown :\n"+
-      '{"domain":"'+domainKeys+'|autre","photoQuery":"2 à 4 mots en anglais, détail visuel spécifique à ce projet"}'+
-      "\n\nDéduis le domaine à partir du TITRE et de l'ICÔNE actuelle du projet (l'icône ne change pas, elle sert de référence) : "+
-      "la photo doit avoir pour objet principal ce que représente cette icône, dans le même esprit que le titre. "+
-      "Pour \"photoQuery\" : jamais de visage ni de portrait (aucun mot comme face/portrait/selfie/smiling/headshot) — "+
-      "une silhouette, des mains, ou une forme humaine de dos ou en action restent acceptables. Toujours en anglais.";
+      '{"domain":"'+domainKeys+'|autre","subject":"1 à 3 mots en anglais"}'+
+      "\n\nTu ne disposes QUE du titre et de l'icône : n'invente rien d'autre.\n"+
+      "- \"domain\" : le domaine qui correspond à l'icône et au titre.\n"+
+      "- \"subject\" : ce que la photo doit montrer, en anglais, 1 à 3 mots courants et concrets (des noms, pas d'adjectifs vagues) : "+
+      "l'OBJET que représente l'icône, dans le contexte du titre. "+
+      "Exemples : 🚗 + \"Vendre ma voiture\" → \"car\" ; ✈️ + \"Voyage au Japon\" → \"japan\" ; "+
+      "🏋️ + \"Reprendre le sport\" → \"gym weights\" ; 🏠 + \"Rénover la cuisine\" → \"kitchen\" ; 🎂 + \"Anniversaire de Julie\" → \"birthday cake\".\n"+
+      "Jamais de visage ni de portrait (aucun mot comme face/portrait/selfie/smiling/headshot) — "+
+      "une silhouette, des mains, ou une forme humaine de dos ou en action restent acceptables.";
 
     return apiFetch("/api/ai", {
       method: "POST",
       headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 150,
+        max_tokens: 100,
         messages: [{role:"user", content:[{type:"text", text:promptText}]}]
       })
     }).then(function(res){ return res.json(); }).then(function(data){
@@ -2723,17 +2802,17 @@
   function regeneratePhoto(p){
     if(!p) return;
     // La photo actuelle n'est plus effacée d'avance : la sélection côté serveur est stricte
-    // (fond d'écran HD, sans visage) et peut ne rien trouver — on garderait alors un projet
-    // sans photo alors qu'il en avait une. Elle n'est remplacée que si une nouvelle arrive.
+    // (fond d'écran HD, sans visage, en rapport avec le sujet) et peut ne rien trouver — on
+    // garderait alors un projet sans photo alors qu'il en avait une. Elle n'est remplacée que
+    // si une nouvelle arrive. Les photos déjà vues pour ce projet ne sont pas reproposées.
     photoFetchAttempted[p.id] = true;
     showToast("Recherche d'une nouvelle photo…");
-    var onDone = function(ok){
-      if(!ok) showToast("Aucune photo adaptée trouvée — la photo actuelle est conservée");
-    };
-    classifyPhotoDomain(p).then(function(result){
-      fetchProjectPhoto(p, buildPhotoQuery(result) || p.title, onDone);
-    }).catch(function(){
-      fetchProjectPhoto(p, p.title, onDone);
+    var seen = (photoSeen[p.id] || []).slice();
+    if(p.photo && p.photo.pexelsId && seen.indexOf(p.photo.pexelsId) < 0) seen.push(p.photo.pexelsId);
+    resolvePhotoQuery(p).then(function(query){
+      fetchProjectPhoto(p, query, function(ok){
+        if(!ok) showToast("Aucune photo adaptée trouvée — la photo actuelle est conservée");
+      }, seen.slice(-20));
     });
   }
 
@@ -4622,7 +4701,7 @@
       "Intention de l'utilisateur : \"" + intention + "\"\n\n"+
       "Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, exactement sous cette forme :\n"+
       '{"title":"titre court (3-5 mots)","domain":"famille|voyage|maison|sport|business|creativite|apprentissage|autre","emoji":"un seul emoji représentatif du domaine choisi","summary":"une phrase naturelle qui résume ce qu\'il y a à faire",'+
-      '"photoQuery":"2 à 4 mots en anglais, un détail visuel spécifique à CE projet précis","dueBucket":"1w|2w|1m|3m|6m|1y","categories":[{"title":"nom de la catégorie","items":["élément 1","élément 2","..."]}]}'+
+      '"dueBucket":"1w|2w|1m|3m|6m|1y","categories":[{"title":"nom de la catégorie","items":["élément 1","élément 2","..."]}]}'+
       "\n\nRegroupe les actions par aspect logique et distinct du projet (par exemple pour un déménagement : achats & aménagement, administratif, organisation, budget — "+
       "mais adapte entièrement les catégories au type de projet réel, un voyage ou un anniversaire n'auront pas du tout les mêmes). "+
       "Nomme chaque catégorie avec un verbe à l'infinitif + un sujet concis, 2 à 3 mots maximum (ex : \"Préparer le budget\", \"Organiser le transport\", \"Réserver le logement\"). "+
@@ -4632,9 +4711,7 @@
       "Sinon, estime la durée réaliste selon la charge de travail implicite du projet (nombre et taille des étapes) : une poignée de tâches simples et rapides → court terme (1w/2w) ; un projet avec plusieurs catégories et des démarches qui prennent du temps (administratif, gros achat, organisation d'événement) → moyen terme (1m/3m) ; un projet ambitieux à plusieurs phases → long terme (6m/1y).\n\n"+
       "Pour \"domain\" et \"emoji\" : choisis EXACTEMENT une des 7 valeurs de domaine listées (\"autre\" seulement si vraiment aucune ne convient), et un emoji cohérent avec ce domaine "+
       "(ex : famille→👨‍👩‍👧/👪/❤️, voyage→✈️/🧳/🌴, maison→🏠/🛋️/🌿, sport→🏃/🚴/🏋️, business→💼/📈/💰, creativite→🎨/📷/🎵, apprentissage→📚/🎓/💻 — tu peux choisir un emoji proche de ces exemples plutôt qu'un des exemples exact si plus précis). "+
-      "L'icône et la photo du projet dépendront toutes les deux de ce domaine : ne les traite jamais comme deux choix indépendants.\n\n"+
-      "Pour \"photoQuery\" : PAS une description complète de la scène (le domaine s'en charge déjà), juste le détail spécifique à CE projet — ex pour \"voyage\" avec l'intention \"partir à Bali\" → \"tropical bali temple\" ; pour \"maison\" avec \"refaire la cuisine\" → \"kitchen renovation\". "+
-      "Toujours en anglais. Jamais de visage ni de portrait (aucun mot comme face/portrait/selfie/smiling/headshot) — en revanche une silhouette, des mains, ou une forme humaine de dos ou en action restent acceptables si ça illustre bien le thème (ex : \"hands typing laptop\", \"person hiking trail from behind\").";
+      "L'icône dépend de ce domaine : ne la choisis jamais indépendamment de lui.";
 
     return Promise.resolve().then(function(){
       return apiFetch("/api/ai", {
@@ -5004,7 +5081,7 @@
       composeText = "";
       currentProjectId = p.id;
       pushNavEntry();
-      ensureProjectPhoto(p, buildPhotoQuery(result));
+      ensureProjectPhoto(p);
       persistNow(); render();
     }).catch(function(){
       generating = false;

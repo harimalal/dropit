@@ -35,25 +35,43 @@
 ## 2. Bouton Drop it
 Fond blanc (avec un liseré, sinon il se fond dans la barre blanche), point rouge, pastille de notification rouge. Nouveau jeton `--notif-red` (`#D42A20`, assombri pour tenir 4,5:1 avec le texte blanc de la pastille).
 
-## 3. Sélection des photos Pexels (`functions/api/photos.js`)
-Pexels n'a **aucune catégorie « fond d'écran »** : on ne peut pas filtrer à la source. La sélection est donc faite côté serveur :
-- 30 résultats au lieu de 6, et le mot `wallpaper` reste dans la requête.
-- Filtre dur : grand côté d'au moins 2560 px, et pas de visage de face (lu dans le texte alt **et** le slug de l'URL).
-- Classement : signaux « fond d'écran » (wallpaper, background, backdrop : +3 ; paysage, panorama, coucher de soleil, montagne, océan… : +2 ; logo, capture, texte… : -2). À égalité, l'ordre de pertinence de Pexels est conservé.
-- Le repli sur `photos[0]` est supprimé : il renvoyait un portrait quand tout était écarté. Sans résultat convenable, l'API répond 404 et la tuile garde son fond couleur + icône.
-- « Changer la photo » **conserve désormais l'ancienne photo** tant qu'une nouvelle n'est pas trouvée (elle était effacée d'avance : avec ce filtre plus strict, on aurait pu se retrouver sans photo). Message : « Aucune photo adaptée trouvée — la photo actuelle est conservée ».
-- Test : `test-pickphoto.mjs`, 8 cas sur résultats simulés, tous verts.
+## 3. Sélection des photos Pexels : refaite (précision + fond d'écran seulement)
 
-**Limite** : c'est un classement par mots-clés sur le texte de la photo, pas une garantie. Non testé contre le vrai Pexels (injoignable depuis le bac à sable). Un mode « strict » (n'accepter que les photos portant un signal) est possible, au prix de davantage de tuiles sans photo.
+**Retour** : « la sélection n'est pas précise, rien à voir avec le projet ; il faut prendre en compte, dans la taxonomie, l'icône et le titre exclusivement », puis « sélection wallpaper seulement ».
+
+**Pourquoi c'était hors sujet** (quatre causes, dont une introduite par ma propre modification du soir) :
+1. Le rattrapage des projets sans photo envoyait le **titre français brut** à Pexels (« Vendre ma voiture wallpaper »), que Pexels comprend mal.
+2. Les mots-clés génériques du domaine (« travel vacation landscape scenic »…) étaient ajoutés **devant** le sujet et le noyaient.
+3. À la création, la requête venait de l'**intention complète**, pas de l'icône et du titre.
+4. Mon classement « fond d'écran » donnait +2 aux mots paysagers (montagne, mer…) : une belle montagne passait devant une photo du projet. Confirmé sur l'ancien code : pour la requête « car », il renvoie le paysage.
+
+**Nouveau chemin unique** (création, rattrapage, bouton « Changer la photo ») :
+- L'IA reçoit **le titre et l'icône, et rien d'autre** (plus de résumé ni d'intention), et rend un **sujet** : 1 à 3 mots anglais, l'objet que représente l'icône dans le contexte du titre (🚗 + « Vendre ma voiture » → `car`).
+- La requête Pexels **est** ce sujet, sans mots génériques devant. Les mots du domaine ne servent que de repli si aucun sujet n'est déduit ; sinon l'icône seule (taxonomie) ; sinon **aucune photo** (jamais le titre français).
+- Si l'IA est indisponible ou limitée (429), **aucune photo n'est posée** : une photo choisie sur une requête pauvre ne serait jamais retentée, alors qu'un projet sans photo l'est à la prochaine visite.
+- « Changer la photo » ne reproposera **pas les photos déjà vues** pour ce projet (elle renvoyait toujours la première) et **garde l'ancienne photo** si rien de convenable n'est trouvé.
+
+**Côté serveur** (`functions/api/photos.js`), une photo n'est retenue que si elle remplit **les trois conditions** :
+1. **Fond d'écran** : son texte alt ou le slug de son URL contient wallpaper, backdrop, desktop, 4K, 8K, HD, lock screen ou background (« in the background » exclu), et rien de graphique (logo, capture, texte…) ; et au moins 2560 px de grand côté. Pexels n'a aucun filtre « fond d'écran » : le texte est le seul indice disponible, donc une photo sans cet indice est **écartée**, pas seulement moins bien classée.
+2. **Sans visage de face**, et pas déjà proposée.
+3. **Qui parle du sujet** : au moins un mot du sujet dans son texte. Plus de mots du sujet = mieux ; puis le mot « wallpaper » explicite ; à égalité, l'ordre de Pexels.
+
+Sans photo qui remplisse les trois, l'API répond 404 : la tuile garde son fond couleur + icône. 80 résultats demandés (le maximum) pour que le filtre strict garde de quoi choisir. Les « aucune photo convenable » sont **mémorisés 24 h** par projet (clé titre + icône) pour ne pas relancer l'IA et Pexels à chaque rechargement, ce qui grillerait le quota gratuit de Pexels (200 requêtes par heure).
+
+**Vérifié** :
+- `test-pickphoto.mjs` : 20 cas verts (fond d'écran seulement, sujet seulement, visages, résolution, exclusion, mots-clés).
+- `photo-query-check.js` (vrai navigateur, `fetch` réel, réponses simulées) : le prompt contient le titre et l'icône et **pas** le résumé ; la requête Pexels vaut `car` (pas de titre français) ; sujet vide → mots du domaine ; « Changer la photo » deux fois → `exclude=100` puis `exclude=100,102` ; IA en 429 → **aucune** requête Pexels ; 404 → mémorisé, **0** appel IA et **0** appel Pexels au rechargement ; icône seule → repli sur la taxonomie.
+
+**Risque à surveiller** : le filtre est strict et je n'ai pas pu le tester contre le vrai Pexels (injoignable depuis le bac à sable). Si trop de tuiles restent sans photo, il faudra ajuster ; le levier est la condition 1 ou 3, à décider avec des exemples réels.
 
 ## 4. Vue liste
 Barre d'ajout de tâches supprimée (rendu, écouteurs, styles), ainsi que `performTlSuggest` et `sparkleIcon`, qui n'avaient plus d'autre usage. La marge basse du défilement ne réserve plus la place de la barre.
 
 ## 5. Icône de tuile
-Encadré carré à fond blanc, dont le côté vaut 1,75 × le glyphe (39 px pour un glyphe de 22, 25 px avec photo, 26 px sur les petites tuiles), coins arrondis proportionnels. Sur photo, une ombre remplace l'ancienne ombre portée du glyphe.
+**Cercle** à fond blanc (demandé après un premier essai en carré arrondi), dont le diamètre vaut 1,75 × le glyphe (39 px pour un glyphe de 22, 25 px avec photo, 26 px sur les petites tuiles). Sur photo, une ombre remplace l'ancienne ombre portée du glyphe.
 
 ## Captures
-`lot2-accueil.png` (tuiles), `lot2-barre.png` (bouton Drop it), `lot2-liste.png` (vue liste sans barre d'ajout).
+`lot2-accueil.png` (tuiles, icônes en cercle), `lot2-barre.png` (bouton Drop it), `lot2-liste.png` (vue liste sans barre d'ajout).
 
 ## Rejouer
 `save-check.js` attend `app-avant.html` (`git show <commit avant>:app.html`) et `app-apres.html` passés par `mkfixture2.js <source> <sortie>`, servis sur `http://localhost:8941/`. Les captures viennent de `verif-lot2.js` (fixture à `fetch` simulé du dossier précédent).

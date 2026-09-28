@@ -5,23 +5,27 @@ import { json, requireUser, enforceRateLimit } from "../_lib/auth.js";
 // juste assez bas pour limiter un abus direct de l'endpoint.
 const RATE_LIMIT_PER_MINUTE = 20;
 const MAX_QUERY_LENGTH = 80;
-// Pexels n'a pas de catégorie « fond d'écran » : on demande large (30 résultats) puis on trie
-// côté serveur (voir pickPhoto). Un pool plus grand laisse de quoi choisir un vrai fond
-// d'écran plutôt que de prendre le premier résultat venu.
-const RESULTS_PER_QUERY = 30;
+// Pexels n'a pas de catégorie « fond d'écran » : on demande le maximum (80 résultats) puis on
+// ne garde que ceux qui en sont réellement (voir pickPhoto). Le filtre est strict, donc un pool
+// le plus large possible pour qu'il reste de quoi choisir.
+const RESULTS_PER_QUERY = 80;
 
 // Résolution minimale pour un fond d'écran HD/2K/4K : au moins 2560 px sur le grand côté.
 // size=large côté Pexels garantit déjà ~24MP ; ce garde-fou reste vrai même si ce paramètre
 // venait à changer, et écarte toute photo trop petite pour être nette en fond de tuile.
 const MIN_LONG_SIDE = 2560;
 
-// Signaux d'une photo pensée comme fond d'écran, lus dans le texte alt et dans le slug de
-// l'URL Pexels (qui reprend ce texte). Fort : le mot y est explicitement. Paysager : la
-// composition typique d'un fond d'écran (vaste, atmosphérique, sans sujet isolé).
-const WALLPAPER_STRONG = /\b(wallpaper|wallpapers|background|backdrop)\b/i;
-const WALLPAPER_SCENIC = /\b(landscape|scenery|scenic|panorama|panoramic|aerial|skyline|horizon|abstract|texture|pattern|minimal|minimalist|aesthetic|dramatic|majestic|serene|tranquil|sunset|sunrise|golden hour|twilight|starry|milky way|night sky|mountain|mountains|ocean|sea|beach|coast|lake|forest|desert|waterfall|valley|clouds|fog|mist)\b/i;
+// Preuve qu'une photo est un fond d'écran, lue dans son texte alt et dans le slug de l'URL Pexels
+// (qui reprend ce texte) : Pexels n'a pas de catégorie ni de filtre « fond d'écran », c'est le
+// seul indice disponible. Une photo SANS cette preuve est écartée, pas seulement moins bien
+// classée. « in the background » (le fond d'une scène) n'est pas un fond d'écran : exclu.
+const WALLPAPER_EVIDENCE = /\b(wallpapers?|backdrops?|desktop|4k|8k|hd|lock ?screen)\b|(?<!in the )(?<!the )\bbackgrounds?\b/i;
+const WALLPAPER_WORD = /\bwallpapers?\b/i;
 // À l'inverse : ce qui n'est pas un fond d'écran (visuel graphique, capture, document).
 const WALLPAPER_AVOID = /\b(logo|screenshot|text|sign|poster|infographic|diagram|chart|mockup|document)\b/i;
+
+// Mots de la requête qui ne disent rien du sujet.
+const STOPWORDS = new Set(["the", "and", "for", "with", "from", "view", "photo", "photos", "image", "images", "stock", "free", "wallpaper", "wallpapers", "background", "backgrounds", "hd", "4k"]);
 
 // Filtre "ranking basique" (MVP) : le prompt de génération de photoQuery demande déjà à
 // l'IA d'éviter les visages, mais reste un filet de secours ici (photoQuery absente sur
@@ -37,25 +41,54 @@ function altAndSlug(p) {
   return (p.alt || "") + " " + slug;
 }
 
-function wallpaperScore(p) {
+function isWallpaper(p) {
   const text = altAndSlug(p);
-  let score = 0;
-  if (WALLPAPER_STRONG.test(text)) score += 3;
-  if (WALLPAPER_SCENIC.test(text)) score += 2;
-  if (WALLPAPER_AVOID.test(text)) score -= 2;
-  return score;
+  return WALLPAPER_EVIDENCE.test(text) && !WALLPAPER_AVOID.test(text);
 }
 
-// Choisit la meilleure photo parmi les résultats, ou null : mieux vaut aucune photo (la
-// tuile garde alors son fond couleur + icône) qu'une photo qui ne convient pas — visage de
-// face, ou trop petite pour un fond d'écran. Le tri est stable : à score égal, l'ordre de
-// pertinence de Pexels est conservé.
-function pickPhoto(photos) {
+// Départage deux photos également pertinentes : le mot « wallpaper » lui-même vaut mieux
+// qu'un indice plus indirect (hd, 4k, background).
+function wallpaperScore(p) {
+  return WALLPAPER_WORD.test(altAndSlug(p)) ? 1 : 0;
+}
+
+// Mots-clés du SUJET, tirés de la requête envoyée par l'app (« car », « gym weights »…).
+// Le singulier sert de racine : « weights » retrouve « weight » comme « weights ».
+function subjectKeywords(q) {
+  return [...new Set(
+    String(q || "").toLowerCase().split(/[^a-z0-9]+/)
+      .filter((w) => w.length >= 3 && !STOPWORDS.has(w))
+      .map((w) => (w.length > 3 && w.endsWith("s") ? w.slice(0, -1) : w))
+  )];
+}
+
+// Nombre de mots-clés du sujet qui apparaissent dans le texte de la photo (alt + slug).
+function relevance(p, keywords) {
+  const text = altAndSlug(p);
+  return keywords.filter((k) => new RegExp("\\b" + k + "(?:s|es)?\\b", "i").test(text)).length;
+}
+
+// Choisit la photo, ou null. Trois conditions, toutes obligatoires :
+//  1. un fond d'écran (voir WALLPAPER_EVIDENCE), d'au moins 2560 px de grand côté ;
+//  2. sans visage de face, et pas déjà proposée (`exclude`) ;
+//  3. qui parle du sujet : au moins un mot-clé du sujet dans son texte.
+// Sans photo qui remplisse les trois, on renvoie null et la tuile garde son fond couleur +
+// icône : mieux vaut aucune photo qu'une qui n'a rien à voir avec le projet ou qui n'est pas
+// un fond d'écran. Parmi celles qui conviennent : plus de mots du sujet d'abord, puis le mot
+// « wallpaper » explicite ; à égalité, l'ordre de pertinence de Pexels (tri stable).
+function pickPhoto(photos, keywords = [], exclude = []) {
   const usable = photos.filter(
-    (p) => !PEOPLE_PATTERN.test(altAndSlug(p)) && Math.max(p.width || 0, p.height || 0) >= MIN_LONG_SIDE
+    (p) =>
+      !exclude.includes(p.id) &&
+      !PEOPLE_PATTERN.test(altAndSlug(p)) &&
+      Math.max(p.width || 0, p.height || 0) >= MIN_LONG_SIDE &&
+      isWallpaper(p)
   );
-  if (!usable.length) return null;
-  return usable.slice().sort((a, b) => wallpaperScore(b) - wallpaperScore(a))[0];
+  const relevant = keywords.length ? usable.filter((p) => relevance(p, keywords) > 0) : usable;
+  if (!relevant.length) return null;
+  return relevant
+    .slice()
+    .sort((a, b) => relevance(b, keywords) - relevance(a, keywords) || wallpaperScore(b) - wallpaperScore(a))[0];
 }
 
 export async function onRequestGet(context) {
@@ -74,6 +107,9 @@ export async function onRequestGet(context) {
   const url = new URL(request.url);
   const q = (url.searchParams.get("q") || "").trim().slice(0, MAX_QUERY_LENGTH);
   if (!q) return json({ error: "q required" }, 400);
+  // Photos déjà proposées pour ce projet (« Changer la photo ») : au plus 20 identifiants.
+  const exclude = (url.searchParams.get("exclude") || "")
+    .split(",").map((n) => Number(n)).filter((n) => Number.isInteger(n) && n > 0).slice(0, 20);
 
   // "wallpaper" oriente Pexels vers des compositions pensées pour occuper tout le cadre
   // (plus atmosphériques, moins de sujet isolé sur fond neutre) — cohérent avec l'usage en
@@ -92,7 +128,7 @@ export async function onRequestGet(context) {
 
   const data = await pexelsRes.json();
   const photos = data.photos || [];
-  const photo = photos.length > 0 ? pickPhoto(photos) : null;
+  const photo = photos.length > 0 ? pickPhoto(photos, subjectKeywords(q), exclude) : null;
   if (!photo) {
     return json({ error: "no_results" }, 404);
   }

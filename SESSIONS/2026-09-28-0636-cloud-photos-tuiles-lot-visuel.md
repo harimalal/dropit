@@ -92,3 +92,7 @@ Voir `MISSIONS/2026-09-08-vision-engagement-identite/livrables/2026-09-28-echec-
 - **Erreur d'appréciation évitée de justesse** : ce durcissement de la sélection aurait, avec l'ancien « Changer la photo » (qui effaçait la photo d'avance), laissé des projets sans photo. Trouvé en relisant le flux, corrigé avant de pousser.
 - **Non prouvé** : la limite de 30 appels/minute comme cause additionnelle (contrôle refusé par l'utilisateur).
 - **À faire** : regarder en production si la sélection Pexels durcie donne assez de photos (sinon assouplir), et le titre blanc sur une vraie photo.
+
+### Retour sur la sélection de photos (fin de soirée)
+
+Après déploiement, l'utilisateur constate que la sélection « n'a rien à voir avec le projet », veut que l'icône et le titre soient seuls pris en compte, puis « wallpaper seulement ». Cause en partie de mon fait : le classement « fond d'écran » de la mise en ligne précédente donnait des points aux mots paysagers et faisait passer un paysage devant une photo du projet (rejoué sur l'ancien code : oui). Trois autres causes plus anciennes (titre français brut au rattrapage, mots génériques du domaine noyant le sujet, requête issue de l'intention complète). Refonte : un chemin unique titre + icône → sujet anglais → requête Pexels, et un serveur strict (fond d'écran ET sujet ET sans visage). Détail dans le README du livrable. **Risque ouvert** : jamais testé contre le vrai Pexels ; le filtre strict peut laisser des tuiles sans photo.
