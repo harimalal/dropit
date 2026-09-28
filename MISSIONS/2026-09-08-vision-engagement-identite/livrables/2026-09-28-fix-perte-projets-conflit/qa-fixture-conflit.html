@@ -5337,7 +5337,52 @@
       });
   }
 
-  boot();
+  // ---- QA fixture n°3 : simule EXACTEMENT le scénario diagnostiqué (un autre
+  // onglet/appareil sauvegarde entre notre chargement et notre enregistrement,
+  // donc premier POST -> 409) pour vérifier que le nouveau projet créé localement
+  // survit bien au retry, au lieu d'être jeté comme avant ce correctif.
+  var seedProjects = [{
+    id:"seed1", title:"Projet existant", emoji:"🌱", summary:"", categories:[
+      {id:"c0", title:"À faire", items:[{id:"i0",title:"Déjà là",done:false,createdAt:"2026-01-01",notes:[]}], catNotes:[], createdAt:"2026-01-01", updatedAt:"2026-01-01"}
+    ], projectNotes:[], dueBucket:"1m", dueDate:null, photo:null, createdAt:"2026-01-01", updatedAt:"2026-01-01"
+  }];
+  var postCount = 0;
+  session = {access_token:"test-token", expires_at: Date.now()+3600000, user:{id:"test-user", email:"test@example.com"}};
+  var _origFetch = window.fetch.bind(window);
+  window.fetch = function(url, opts){
+    var u = String(url);
+    if(u.indexOf("/api/ai") === 0){
+      var body = JSON.parse(opts.body);
+      var userText = body.messages[0].content[0].text;
+      var titleMatch = userText.match(/Intention de l'utilisateur : "([^"]*)"/);
+      var title = titleMatch ? titleMatch[1] : "Projet test";
+      var payload = {title: title, emoji:"🧪", summary:"Résumé test", dueBucket:"1m",
+        categories:[{title:"À faire", items:["Étape 1","Étape 2"]}]};
+      return Promise.resolve(new Response(JSON.stringify({content:[{type:"text", text: JSON.stringify(payload)}]}),{status:200}));
+    }
+    if(u.indexOf("/api/projects") === 0 && opts && opts.method === "POST"){
+      postCount++;
+      if(postCount === 1){
+        // Premier POST : simule qu'un autre onglet a sauvegardé entre-temps (T1).
+        return Promise.resolve(new Response(JSON.stringify({
+          error:"conflict",
+          data:{projects: seedProjects, dropZone:[]},
+          updatedAt:"2026-09-28T09:00:00.000Z"
+        }),{status:409}));
+      }
+      // Deuxième POST (le retry) : accepté.
+      return Promise.resolve(new Response(JSON.stringify({ok:true, updatedAt:new Date().toISOString()}),{status:200}));
+    }
+    if(u.indexOf("/api/projects") === 0){
+      return Promise.resolve(new Response(JSON.stringify({data:{projects: seedProjects, dropZone:[]}, updatedAt:"2026-01-01T00:00:00.000Z"}),{status:200}));
+    }
+    if(u.indexOf("/api/photos") === 0){
+      return Promise.resolve(new Response(JSON.stringify({error:"no_results"}),{status:404}));
+    }
+    return _origFetch(url, opts);
+  };
+  window.__postCount = function(){ return postCount; };
+  bootAfterAuth();
 })();
 </script>
 </body>
