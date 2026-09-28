@@ -5354,7 +5354,51 @@
       });
   }
 
-  boot();
+  var MOCK_PHOTOS = {
+    "cozy mountain cabin exterior snow": {
+      url: "https://images.pexels.com/photos/2417842/pexels-photo-2417842.jpeg?auto=compress&cs=tinysrgb&w=800",
+      photographer: "Test", photographerUrl: "https://pexels.com", pexelsId: 1, pageUrl: "https://pexels.com/photo/1"
+    },
+    "modern home interior renovation": {
+      url: "https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=800",
+      photographer: "Test 2", photographerUrl: "https://pexels.com", pexelsId: 2, pageUrl: "https://pexels.com/photo/2"
+    }
+  };
+  var mockProjects = [
+    {id:"p1", title:"Organiser les vacances en famille", emoji:"🌴", summary:"", categories:[
+      {id:"c1", title:"Réserver", items:[{id:"i1",title:"Vols",done:true},{id:"i2",title:"Hôtel",done:false},{id:"i3",title:"Voiture",done:false}]},
+      {id:"c2", title:"Préparer", items:[{id:"i4",title:"Valises",done:false},{id:"i5",title:"Activités",done:false}]}
+    ], projectNotes:[], dueBucket:"1m", dueDate:null,
+    photo:{url:MOCK_PHOTOS["cozy mountain cabin exterior snow"].url, photographer:"Test", photographerUrl:"", pexelsId:1, pageUrl:"", query:"cozy mountain cabin exterior snow", fetchedAt:"2026-01-01"},
+    createdAt:"2026-01-01", updatedAt:"2026-01-01"},
+    {id:"p2", title:"Rénover ma maison avec un titre assez long pour tester", emoji:"🏠", summary:"", categories:[
+      {id:"c3", title:"Travaux", items:[{id:"i6",title:"Peinture",done:false},{id:"i7",title:"Sol",done:false},{id:"i8",title:"Cuisine",done:false},{id:"i9",title:"Salle de bain",done:false}]}
+    ], projectNotes:[], dueBucket:"3m", dueDate:null,
+    photo:{url:MOCK_PHOTOS["modern home interior renovation"].url, photographer:"Test 2", photographerUrl:"", pexelsId:2, pageUrl:"", query:"modern home interior renovation", fetchedAt:"2026-01-01"},
+    createdAt:"2026-01-01", updatedAt:"2026-01-01"},
+    {id:"p3", title:"Budget mensuel", emoji:"💰", summary:"", categories:[
+      {id:"c4", title:"Suivi", items:[{id:"i10",title:"Relever les dépenses",done:false}]}
+    ], projectNotes:[], dueBucket:"1w", dueDate:null, photo:null, createdAt:"2026-01-01", updatedAt:"2026-01-01"},
+    {id:"p4", title:"Courir un semi-marathon", emoji:"🏃", summary:"", categories:[
+      {id:"c6", title:"Entraînement", items:[{id:"i12",title:"Sortie longue",done:false}]}
+    ], projectNotes:[], dueBucket:"2w", dueDate:null,
+    photo:{url:MOCK_PHOTOS["cozy mountain cabin exterior snow"].url, photographer:"Test", photographerUrl:"", pexelsId:1, pageUrl:"", query:"trail", fetchedAt:"2026-01-01"},
+    createdAt:"2026-01-01", updatedAt:"2026-01-01"}
+  ];
+  session = {access_token:"test-token", expires_at: Date.now()+3600000, user:{id:"test-user", email:"test@example.com"}};
+  var _origFetch = window.fetch.bind(window);
+  window.fetch = function(url, opts){
+    var u = String(url);
+    if(u.indexOf("/api/projects") === 0){
+      if(opts && opts.method === "POST") return Promise.resolve(new Response(JSON.stringify({ok:true, updatedAt:new Date().toISOString()}),{status:200}));
+      return Promise.resolve(new Response(JSON.stringify({data:{projects:mockProjects, dropZone:[]}, updatedAt:"2026-01-01T00:00:00Z"}),{status:200}));
+    }
+    if(u.indexOf("/api/photos") === 0){
+      return Promise.resolve(new Response(JSON.stringify({error:"no_results"}),{status:404}));
+    }
+    return _origFetch(url, opts);
+  };
+  bootAfterAuth();
 })();
 </script>
 </body>

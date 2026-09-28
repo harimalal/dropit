@@ -5,6 +5,17 @@ import { json, requireUser, enforceRateLimit } from "../_lib/auth.js";
 // juste assez bas pour limiter un abus direct de l'endpoint.
 const RATE_LIMIT_PER_MINUTE = 20;
 const MAX_QUERY_LENGTH = 80;
+const RESULTS_PER_QUERY = 6;
+
+// Filtre "ranking basique" (MVP) : le prompt de génération de photoQuery demande déjà à
+// l'IA d'éviter toute personne, mais reste un filet de secours ici (photoQuery absente sur
+// les vieux projets, requête de repli sur le titre, ou l'IA n'a pas suivi la consigne) —
+// Pexels n'offrant pas de filtre "sans personne", on écarte via le texte alt du résultat.
+const PEOPLE_PATTERN = /\b(person|people|man|men|woman|women|boy|girl|child|children|kid|kids|family|portrait|face|faces|couple|friends|selfie|smiling|guy|lady|human|group of)\b/i;
+
+function pickPhoto(photos) {
+  return photos.find((p) => !PEOPLE_PATTERN.test(p.alt || "")) || photos[0];
+}
 
 export async function onRequestGet(context) {
   const { env, request } = context;
@@ -24,7 +35,7 @@ export async function onRequestGet(context) {
   if (!q) return json({ error: "q required" }, 400);
 
   const pexelsRes = await fetch(
-    "https://api.pexels.com/v1/search?per_page=1&query=" + encodeURIComponent(q),
+    "https://api.pexels.com/v1/search?per_page=" + RESULTS_PER_QUERY + "&query=" + encodeURIComponent(q),
     { headers: { Authorization: env.PEXELS_API_KEY } }
   );
   if (!pexelsRes.ok) {
@@ -32,7 +43,8 @@ export async function onRequestGet(context) {
   }
 
   const data = await pexelsRes.json();
-  const photo = (data.photos || [])[0];
+  const photos = data.photos || [];
+  const photo = photos.length > 0 ? pickPhoto(photos) : null;
   if (!photo) {
     return json({ error: "no_results" }, 404);
   }
