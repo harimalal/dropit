@@ -5452,7 +5452,35 @@
       });
   }
 
-  boot();
+  var seedProjects = [{
+    id:"seed1", title:"Projet existant", emoji:"🌱", summary:"", categories:[
+      {id:"c0", title:"À faire", items:[{id:"i0",title:"Déjà là",done:false,createdAt:"2026-01-01",notes:[]}], catNotes:[], createdAt:"2026-01-01", updatedAt:"2026-01-01"}
+    ], projectNotes:[], dueBucket:"1m", dueDate:null, photo:null, createdAt:"2026-01-01", updatedAt:"2026-01-01"
+  }];
+  window.__postCount = 0;
+  window.__alwaysConflict = true; // basculé à false par le test après N tentatives si besoin
+  session = {access_token:"test-token", expires_at: Date.now()+3600000, user:{id:"test-user", email:"test@example.com"}};
+  var _origFetch = window.fetch.bind(window);
+  window.fetch = function(url, opts){
+    var u = String(url);
+    if(u.indexOf("/api/projects") === 0){
+      if(opts && opts.method === "POST"){
+        window.__postCount++;
+        if(window.__alwaysConflict && window.__postCount < 3){
+          return Promise.resolve(new Response(JSON.stringify({
+            error:"conflict", data:{projects: seedProjects, dropZone:[]}, updatedAt:"2026-09-28T00:00:0"+window.__postCount+".000Z"
+          }),{status:409}));
+        }
+        return Promise.resolve(new Response(JSON.stringify({ok:true, updatedAt:new Date().toISOString()}),{status:200}));
+      }
+      return Promise.resolve(new Response(JSON.stringify({data:{projects:seedProjects, dropZone:[]}, updatedAt:"2026-01-01T00:00:00.000Z"}),{status:200}));
+    }
+    if(u.indexOf("/api/photos") === 0){
+      return Promise.resolve(new Response(JSON.stringify({error:"no_results"}),{status:404}));
+    }
+    return _origFetch(url, opts);
+  };
+  bootAfterAuth();
 })();
 </script>
 </body>
