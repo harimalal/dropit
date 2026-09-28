@@ -193,6 +193,23 @@ Point vérifié et non une option à trancher : Claude (modèle utilisé pour le
 ### Question restée ouverte (non tranchée)
 Une fois une mosaïque révélée à 100%, l'image reste-t-elle l'icône permanente du projet, ou rejoint-elle une "galerie des identités accomplies" séparée ? Les deux options ont été évoquées, aucune n'a été choisie.
 
+### Itération — 2026-09-28 : révision assumée, mécanique simplifiée à "photo fixe + icône"
+
+L'utilisateur relance ce chantier avec un cadrage différent de celui ci-dessus, tranché explicitement comme une révision (pas un chantier concurrent) :
+
+| Point | Décision du 2026-09-08 | Décision du 2026-09-28 (retenue) |
+|---|---|---|
+| Source de l'image | A — génération IA (bloquant, aucun service choisi) | **Banque de photos via API (Pexels pour le MVP)** — plus de génération IA. L'option B de l'itération initiale ("piochée dans une banque gratuite") devient la source principale, plus un simple filet de repli |
+| Mécanique de révélation | Mosaïque de tuiles pixelisées, révélées une par tâche cochée | **Abandonnée** — la photo est affichée en entier dès qu'elle est trouvée, pas de reveal progressif. Simplification assumée, pas retenue faute de mieux |
+| Rôle de l'icône | Superposable en option (grayscale→couleur) à la mosaïque | **Toujours présente, indépendante de la photo** — petit badge dans un coin de la tuile (l'emoji existant du projet), jamais un remplacement de la photo |
+| Layout Home concerné | Pas encore précisé (la Home était encore en grille de cartes au moment du cadrage initial) | La Home est désormais un treemap de tuiles (tiny/small/medium/large, chantiers 1-4+bonus) : la photo devient le fond de chaque tuile existante, à toutes les tailles — le treemap n'est pas défait |
+| Recherche de la photo | — | Requête Pexels = titre du projet tel quel (`p.title`), pas de nouveau champ "thème visuel" |
+| Fréquence de récupération | — | Une fois par projet, résultat stocké sur `p.photo` et persisté — jamais réinterrogée automatiquement ensuite |
+| Rétroactivité | — | Oui : les projets déjà existants sans `p.photo` reçoivent une photo au premier chargement de la Home après déploiement (même mécanisme que les nouveaux projets) |
+| Clé API Pexels | — | Pas encore disponible au moment de l'implémentation. Code câblé quand même (`functions/api/photos.js`, `PEXELS_API_KEY` en variable d'env Cloudflare) avec échec silencieux + repli sur l'état actuel (couleur+emoji) tant que la clé n'est pas posée — jamais de blocage du projet ni de remplacement définitif par une icône seule |
+
+La question ouverte "galerie des identités accomplies" (ci-dessus) ne se pose plus dans cette version : sans mosaïque à révéler, il n'y a pas de "moment 100%" à part gérer.
+
 ## Chantier 9 — Collaboration (pour mémoire, non cadré en détail)
 
 | Élément demandé | Version complète (écartée pour ce sprint) | Version MVP retenue pour une future mission |
