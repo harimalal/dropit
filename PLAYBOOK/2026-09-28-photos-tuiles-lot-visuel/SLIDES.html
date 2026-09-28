@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>DROPIT — Le jour des tuiles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #16151C; --ink-soft: #55535F; --paper: #FAF9F6; --surface: #FFFFFF; --line: #E4E1DA;
+    --accent: #B04E38; --accent-soft: #F3E2DC;
+    --good: #1E8E5A; --good-soft: #E4F3EB; --warn: #B4700F; --warn-soft: #FBF0DD; --bad: #C4432C; --bad-soft: #FBE9E4;
+    --night: #131219; --night-surface: #1C1B26; --night-ink: #F2F0EA; --night-ink-soft: #A6A3B4; --night-line: #302E3E;
+    --night-accent: #E5866D; --night-accent-soft: rgba(229,134,109,.16); --night-good: #4ADE80; --night-good-soft: rgba(74,222,128,.12);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink); font-family: 'IBM Plex Sans', -apple-system, sans-serif; }
+  .display { font-family: 'Fraunces', Georgia, serif; text-wrap: balance; }
+  .mono { font-family: 'IBM Plex Mono', 'Courier New', monospace; }
+
+  .deck { width: 100%; height: 100%; position: relative; overflow: hidden; }
+  .slide {
+    position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center;
+    padding: 7vh 9vw 10vh 12vw; opacity: 0; transform: translateY(10px) scale(.995);
+    transition: opacity .5s cubic-bezier(.2,.7,.3,1), transform .5s cubic-bezier(.2,.7,.3,1);
+    overflow-y: auto;
+  }
+  .slide.active { display: flex; opacity: 1; transform: none; z-index: 5; }
+  .slide.light { background: var(--paper); color: var(--ink); }
+  .slide.dark { background: var(--night); color: var(--night-ink); }
+  .slide.dark .ink-soft { color: var(--night-ink-soft); }
+  .light .ink-soft { color: var(--ink-soft); }
+
+  @keyframes riseIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .slide.active .eyebrow { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) both; }
+  .slide.active h1, .slide.active h2 { animation: riseIn .55s cubic-bezier(.2,.8,.3,1) .07s both; }
+  .slide.active .vo { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .16s both; }
+  .slide.active > p { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .2s both; }
+  .slide.active .io-card { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .24s both; }
+  .slide.active .stat-grid > *, .slide.active .grid-4 > *, .slide.active .grid-2 > *,
+  .slide.active .timeline > *, .slide.active .control-split > *, .slide.active .checklist > li,
+  .slide.active .case-steps > .case-step, .slide.active .shot-compare > * { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) both; }
+  .slide.active .stat-grid>*:nth-child(1), .slide.active .grid-4>*:nth-child(1), .slide.active .grid-2>*:nth-child(1),
+  .slide.active .timeline>*:nth-child(1), .slide.active .control-split>*:nth-child(1), .slide.active .checklist>li:nth-child(1),
+  .slide.active .case-steps>.case-step:nth-child(1), .slide.active .shot-compare>*:nth-child(1) { animation-delay: .24s; }
+  .slide.active .stat-grid>*:nth-child(2), .slide.active .grid-4>*:nth-child(2), .slide.active .grid-2>*:nth-child(2),
+  .slide.active .timeline>*:nth-child(2), .slide.active .control-split>*:nth-child(2), .slide.active .checklist>li:nth-child(2),
+  .slide.active .case-steps>.case-step:nth-child(2), .slide.active .shot-compare>*:nth-child(2) { animation-delay: .38s; }
+  .slide.active .stat-grid>*:nth-child(3), .slide.active .grid-4>*:nth-child(3), .slide.active .timeline>*:nth-child(3),
+  .slide.active .checklist>li:nth-child(3), .slide.active .case-steps>.case-step:nth-child(3) { animation-delay: .4s; }
+  .slide.active .stat-grid>*:nth-child(4), .slide.active .grid-4>*:nth-child(4), .slide.active .timeline>*:nth-child(4),
+  .slide.active .checklist>li:nth-child(4), .slide.active .case-steps>.case-step:nth-child(4) { animation-delay: .48s; }
+  .slide.active .stat-grid>*:nth-child(5), .slide.active .timeline>*:nth-child(5), .slide.active .checklist>li:nth-child(5) { animation-delay: .56s; }
+  .slide.active .checklist>li:nth-child(6), .slide.active .checklist>li:nth-child(7), .slide.active .checklist>li:nth-child(8),
+  .slide.active .stat-grid>*:nth-child(6) { animation-delay: .62s; }
+  .slide.active .terme { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .5s both; }
+  .slide.active .loop { animation: riseIn .5s cubic-bezier(.2,.8,.3,1) .66s both; }
+  @media (prefers-reduced-motion: reduce) { .slide, .slide * { animation: none !important; transition: none !important; } }
+
+  .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: .74rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .dark .eyebrow { color: var(--night-accent); }
+  .eyebrow .icon { width: 16px; height: 16px; }
+  .eyebrow .chap { opacity: .55; }
+
+  h1 { font-size: clamp(2.1rem, 4.6vw, 3.7rem); font-weight: 600; line-height: 1.05; margin: 0 0 18px; max-width: 19ch; }
+  h2 { font-size: clamp(1.7rem, 3.3vw, 2.6rem); font-weight: 600; line-height: 1.1; margin: 0 0 18px; max-width: 22ch; }
+  p { font-size: 1.02rem; line-height: 1.62; max-width: 60ch; margin: 0 0 12px; }
+  svg.icon { width: 22px; height: 22px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+  .vo { font-size: 1.16rem; line-height: 1.58; max-width: 56ch; margin: 2px 0 8px; padding-left: 18px; border-left: 3px solid var(--accent); color: var(--ink); }
+  .dark .vo { border-left-color: var(--night-accent); color: var(--night-ink); }
+  .vo .vo-tag { display: block; font-family: 'IBM Plex Mono', monospace; font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 7px; }
+  .dark .vo .vo-tag { color: var(--night-accent); }
+  .vo strong { font-weight: 600; }
+
+  .loop { margin-top: 26px; font-family: 'IBM Plex Mono', monospace; font-size: .8rem; letter-spacing: .01em; color: var(--accent); display: flex; align-items: baseline; gap: 9px; max-width: 52ch; }
+  .dark .loop { color: var(--night-accent); }
+  .loop::before { content: "↳"; font-size: 1rem; }
+
+  .terme { margin-top: 18px; border: 1px solid var(--line); border-left: 3px solid var(--warn); border-radius: 10px; padding: 13px 18px; max-width: 620px; background: var(--surface); }
+  .dark .terme { border-color: var(--night-line); border-left-color: var(--warn); background: var(--night-surface); }
+  .terme .t-label { font-family: 'IBM Plex Mono', monospace; font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--warn); }
+  .terme .t-term { font-weight: 600; font-size: 1rem; margin: 3px 0 2px; }
+  .terme .t-def { font-size: .88rem; color: var(--ink-soft); line-height: 1.48; }
+  .dark .terme .t-def { color: var(--night-ink-soft); }
+  .terme + .terme { margin-top: 10px; }
+
+  .io-card { border: 1.5px solid var(--line); border-radius: 16px; padding: 22px 24px; background: var(--surface); max-width: 780px; margin-top: 8px; }
+  .dark .io-card { border-color: var(--night-line); background: var(--night-surface); }
+  .io-card .io-label { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  .dark .io-card .io-label { color: var(--night-accent); }
+  .io-card .io-body { font-size: .92rem; line-height: 1.65; color: var(--ink-soft); white-space: pre-wrap; }
+  .dark .io-card .io-body { color: var(--night-ink-soft); }
+  .io-card.mono-body .io-body { font-family: 'IBM Plex Mono', monospace; font-size: .8rem; line-height: 1.75; }
+
+  .rail { position: fixed; left: 32px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; z-index: 50; }
+  .rail .tick { width: 5px; height: 16px; border-radius: 3px; background: rgba(120,116,140,.28); cursor: pointer; transition: background .25s, transform .25s; }
+  .rail .tick.active { background: var(--accent); transform: scaleY(1.2); }
+  .nav-buttons { position: fixed; bottom: calc(26px + env(safe-area-inset-bottom, 0px)); right: 32px; display: flex; gap: 10px; z-index: 60; }
+  .nav-btn { font-family: 'IBM Plex Mono', monospace; font-size: .8rem; background: transparent; border: 1px solid var(--line); color: var(--ink); padding: 9px 15px; border-radius: 999px; cursor: pointer; transition: border-color .2s, color .2s; }
+  body:has(.slide.dark.active) .nav-btn { border-color: var(--night-line); color: var(--night-ink); }
+  .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-btn:disabled { opacity: .35; cursor: default; }
+  .counter { position: fixed; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); left: 56px; font-family: 'IBM Plex Mono', monospace; font-size: .78rem; color: var(--ink-soft); z-index: 60; }
+  body:has(.slide.dark.active) .counter { color: var(--night-ink-soft); }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 980px; margin-top: 8px; }
+  .stat-card { border: 1px solid var(--line); border-radius: 14px; padding: 20px 18px; background: var(--surface); transition: transform .2s, box-shadow .2s; }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(20,18,30,.08); }
+  .dark .stat-card { border-color: var(--night-line); background: var(--night-surface); }
+  .stat-value { font-family: 'Fraunces', serif; font-size: 2.4rem; font-weight: 600; line-height: 1; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+  .stat-value.good { color: var(--good); }
+  .stat-label { font-size: .88rem; line-height: 1.4; color: var(--ink-soft); }
+  .dark .stat-label { color: var(--night-ink-soft); }
+  .stat-card.time { grid-column: span 2; }
+  .stat-card.time .stat-value { font-size: 2.9rem; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; max-width: 940px; margin-top: 6px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; max-width: 940px; margin-top: 6px; }
+  .box { border: 1px solid var(--line); border-radius: 16px; padding: 20px; background: var(--surface); transition: transform .2s, box-shadow .2s; }
+  .box:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(20,18,30,.08); }
+  .dark .box { border-color: var(--night-line); background: var(--night-surface); }
+  .box h3 { font-size: 1rem; font-weight: 600; margin: 0 0 7px; }
+  .box p { font-size: .9rem; margin: 0; color: var(--ink-soft); }
+  .dark .box p { color: var(--night-ink-soft); }
+  .box ul { margin: 7px 0 0; padding-left: 17px; font-size: .85rem; line-height: 1.58; color: var(--ink-soft); }
+  .dark .box ul { color: var(--night-ink-soft); }
+  .box ul li { margin: 4px 0; }
+  .box .box-tag { font-family: 'IBM Plex Mono', monospace; font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  .dark .box .box-tag { color: var(--night-accent); }
+
+  .case-steps { position: relative; padding-left: 52px; max-width: 680px; margin-top: 12px; }
+  .case-steps::before { content: ''; position: absolute; left: 20px; top: 6px; bottom: 6px; width: 2px; background: var(--night-line); }
+  .case-step { position: relative; margin-bottom: 20px; }
+  .case-step:last-child { margin-bottom: 0; }
+  .case-num { position: absolute; left: -52px; top: 0; width: 36px; height: 36px; border-radius: 50%; background: var(--night); border: 1.5px solid var(--night-line); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: .82rem; color: var(--night-ink-soft); }
+  .case-step.resolved .case-num { border-color: var(--night-good); color: var(--night-good); background: var(--night-good-soft); }
+  .case-title { font-weight: 600; font-size: .98rem; margin-bottom: 4px; }
+  .case-step.resolved .case-title { color: var(--night-good); }
+  .case-desc { font-size: .89rem; color: var(--night-ink-soft); line-height: 1.5; max-width: 58ch; }
+
+  .control-split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px; margin-top: 6px; }
+  .control-col { border-radius: 16px; padding: 20px 22px; background: var(--night-surface); }
+  .control-col h3 { font-size: 1rem; margin: 0 0 12px; display: flex; align-items: center; gap: 9px; }
+  .control-col ul { list-style: none; padding: 0; margin: 0; }
+  .control-col li { padding: 7px 0; font-size: .87rem; border-bottom: 1px solid rgba(255,255,255,.06); color: var(--night-ink-soft); }
+  .control-col li:last-child { border-bottom: none; }
+  .ratio-bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; max-width: 900px; margin: 20px 0 8px; border: 1px solid var(--night-line); }
+  .ratio-bar .r-you { background: var(--night-accent); width: 10%; }
+  .ratio-bar .r-ia { background: var(--night-surface); width: 90%; }
+  .ratio-legend { display: flex; gap: 22px; font-family: 'IBM Plex Mono', monospace; font-size: .76rem; color: var(--night-ink-soft); }
+  .ratio-legend b { color: var(--night-ink); }
+
+  .checklist { list-style: none; padding: 0; margin: 16px 0 0; max-width: 760px; }
+  .checklist li { display: flex; gap: 12px; padding: 9px 0; font-size: .97rem; border-bottom: 1px solid var(--night-line); align-items: flex-start; }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist .icon { margin-top: 3px; color: var(--night-good); flex-shrink: 0; }
+  .checklist .icon.todo { color: var(--warn); }
+
+  /* --- comparaison avant/après (ajouté pour ce deck) --- */
+  .shot-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; max-width: 720px; margin-top: 14px; }
+  .shot { border: 1px solid var(--line); border-radius: 16px; padding: 14px; background: var(--surface); text-align: center; }
+  .dark .shot { border-color: var(--night-line); background: var(--night-surface); }
+  .shot .shot-label { font-family: 'IBM Plex Mono', monospace; font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 10px; }
+  .dark .shot .shot-label { color: var(--night-ink-soft); }
+  .shot.after .shot-label { color: var(--good); }
+  .dark .shot.after .shot-label { color: var(--night-good); }
+  .shot img { width: 100%; max-height: 380px; object-fit: cover; object-position: top; border-radius: 10px; display: block; }
+  .shot-single { max-width: 340px; margin-top: 14px; }
+  .shot-single img { width: 100%; max-height: 460px; object-fit: cover; object-position: top; border-radius: 12px; border: 1px solid var(--night-line); }
+
+  @media (max-width: 820px) {
+    .slide { padding: 8vh 7vw 12vh 8vw; }
+    .stat-grid, .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-2, .control-split, .shot-compare { grid-template-columns: 1fr; }
+    .timeline { grid-template-columns: 1fr 1fr; } .timeline::before { display: none; }
+    .rail { display: none; }
+    .counter { left: 20px; }
+    .nav-buttons { right: 16px; }
+    .stat-card.time { grid-column: span 2; }
+  }
+
+  :root { color-scheme: light; }
+  html, body { background: var(--paper); color: var(--ink); }
+  .slide { min-width: 0; }
+  .io-card .io-body { overflow-wrap: anywhere; }
+  /* Centrage vertical par espaceurs : avec justify-content:center, un contenu plus haut que
+     l'écran déborde des deux côtés et le haut (titre, eyebrow) est rogné, inatteignable au
+     défilement. Les espaceurs se replient à 0 quand la place manque : le contenu démarre en haut. */
+  .slide { justify-content: flex-start; }
+  .slide::before, .slide::after { content: ''; flex: 1 1 0; min-height: 0; }
+  .light .terme .t-label { color: #8A5409; }
+  .shot .cap { font-size: .78rem; margin-top: 8px; color: var(--ink-soft); max-width: none; }
+  .dark .shot .cap { color: var(--night-ink-soft); }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+  <section class="slide dark active">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Dropit · le sujet <span class="chap">· 01</span></div><h1 class="display">14 commits, une appli transformée — et ce soir, la production n'affichait rien.</h1><div class="vo"><span class="vo-tag">Narration</span>Aujourd'hui, les tuiles de l'accueil ont reçu de vraies photos, une barre de progression, un nouveau bouton Drop it. Sur GitHub, tout était en ligne. Sur l'écran de l'utilisateur, rien ne bougeait.</div><div class="loop">Pour comprendre pourquoi, il faut revenir au tout début de la journée.</div><p class="ink-soft mono" style="margin-top:22px;font-size:.8rem;">2026-09-28 · Claude Code (cloud) · lecture ~6 min</p>
+  </section>
+
+  <section class="slide light">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>La commande <span class="chap">· 02</span></div><h2>La phrase qui a lancé la journée.</h2><div class="vo"><span class="vo-tag">Narration</span>Pas un cahier des charges. Une phrase dictée, prise telle quelle.</div><div class="io-card mono-body"><div class="io-label"><svg class="icon" style="width:13px;height:13px" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>Message reçu</div><div class="io-body">"Je veux lancer le chantier du changement de lot de la page d'accueil avec les photos. Et la petite icône dans le coin"</div></div><div class="loop">Sauf qu'un chantier plus ancien disait presque le contraire.</div>
+  </section>
+
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>L'enjeu <span class="chap">· 03</span></div><h2 class="display">Une tuile a une seconde pour dire de quoi il s'agit.</h2><div class="vo"><span class="vo-tag">Narration</span>L'accueil de Dropit est une mosaïque : un projet, une tuile. Jusqu'ici, une icône sur un fond de couleur. Le pari de la journée : une photo se reconnaît plus vite.</div><div class="terme"><div class="t-label">Terme à retenir</div><div class="t-term">Treemap</div><div class="t-def">Une mosaïque où la taille de chaque tuile reflète le poids du projet : plus il a de tâches, plus il est grand.</div></div><div class="loop">Le pari avait un problème : le plan de départ reposait sur une IA qui génère des images.</div>
+  </section>
+
+  <section class="slide light">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg>Le recadrage <span class="chap">· 04</span></div><h2>Fini l'image générée : de vraies photos.</h2><div class="vo"><span class="vo-tag">Narration</span>Le cadrage du 8 septembre prévoyait une image générée par IA, révélée tuile par tuile au fil des tâches. Bloqué : aucun service d'image n'avait été choisi. La journée a tranché autrement.</div><div class="grid-2"><div class="box"><span class="box-tag">Avant · cadrage du 8 sept.</span><h3>Une image générée</h3><ul><li>Générée par un service tiers, jamais choisi</li><li>Révélée tuile par tuile, selon les tâches faites</li><li>Chantier bloqué en attente de ce service</li></ul></div><div class="box"><span class="box-tag">Après · décidé ce matin</span><h3>Une vraie photo</h3><ul><li>Photo Pexels en fond de tuile</li><li>Une seule par projet, sauvegardée</li><li>L'icône reste, en petit badge dans le coin</li></ul></div></div><div class="loop">Restait à décider comment une photo peut « représenter » une icône.</div>
+  </section>
+
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6L3 10l6-1z"/></svg>La méthode <span class="chap">· 05</span></div><h2 class="display">Quatre réflexes qui reviennent toute la journée.</h2><div class="vo"><span class="vo-tag">Narration</span>Rien ne part en ligne sans preuve, et une supposition ne compte jamais comme une preuve.</div><div class="grid-4"><div class="box"><span class="box-tag">1 · Vrai navigateur</span><h3>Tester avant de pousser</h3><ul><li>Playwright sur l'app réelle, données simulées</li><li>Jamais « ça devrait marcher »</li></ul></div><div class="box"><span class="box-tag">2 · La base avant l'intuition</span><h3>Lire ce qui s'est passé</h3><ul><li>Requêtes réelles sur Supabase</li><li>Les bugs de sauvegarde ont été prouvés, pas devinés</li></ul></div><div class="box"><span class="box-tag">3 · Un dossier par livraison</span><h3>Les preuves restent</h3><ul><li>9 dossiers de scripts et de captures</li><li>Versionnés dans le dépôt, pas dans le bac à sable</li></ul></div><div class="box"><span class="box-tag">4 · Un journal qui ne se réécrit pas</span><h3>Une ligne par événement</h3><ul><li>Le fichier d'état ne fait que s'allonger</li><li>On relit l'histoire, on ne la réécrit pas</li></ul></div></div><div class="loop">Premier livrable : faire dire à la photo la même chose que l'icône.</div>
+  </section>
+
+  <section class="slide light">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg>Livrable 1 <span class="chap">· 06</span></div><h2>La photo, c'est l'icône en vrai.</h2><div class="vo"><span class="vo-tag">Narration</span>Chaque projet tombe dans un domaine parmi sept. Le domaine choisit à la fois l'icône et les mots de la recherche de photo : les deux ne peuvent plus se contredire.</div><div class="grid-2"><div class="box"><span class="box-tag">Objectif</span><h3>Une photo qui colle à l'icône</h3><p>Une voiture en icône, une voiture en photo.</p></div><div class="box"><span class="box-tag">Comment</span><h3>Une règle, pas deux choix</h3><ul><li>Sept domaines fixes, un seul décide de tout</li><li>Requête = mots-clés du domaine + détail du projet</li><li>Visage de face exclu ; mains et silhouettes acceptées</li></ul></div></div><div class="terme"><div class="t-label">Terme à retenir</div><div class="t-term">Domaine visuel</div><div class="t-def">L'une des sept catégories fixes (famille, voyage, maison, sport, business, créativité, apprentissage).</div></div><p class="ink-soft mono" style="margin-top:14px;font-size:.76rem;">Commits 75b24fd · 3980de5. Limite : le filtre de visages lit le texte descriptif de la photo, il n'est pas infaillible.</p><div class="loop">Et quand la photo tombe mal ? Il fallait un bouton pour en changer.</div>
+  </section>
+
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2 5.3"/><path d="M20 4v7h-7"/></svg>Livrable 2 <span class="chap">· 07</span></div><h2 class="display">Un bouton pour changer d'avis, et une course perdue d'avance.</h2><div class="vo"><span class="vo-tag">Narration</span>« Changer la photo » relance la recherche. Sauf que l'écran redessine les tuiles en arrière-plan et relançait, lui, une recherche automatique avec le titre brut. La plus rapide gagnait, et ce n'était pas celle qu'on voulait.</div><div class="case-steps"><div class="case-step"><div class="case-num">1</div><div class="case-title">Le clic</div><div class="case-desc">Le projet est reclassé dans un domaine à partir de son titre et de son icône, par le modèle rapide.</div></div><div class="case-step"><div class="case-num">2</div><div class="case-title">La course</div><div class="case-desc">Pendant ce temps, l'écran se redessine et lance le remplissage automatique, plus rapide que la reclassification.</div></div><div class="case-step resolved"><div class="case-num">3</div><div class="case-title">Le correctif</div><div class="case-desc">Le drapeau anti-doublon est posé avant tout redessin. Vérifié : un seul appel photo, avec la bonne requête.</div></div></div><div class="loop">Le bouton marchait. Mais à la reconnexion, l'ancienne photo revenait.</div>
+  </section>
+
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M7 18a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 9.5 4 4 0 0 1 17.5 18z"/></svg>Le grain de sable <span class="chap">· 08</span></div><h2 class="display">Ta photo change… puis l'ancienne revient.</h2><div class="vo"><span class="vo-tag">Narration</span>Le changement s'affichait, puis disparaissait à la reconnexion. Premier réflexe : ne pas deviner, aller lire la base.</div><div class="case-steps"><div class="case-step"><div class="case-num">1</div><div class="case-title">Le constat</div><div class="case-desc">La base : 39 appels photo en 6 minutes pour 8 projets, et la date de dernière sauvegarde qui ne bouge jamais.</div></div><div class="case-step"><div class="case-num">2</div><div class="case-title">Un premier correctif, insuffisant</div><div class="case-desc">Réessayer 4 fois de suite au lieu d'une seule. Ça ne suffisait pas.</div></div><div class="case-step"><div class="case-num">3</div><div class="case-title">La vraie cause</div><div class="case-desc">Web et application ouverts en même temps : chaque session remplit ses photos et écrase celle de l'autre.</div></div><div class="case-step resolved"><div class="case-num">4</div><div class="case-title">Le correctif</div><div class="case-desc">Attendre un temps au hasard avant chaque nouvel essai, 5 essais au total. Testé avec deux pages simultanées : 4 photos, 1 conflit résolu, rien de perdu.</div></div></div><div class="terme"><div class="t-label">Terme à retenir</div><div class="t-term">Backoff aléatoire</div><div class="t-def">Attendre un délai au hasard avant de réessayer, pour que deux sessions en conflit ne repartent pas au même instant.</div></div><div class="loop">Un bug de sauvegarde réglé. Restait un défaut bien plus visible : les titres coupés.</div>
+  </section>
+
+  <section class="slide light">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M5 6h14M12 6v13M9 19h6"/></svg>Livrable 3 <span class="chap">· 09</span></div><h2>Le titre coupé cachait trois bugs, pas un.</h2><div class="vo"><span class="vo-tag">Narration</span>Chaque correctif semblait marcher, puis un autre titre restait coupé. Il a fallu mesurer la hauteur réelle du texte, avec et sans coupure, pour les voir un par un.</div><div class="grid-4"><div class="box"><span class="box-tag">Bug 1</span><h3>Le titre écrasé</h3><p>Le conteneur rétrécissait le titre sous ses deux lignes. Il manquait une seule règle de style.</p></div><div class="box"><span class="box-tag">Bug 2</span><h3>Une largeur surestimée</h3><p>Le calcul de la taille de police oubliait environ 15 px de marge de chaque côté.</p></div><div class="box"><span class="box-tag">Bug 3</span><h3>Une lichette de 3e ligne</h3><p>La coupe se fait au bord de la marge, pas du texte : 3 px de la ligne suivante dépassaient sous l'encadré.</p></div></div><div class="terme"><div class="t-label">Terme à retenir</div><div class="t-term">Troncature multi-ligne</div><div class="t-def">Couper un texte après un nombre de lignes fixé et finir par « … ». Elle coupe là où le style le lui dit, pas là où le texte s'arrête.</div></div><p class="ink-soft mono" style="margin-top:14px;font-size:.76rem;">Limite assumée : un titre de 4-5 mots sur une tuile étroite finit encore par « … », à la taille minimale lisible (8 px).</p><div class="loop">Et ce n'était que l'accueil. Le reste du lot changeait quatre écrans.</div>
+  </section>
+
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10"/></svg>Livrable 4 <span class="chap">· 10</span></div><h2 class="display">Sept changements d'un coup, sur quatre écrans.</h2><div class="vo"><span class="vo-tag">Narration</span>Barre de progression à la place de l'anneau, icônes sans cadre, salutation en français, Drop it au centre de la barre de navigation, en-tête Drop Zone façon page d'accueil publique, liste plus nette, et une fenêtre projet avec sa barre d'étapes.</div><div class="shot-compare"><div class="shot after"><div class="shot-label">Accueil</div><img src="assets/shot-accueil.png" alt="Accueil : tuiles avec barre de progression, bouton Drop it au centre de la barre de navigation"></div><div class="shot after"><div class="shot-label">Fenêtre projet</div><img src="assets/shot-projet.png" alt="Fenêtre projet : icône en badge, titre à gauche, barre d'étapes fusionnée avec la progression"></div></div><p class="ink-soft" style="font-size:.78rem;margin-top:10px;">Captures du banc de test, données fictives.</p><div class="loop">Un détail a failli tout gâcher : le bouton Drop it existait en double.</div>
+  </section>
+
+  <section class="slide light">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M17 4.5a3 3 0 0 1 0 6M21 20a6 6 0 0 0-4-5.6"/></svg>Livrable 5 <span class="chap">· 11</span></div><h2>Le bouton Drop it existait en double.</h2><div class="vo"><span class="vo-tag">Narration</span>Sur l'écran projet, deux barres de navigation vivent dans la page en même temps. Un clic sur la mauvaise ne fait rien. Un compteur mis à jour sur une seule des deux ment sur l'autre.</div><div class="io-card mono-body"><div class="io-label"><svg class="icon" style="width:13px;height:13px" viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></svg>Sortie réelle du test</div><div class="io-body">{ "tabbarsInDom": 2,
+  "sheetOpensFromDetail": true,
+  "badgesAfterAdd": ["4", "4"],
+  "badgesAfterCheck": ["3", "3"],
+  "errors": [] }</div></div><div class="loop">Tout marchait en test. Restait à le voir marcher en vrai.</div>
+  </section>
+
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></svg>Le retournement <span class="chap">· 12</span></div><h2 class="display">Tout était juste dans le code. La production montrait l'ancienne version.</h2><div class="vo"><span class="vo-tag">Narration</span>Le dernier lot était bien sur GitHub. Mais le dernier déploiement de production affichait un commit plus ancien.</div><div class="case-steps"><div class="case-step"><div class="case-num">1</div><div class="case-title">Vérifié côté git</div><div class="case-desc">Le commit b1aa1ce est bien sur main.</div></div><div class="case-step"><div class="case-num">2</div><div class="case-title">Vérifié côté Cloudflare, par toi</div><div class="case-desc">Le dernier déploiement de production est c5b5435, daté après b1aa1ce.</div></div><div class="case-step resolved"><div class="case-num">3</div><div class="case-title">Le geste</div><div class="case-desc">Relancer le déploiement de la ligne b1aa1ce. Réponse : « ça a marché ».</div></div><div class="case-step"><div class="case-num">4</div><div class="case-title">La cause</div><div class="case-desc">Non prouvée : réglage de la branche de production, plusieurs projets Pages sur le même dépôt, ou intégration GitHub à réinstaller.</div></div></div><div class="terme"><div class="t-label">Terme à retenir</div><div class="t-term">Production ou preview</div><div class="t-def">Preview : une version d'essai créée à chaque push. Production : ce que voient vraiment tes utilisateurs sur le domaine.</div></div><div class="loop">Pour ne plus dépendre de toi pour le savoir, il manque un jeton.</div>
+  </section>
+
+  <section class="slide light">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Les chiffres <span class="chap">· 13</span></div><h2>Ce que disent les horodatages git.</h2><div class="vo"><span class="vo-tag">Narration</span>Le temps actif ne se lit pas dans git : la journée compte de longues pauses. Ce qui se compte, c'est ce qui est sorti.</div><div class="stat-grid"><div class="stat-card time"><div class="stat-value">15 h 49</div><div class="stat-label">d'amplitude, de 06:36 à 22:25, avec deux pauses de plus de 2 h : ce n'est pas du temps de travail</div></div><div class="stat-card"><div class="stat-value good">14</div><div class="stat-label">commits, tous poussés sur main</div></div><div class="stat-card"><div class="stat-value">9</div><div class="stat-label">dossiers de preuves : scripts et captures</div></div><div class="stat-card"><div class="stat-value">0</div><div class="stat-label">erreur JS sur les 4 écrans du lot</div></div></div><div class="loop">Reste une question qui fâche : qui a décidé quoi ?</div>
+  </section>
+
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M17 4.5a3 3 0 0 1 0 6M21 20a6 6 0 0 0-4-5.6"/></svg>Qui décide quoi <span class="chap">· 14</span></div><h2 class="display">13 commits sur 14 viennent d'une demande de l'utilisateur.</h2><div class="vo"><span class="vo-tag">Narration</span>Les 14 commits sont signés Claude, le code aussi. Mais chaque virage est venu de l'utilisateur : des photos plutôt qu'une image générée, 70 % d'opacité puis retour à 100 %, l'ordre des chantiers. Le dernier commit est une note d'état.</div><div class="control-split"><div class="control-col"><h3><svg class="icon" viewBox="0 0 24 24"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></svg>Décidé par l'utilisateur</h3><ul><li>Une banque de photos plutôt qu'une image générée</li><li>Photo à 100 % d'opacité, après un essai à 70 %</li><li>L'icône reste, en petit badge</li><li>Quoi corriger, et dans quel ordre</li></ul></div><div class="control-col"><h3><svg class="icon" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Fait par Claude</h3><ul><li>Diagnostics en lisant la base réelle</li><li>Correctifs, testés dans un vrai navigateur</li><li>Journal, dossiers de preuves, cockpit</li><li>Aucune clé secrète côté client</li></ul></div></div><div class="loop">Il reste ce qui dépend de toi, maintenant.</div>
+  </section>
+
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></svg>La checklist de sortie <span class="chap">· 15</span></div><h2 class="display">Ce qui est fini. Ce qui dépend de toi.</h2><ul class="checklist"><li><svg class="icon" viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></svg><span>Lot visuel en production, déployé à la main</span></li><li><svg class="icon" viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></svg><span>Journal de session, historique et playbook enregistrés</span></li><li><svg class="icon" viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></svg><span>Cockpit mis à jour</span></li><li><svg class="icon" viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></svg><span>Ce deck, publié</span></li><li><svg class="icon todo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg><span>Regarder le titre blanc sur une vraie photo, en production</span></li><li><svg class="icon todo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg><span>Enregistrer le jeton Cloudflare (permission Pages, en édition), l'accès réseau et l'identifiant de compte</span></li><li><svg class="icon todo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg><span>Ouvrir une nouvelle session pour que je déploie et vérifie seul</span></li></ul><div class="loop">Et une dernière chose que personne ne te dit.</div>
+  </section>
+
+  <section class="slide light">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>Le truc que personne ne te dit <span class="chap">· 16</span></div><h2>Un zéro peut être un silence.</h2><div class="vo"><span class="vo-tag">Narration</span>Aujourd'hui, une commande bloquée par le réseau a rendu du vide. Compté comme « zéro résultat », il a fait croire que le bouton n'existait pas en production. Un titre corrigé qui « semble » bon, quatre essais qui « suffisent » : trois fois la même erreur, prendre l'absence de mauvaise nouvelle pour une bonne nouvelle.</div><div class="terme"><div class="t-label">Terme à retenir</div><div class="t-term">Faux négatif</div><div class="t-def">Un test qui ne trouve rien parce qu'il n'a rien pu regarder, et non parce qu'il n'y a rien à trouver.</div></div><div class="loop">Alors la prochaine fois, on regarde ce qui est vraiment déployé.</div>
+  </section>
+
+  <section class="slide dark">
+    <div class="eyebrow"><svg class="icon" viewBox="0 0 24 24"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></svg>La suite <span class="chap">· 17</span></div><h1 class="display">14 commits, et un seul compte : celui que la production affiche.</h1><div class="vo"><span class="vo-tag">Narration</span>Le code est fini. Il reste une seule action : enregistrer le jeton Cloudflare et l'accès réseau, puis ouvrir une nouvelle session.</div><div class="loop">Prochain épisode : la production se vérifie toute seule, après chaque push.</div>
+  </section>
+
+</div>
+
+<div class="rail" id="rail"></div>
+<div class="counter" id="counter">01 / 17</div>
+<div class="nav-buttons">
+  <button class="nav-btn" id="prev">← préc.</button>
+  <button class="nav-btn" id="next">suiv. →</button>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const rail = document.getElementById('rail');
+  const counter = document.getElementById('counter');
+  let i = 0;
+  slides.forEach((_, idx) => {
+    const t = document.createElement('div');
+    t.className = 'tick' + (idx === 0 ? ' active' : '');
+    t.addEventListener('click', () => go(idx));
+    rail.appendChild(t);
+  });
+  const ticks = Array.from(rail.children);
+  counter.textContent = '01 / ' + String(slides.length).padStart(2, '0');
+  function go(n) {
+    if (n < 0 || n >= slides.length || n === i) return;
+    slides[i].classList.remove('active'); ticks[i].classList.remove('active');
+    i = n;
+    const incoming = slides[i];
+    incoming.classList.remove('active'); void incoming.offsetWidth; incoming.classList.add('active');
+    ticks[i].classList.add('active');
+    counter.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+    document.getElementById('prev').disabled = i === 0;
+    document.getElementById('next').disabled = i === slides.length - 1;
+    incoming.scrollTop = 0;
+  }
+  document.getElementById('next').addEventListener('click', () => go(i + 1));
+  document.getElementById('prev').addEventListener('click', () => go(i - 1));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(i + 1); }
+    if (e.key === 'ArrowLeft') go(i - 1);
+  });
+  document.getElementById('prev').disabled = true;
+</script>
+</body>
+</html>

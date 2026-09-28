@@ -22,3 +22,7 @@ renderFAB(), menu FAB complet, SUGGERER avec texte du champ inclus. Commit 9564b
 Voir MISSIONS/2026-09-08-vision-engagement-identite/etat.md — EN_COURS
 Voir MISSIONS/2026-09-10-landing-carousel-benefices/etat.md — LIVRÉ
 50+ commits cloud : accordéon catégories, Drop Zone, carrousel Prochaine action, landing 6 slides.
+
+## 2026-09-28 — Cloud — Photos Pexels sur les tuiles + lot visuel
+Voir SESSIONS/2026-09-28-0636-cloud-photos-tuiles-lot-visuel.md et MISSIONS/2026-09-08-vision-engagement-identite/etat.md — LIVRÉ
+14 commits : Chantier 8 révisé (photos Pexels), sauvegarde fiabilisée (retry + backoff), titres de tuile non tronqués, lot visuel en 7 points. Déploiement Cloudflare de production manqué plusieurs fois, cause racine non prouvée.

@@ -2,6 +2,50 @@
 
 ---
 
+## Session 5 — 2026-09-28 · Photos Pexels sur les tuiles, sauvegarde fiabilisée, lot visuel
+
+**Commits :** 89efeeb · 4a51c8c · 245c8f9 · 75b24fd · 3980de5 · 8fb3ff2 · 62f07a8 · 4ae904c · bb7c2e4 · c9a4309 · b0c3691 · 50539a3 · c5b5435 · b1aa1ce — tous poussés sur `main`, déployés à la main (voir « Erreurs & corrections »).
+
+Amplitude 06:36 → 22:25 (horodatage git), avec de longues pauses (11:46→13:56, 17:17→21:34) : ce n'est pas du temps actif. Journal complet : `SESSIONS/2026-09-28-0636-cloud-photos-tuiles-lot-visuel.md`.
+
+### Travail réalisé
+
+- **Chantier 8 révisé** : photo Pexels en fond de tuile + icône en badge de coin, à la place de la génération d'image du cadrage initial. Rétroactif, une seule récupération par projet, clé Pexels côté serveur uniquement.
+- **Qualité des photos** : taxonomie de 7 domaines qui commande à la fois l'icône et la requête (la photo = « l'icône en vrai »), filtre « sans visage » resserré (mains et silhouettes acceptées), cible « fond d'écran » HD/2K/4K, bouton « Changer la photo » dans le menu projet.
+- **Sauvegarde fiabilisée** : retry sur conflit 409, puis backoff aléatoire + 5 tentatives face aux conflits multi-sessions.
+- **Titres de tuile jamais tronqués** : police adaptée par simulation réelle du retour à la ligne (2 lignes max).
+- **Lot visuel en 7 points** : barre de progression sous le titre à la place de l'anneau, icônes sans cadre et -30 %, salutation à emoji aléatoire, bouton Drop it au centre de la barre de navigation, en-tête Drop Zone façon landing, chips de la liste en carré arrondi, voiles de couleur allégés, fenêtre projet avec barre d'étapes fusionnée à la progression.
+
+### Erreurs & corrections (en cours de session)
+
+- **Projets perdus au rafraîchissement** : le conflit 409 écrasait l'état local sans retenter. Cause trouvée en interrogeant la base réelle (`updated_at` ne bougeait jamais), pas en devinant.
+- **Photo qui revient à l'ancienne à la reconnexion** : 39 appels `/api/photos` en 6 min pour 8 projets — signature d'un test web + application simultané, chaque session écrasant l'autre. Le premier correctif (4 retries immédiats) était insuffisant ; il fallait désynchroniser les sessions (backoff aléatoire).
+- **Titres tronqués — deux bugs, pas un** : `flex-shrink:0` manquant sur `.tile-title`, puis largeur disponible surestimée (padding de l'anneau et du chip oubliés). Le premier correctif « semblait » marcher sur certains titres et masquait le second ; c'est un diagnostic comparant hauteur naturelle et hauteur affichée qui a tranché.
+- **Faux diagnostic de prod** : un `curl` bloqué par la politique réseau renvoyait du vide et j'ai conclu à tort que le bouton était absent de la prod. Corrigé en vérifiant côté git plutôt que sur une réponse vide.
+- **Déploiement Cloudflare Pages** : la production a manqué plusieurs pushs ; en fin de session elle était sur `c5b5435` alors que `b1aa1ce` était poussé. Redéploiement manuel de la bonne ligne par l'utilisateur. **Cause racine non prouvée** (Production branch ? plusieurs projets Pages sur le même dépôt ? intégration GitHub à réinstaller ?).
+
+### Décisions prises
+
+- Pexels plutôt que génération d'image ; une récupération par projet, persistée, rétroactive
+- Le domaine visuel commande icône ET photo, jamais deux champs indépendants
+- `persistNow()` réservé aux actions rares ; le backfill reste débouncé pour que les sauvegardes se regroupent au lieu de se disputer
+- Bande d'étapes du projet = indicateur non cliquable, pour ne pas promettre une navigation inexistante
+- Jeton Cloudflare : permission unique *Account → Cloudflare Pages → Edit*, dans « Identifiants API » (valeur masquée), jamais dans le chat ni dans les variables d'environnement visibles
+
+### Vérifié
+
+Playwright + Chromium local sur `app.html` réel avec `fetch` simulé, aucune erreur JS sur les 4 écrans touchés ; deux sessions simultanées ; 409 puis 200 ; id de barre de navigation en double. **Non vérifié :** le titre blanc sur une vraie photo (Pexels injoignable depuis le bac à sable).
+
+### Point d'arrêt
+
+Tout est livré. Reste côté utilisateur : regarder le titre blanc sur une vraie photo en prod, et enregistrer jeton Cloudflare + accès réseau + `CLOUDFLARE_ACCOUNT_ID` dans l'environnement pour que la prochaine session déploie et vérifie seule.
+
+### Fichiers modifiés/créés cette session
+
+`app.html`, `functions/api/photos.js`, `MISSIONS/2026-09-08-vision-engagement-identite/{etat.md,decisions.md}`, 9 dossiers `MISSIONS/.../livrables/2026-09-28-*`, `SESSIONS/2026-09-28-0636-cloud-photos-tuiles-lot-visuel.md`, `PLAYBOOK/2026-09-28-photos-tuiles-lot-visuel/SLIDES.html`.
+
+---
+
 ## Session 4 — 2026-09-05/06 · Onboarding, fuite de données critique, audit, landing page
 
 **Commits :** 810129d · 0175cdb · db6283a · 622af15 · 78315c3 · 95bdf29 · bad0b5e · 588b784 · 1dec6bd · b26a4f7 · 5c77be1 · bfa133e · 6fffe6b — tous poussés et déployés
