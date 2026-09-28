@@ -81,3 +81,14 @@ Tout est livré et poussé (`b1aa1ce` sur `main`, déployé à la main).
 ## Statut
 
 LIVRÉ. Pushs directs sur `main` sur autorisation explicite de l'utilisateur.
+
+## Suite de session (soirée) — bug d'enregistrement + lot de 4 retouches
+
+Voir `MISSIONS/2026-09-08-vision-engagement-identite/livrables/2026-09-28-echec-enregistrement-et-lot-2/README.md` pour le détail et les preuves.
+
+- **Cause racine du « Échec de l'enregistrement »** : `keepalive:true` sur chaque sauvegarde, plafonné à 64 Kio par les navigateurs ; le compte principal pèse 67 104 octets, donc plus aucune de ses sauvegardes n'atteignait le serveur (dernière réussie à 19:36 UTC). Cela expliquait aussi, au moins en partie, les photos qui « reviennent » : ce n'était pas seulement le conflit multi-sessions du matin. Corrigé et reproduit avant/après.
+- **Récupération automatique** : relances sur panne, reprise au retour du réseau, une seule sauvegarde à la fois, photos non confirmées rejouées après rechargement.
+- **Lot** : bouton Drop it blanc/rouge, sélection Pexels durcie (et « Changer la photo » qui garde l'ancienne photo si rien de convenable), barre d'ajout de la liste supprimée, encadré blanc sur les icônes de tuile.
+- **Erreur d'appréciation évitée de justesse** : ce durcissement de la sélection aurait, avec l'ancien « Changer la photo » (qui effaçait la photo d'avance), laissé des projets sans photo. Trouvé en relisant le flux, corrigé avant de pousser.
+- **Non prouvé** : la limite de 30 appels/minute comme cause additionnelle (contrôle refusé par l'utilisateur).
+- **À faire** : regarder en production si la sélection Pexels durcie donne assez de photos (sinon assouplir), et le titre blanc sur une vraie photo.

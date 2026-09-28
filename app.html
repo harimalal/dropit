@@ -91,6 +91,11 @@
        des 8 teintes de projet, qui sont assignées automatiquement). */
     --dropzone-violet:#5B3FE8;
 
+    /* Rouge de notification (point et pastille du bouton Drop it) : un vrai rouge, distinct de la
+       terracotta d'accent de l'app, pour qu'une notification se lise comme telle. Assombri pour
+       tenir 4,5:1 avec le texte blanc de la pastille. */
+    --notif-red:#D42A20;
+
     --font-display:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --font-mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
   }
@@ -179,16 +184,16 @@
   }
   .tile.has-photo .tile-emoji{
     position:absolute;top:8px;right:8px;z-index:2;
-    /* Plus de cadre coloré : sur une photo, seule une ombre portée (qui épouse le glyphe,
-       contrairement à box-shadow qui suivrait la boîte transparente) garde l'icône lisible. */
-    filter:drop-shadow(0 1px 3px rgba(0,0,0,.45));
+    box-shadow:0 1px 4px rgba(0,0,0,.28);
   }
-  /* Icône nue, sans cadre de couleur : la teinte du projet ne vit plus que dans le badge
-     du titre et la barre de progression. Taille posée en ligne (voir layoutHomeTreemap),
-     proportionnelle à la taille de la tuile. */
+  /* Icône dans un encadré carré à fond blanc : lisible sur n'importe quelle couleur de carte
+     comme sur n'importe quelle photo, sans reprendre la teinte du projet (qui ne vit que dans
+     le badge du titre et la barre de progression). Côté de l'encadré et taille du glyphe
+     posés en ligne (voir layoutHomeTreemap), proportionnels à la taille de la tuile. */
   .tile-emoji{
-    line-height:1;font-size:22px;width:auto;height:auto;
-    background:none;border:none;box-shadow:none;border-radius:0;overflow:visible;
+    line-height:1;font-size:22px;
+    width:var(--emoji-box,38px);height:var(--emoji-box,38px);
+    background:#fff;border:none;box-shadow:0 1px 3px rgba(43,36,32,.12);border-radius:calc(var(--emoji-box,38px) * .28);overflow:hidden;
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
   }
   .tile-title{font-weight:700;letter-spacing:-0.01em;line-height:1.25;color:var(--ink);margin-top:8px;
@@ -654,17 +659,17 @@
   }
   .drop-tab-btn{
     position:relative;display:flex;align-items:center;justify-content:center;gap:4px;
-    border:none;border-radius:999px;padding:10px 12px;
-    background:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(191,91,68,0.38);
+    border:1px solid var(--line);border-radius:999px;padding:10px 12px;
+    background:#fff;color:var(--ink);box-shadow:0 3px 10px rgba(43,36,32,0.16);
     font-size:11.5px;font-weight:800;letter-spacing:0.02em;white-space:nowrap;
     /* Remonté au-dessus de la ligne des autres onglets : c'est ce débord qui le fait lire
        comme un bouton d'action et non comme un cinquième onglet. */
     transform:translateY(-8px);
   }
-  .drop-tab-dot{width:5px;height:5px;border-radius:50%;background:#fff;flex-shrink:0;}
+  .drop-tab-dot{width:5px;height:5px;border-radius:50%;background:var(--notif-red);flex-shrink:0;}
   .drop-tab-badge{
     position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;
-    background:var(--ink);color:#fff;font-size:10.5px;font-weight:700;line-height:18px;text-align:center;
+    background:var(--notif-red);color:#fff;font-size:10.5px;font-weight:700;line-height:18px;text-align:center;
     box-shadow:0 0 0 2px var(--canvas-card);
   }
 
@@ -798,7 +803,7 @@
   .tl-text-chip.active{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);}
   .tl-filter-sep{flex-shrink:0;width:1px;align-self:stretch;background:var(--line);margin:0 2px;}
   /* Scroll liste */
-  .tasklist-scroll{flex:1;overflow-y:auto;padding-bottom:calc(30px + 59px + var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));}
+  .tasklist-scroll{flex:1;overflow-y:auto;padding-bottom:calc(30px + var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));}
   /* Ligne tâche */
   .tl-row{
     display:flex;align-items:center;gap:12px;padding:13px 16px;
@@ -885,17 +890,6 @@
   /* Barre de saisie dans la task list — même gabarit que .detail-fixed-bar : position:absolute
      posée juste au-dessus de la bottom-tabbar (ajoutée sous cette barre pour que le tab "Liste"
      reste accessible), plutôt qu'un enfant flex en bas d'écran sans barre de nav en dessous. */
-  .tl-compose-bar{
-    position:absolute;left:0;right:0;bottom:calc(var(--tabbar-h) + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)));z-index:42;
-    background:var(--canvas-card);border-top:1px solid var(--line);
-    padding:10px 12px;
-    display:flex;align-items:center;gap:8px;box-shadow:0 -4px 16px rgba(43,36,32,0.10);
-  }
-  .tl-target-label{
-    flex-shrink:0;font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);
-    white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis;
-  }
-
   /* BARRE FIXE DÉTAIL (catégorie/tâches & projet) — barre IA, accent vert dédié (design system v5) */
   /* position:absolute (voir .top-bar plus haut pour le pourquoi).
      bottom + var(--safe-area-inset-bottom, env(safe-area-inset-bottom)) et padding remis à plat : même
@@ -2567,6 +2561,21 @@
   function normalizeDropItem(raw){
     return {id: raw.id || uid(), title: raw.title || "", createdAt: raw.createdAt || nowIso()};
   }
+  // https seulement : l'URL finit dans un background-image, et cette fonction relit aussi des
+  // photos gardées dans le navigateur (voir rejeu des photos non enregistrées).
+  function normalizePhoto(raw){
+    if(!raw || typeof raw.url !== "string" || !/^https:\/\//.test(raw.url)) return null;
+    return {
+      url: raw.url,
+      photographer: raw.photographer || "",
+      photographerUrl: raw.photographerUrl || "",
+      pexelsId: raw.pexelsId || null,
+      pageUrl: raw.pageUrl || "",
+      query: raw.query || "",
+      fetchedAt: raw.fetchedAt || nowIso()
+    };
+  }
+
   function normalizeProject(raw){
     var categories;
     if(Array.isArray(raw.categories)){
@@ -2594,15 +2603,7 @@
         cat.catNotes = [];
       });
     }
-    var photo = (raw.photo && raw.photo.url) ? {
-      url: raw.photo.url,
-      photographer: raw.photo.photographer || "",
-      photographerUrl: raw.photo.photographerUrl || "",
-      pexelsId: raw.photo.pexelsId || null,
-      pageUrl: raw.photo.pageUrl || "",
-      query: raw.photo.query || "",
-      fetchedAt: raw.photo.fetchedAt || nowIso()
-    } : null;
+    var photo = normalizePhoto(raw.photo);
     return {
       id: raw.id || uid(),
       title: raw.title || "Projet",
@@ -2651,23 +2652,29 @@
   // Fait l'appel réseau sans aucune garde (utilisé aussi bien par le backfill automatique,
   // déjà gardé par l'appelant, que par regeneratePhoto() qui doit pouvoir forcer un nouvel
   // essai même si photoFetchAttempted est déjà posé).
-  function fetchProjectPhoto(p, query){
+  // `done(true|false)` (facultatif) dit si une photo a effectivement été posée : le backfill
+  // automatique s'en passe (échec silencieux), le bouton "Changer la photo" en a besoin pour
+  // prévenir quand rien de convenable n'a été trouvé.
+  function fetchProjectPhoto(p, query, done){
     query = String(query || "").trim();
-    if(!p || !query) return;
+    if(!p || !query){ if(done) done(false); return; }
     apiFetch("/api/photos?q=" + encodeURIComponent(query)).then(function(res){
       if(!res.ok) return Promise.reject(new Error("photo-fetch-failed"));
       return res.json();
     }).then(function(data){
-      if(!data || !data.url) return;
+      if(!data || !data.url){ if(done) done(false); return; }
       p.photo = {
         url: data.url, photographer: data.photographer || "", photographerUrl: data.photographerUrl || "",
         pexelsId: data.pexelsId || null, pageUrl: data.pageUrl || "", query: query, fetchedAt: nowIso()
       };
+      rememberPendingPhoto(p);
       persist();
       if(!currentProjectId) layoutHomeTreemap();
+      if(done) done(true);
     }).catch(function(){
       // Échec silencieux (pas de clé Pexels encore posée, pas de résultat, réseau) :
       // le projet reste pleinement fonctionnel, la tuile garde son placeholder couleur+emoji.
+      if(done) done(false);
     });
   }
   function ensureProjectPhoto(p, queryOverride){
@@ -2706,22 +2713,27 @@
     });
   }
 
-  // Action manuelle "Changer la photo" (menu projet) : efface la photo actuelle, reclasse
-  // le projet (titre + icône) puis relance la recherche avec la requête reclassée — repli
-  // silencieux sur le titre seul si la classification échoue, jamais de blocage.
+  // Action manuelle "Changer la photo" (menu projet) : reclasse le projet (titre + icône)
+  // puis relance la recherche avec la requête reclassée — repli silencieux sur le titre seul
+  // si la classification échoue, jamais de blocage.
   // photoFetchAttempted posé tout de suite (avant tout render()) : render() relaie toujours
   // le treemap en arrière-plan même depuis l'écran projet (pour l'animation de retour), ce
-  // qui relancerait sinon le backfill automatique (requête = titre brut) en pleine course
-  // avec la classification, et ferait gagner l'ancienne requête moins ciblée.
+  // qui pourrait sinon relancer le backfill automatique (requête = titre brut) en pleine
+  // course avec la classification, et faire gagner une requête moins ciblée.
   function regeneratePhoto(p){
     if(!p) return;
-    p.photo = null;
+    // La photo actuelle n'est plus effacée d'avance : la sélection côté serveur est stricte
+    // (fond d'écran HD, sans visage) et peut ne rien trouver — on garderait alors un projet
+    // sans photo alors qu'il en avait une. Elle n'est remplacée que si une nouvelle arrive.
     photoFetchAttempted[p.id] = true;
     showToast("Recherche d'une nouvelle photo…");
+    var onDone = function(ok){
+      if(!ok) showToast("Aucune photo adaptée trouvée — la photo actuelle est conservée");
+    };
     classifyPhotoDomain(p).then(function(result){
-      fetchProjectPhoto(p, buildPhotoQuery(result) || p.title);
+      fetchProjectPhoto(p, buildPhotoQuery(result) || p.title, onDone);
     }).catch(function(){
-      fetchProjectPhoto(p, p.title);
+      fetchProjectPhoto(p, p.title, onDone);
     });
   }
 
@@ -2839,6 +2851,9 @@
           persist();
         } else {
           state = {projects: parsed.projects.map(normalizeProject), dropZone: dropZone};
+          // Une photo changée pendant une panne de sauvegarde, puis page rechargée ou compte
+          // reconnecté : elle attendait dans le navigateur, on la remet et on la sauvegarde.
+          if(replayPendingPhotos()) persist();
         }
         render();
         if(json.migrated) showToast("Tes projets ont été rattachés à ton compte");
@@ -2856,27 +2871,122 @@
   }
 
   var saveTimer = null;
-  var pendingSave = false;
+  var pendingSave = false;      // des changements locaux ne sont pas encore confirmés par le serveur
+  var saveInFlight = false;     // une sauvegarde est en cours (une seule à la fois, voir sendSaveNow)
+  var saveRetryTimer = null;
+  var saveFailures = 0;         // échecs consécutifs (réseau, 429, 5xx) ; 0 = tout va bien
+  var saveFailNotified = false; // un seul message par épisode d'échec, pas un par tentative
+  var conflictReplayed = false; // les photos en attente n'ont été rejouées qu'une fois depuis le dernier succès
+
+  // Un corps de requête "keepalive" (celle qui survit à la fermeture de l'onglet) est plafonné à
+  // 64 Kio par les navigateurs : au-delà, fetch() échoue tout de suite ("Failed to fetch"), sans
+  // jamais atteindre le serveur. Ce plafond est aussi cumulé entre toutes les requêtes keepalive
+  // en vol. Un compte de 8 projets pesait déjà 67 Ko : TOUTES ses sauvegardes échouaient, pas
+  // seulement celles des photos. keepalive n'est donc utilisé qu'à la fermeture de la page, et
+  // seulement si le corps tient largement sous le plafond (marge pour les en-têtes).
+  var KEEPALIVE_MAX_BYTES = 60000;
+  var SAVE_TIMEOUT_MS = 30000;
+  var SAVE_RETRY_DELAYS = [2000, 5000, 15000, 30000, 60000];
+
+  function utf8Length(str){
+    try{ return new TextEncoder().encode(str).length; }catch(e){ return str.length * 3; }
+  }
+
+  /* Photos changées mais pas encore confirmées par le serveur : gardées dans le navigateur pour
+     survivre à un rechargement ou une reconnexion pendant une panne de sauvegarde, puis rejouées
+     au chargement suivant. Ne concerne que la photo : c'est un champ isolé par projet, donc
+     rejouable sans risque d'écraser autre chose (contrairement à un état complet). */
+  function pendingPhotosKey(){
+    return "dropit.pendingPhotos." + ((session && session.user && session.user.id) || "anon");
+  }
+  function readPendingPhotos(){
+    try{
+      var m = JSON.parse(localStorage.getItem(pendingPhotosKey()) || "{}");
+      return (m && typeof m === "object") ? m : {};
+    }catch(e){ return {}; }
+  }
+  function writePendingPhotos(m){
+    try{
+      if(Object.keys(m).length) localStorage.setItem(pendingPhotosKey(), JSON.stringify(m));
+      else localStorage.removeItem(pendingPhotosKey());
+    }catch(e){}
+  }
+  function rememberPendingPhoto(p){
+    if(!p || !p.photo) return;
+    var m = readPendingPhotos();
+    m[p.id] = p.photo;
+    writePendingPhotos(m);
+  }
+  // `sent` = url de photo par projet, telle qu'elle figurait dans l'état effectivement envoyé :
+  // une photo changée pendant l'envoi n'est donc jamais effacée à tort de la liste en attente.
+  function clearConfirmedPhotos(sent){
+    var m = readPendingPhotos(), changed = false;
+    Object.keys(m).forEach(function(id){
+      if(m[id] && sent[id] === m[id].url){ delete m[id]; changed = true; }
+    });
+    if(changed) writePendingPhotos(m);
+  }
+  // Applique les photos en attente sur l'état tout juste chargé. Une photo plus récente déjà
+  // présente sur le serveur (changée depuis un autre appareil) n'est jamais écrasée.
+  function replayPendingPhotos(){
+    var m = readPendingPhotos(), replayed = false;
+    Object.keys(m).forEach(function(id){
+      var p = state && findProject(id), pending = normalizePhoto(m[id]);
+      if(!p || !pending){ delete m[id]; return; }
+      if(p.photo && p.photo.url === pending.url){ delete m[id]; return; }
+      if(!p.photo || String(p.photo.fetchedAt || "") < String(pending.fetchedAt || "")){
+        p.photo = pending;
+        replayed = true;
+      }
+    });
+    writePendingPhotos(m);
+    return replayed;
+  }
 
   // Plusieurs mises à jour indépendantes (ex: le backfill photo de plusieurs vieux projets
   // au premier chargement de la Home, ou plusieurs onglets/appareils ouverts en même temps
   // sur le même compte) peuvent chacune déclencher leur propre persist() à quelques
   // centaines de ms d'écart : si un POST est encore en vol quand le suivant part, les deux
   // utilisent le même lastKnownUpdatedAt pas encore rafraîchi et se conflictent eux-mêmes
-  // (409). Plusieurs tentatives (pas juste une) laissent ce genre d'auto-conflit converger ;
-  // un petit délai aléatoire avant chaque retry évite en plus que plusieurs sessions qui se
-  // sont conflictées au même instant repartent retenter exactement en même temps et se
-  // reconflictent en boucle (observé en pratique avec web + app ouverts simultanément).
+  // (409). D'où : une seule sauvegarde à la fois (les suivantes attendent la fin de celle en
+  // cours), plusieurs tentatives sur 409, et un petit délai aléatoire avant chaque retry pour
+  // que plusieurs sessions conflictées au même instant ne repartent pas exactement ensemble
+  // (observé en pratique avec web + app ouverts simultanément).
   var MAX_SAVE_ATTEMPTS = 5;
-  function sendSaveNow(attempt){
+
+  function scheduleSaveRetry(){
+    clearTimeout(saveRetryTimer);
+    var delay = SAVE_RETRY_DELAYS[Math.min(saveFailures - 1, SAVE_RETRY_DELAYS.length - 1)];
+    saveRetryTimer = setTimeout(function(){ sendSaveNow(); }, delay);
+  }
+
+  // Fin de sauvegarde (quelle qu'en soit l'issue) : libère le verrou, et si des changements
+  // sont arrivés pendant l'envoi, en lance une nouvelle.
+  function finishSave(){
+    saveInFlight = false;
+    if(pendingSave && saveFailures === 0) persist();
+  }
+
+  function sendSaveNow(attempt, unloading){
     attempt = attempt || 0;
+    if(attempt === 0 && saveInFlight && !unloading){ pendingSave = true; return; }
+    clearTimeout(saveRetryTimer);
+    saveInFlight = true;
     pendingSave = false;
-    apiFetch("/api/projects", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({state: state, baseUpdatedAt: lastKnownUpdatedAt}),
-      keepalive: true // survit à la fermeture de l'onglet si déclenché juste avant
-    }).then(function(res){
+
+    var sentPhotos = {};
+    state.projects.forEach(function(p){ if(p.photo && p.photo.url) sentPhotos[p.id] = p.photo.url; });
+    var payload = JSON.stringify({state: state, baseUpdatedAt: lastKnownUpdatedAt});
+    var opts = {method: "POST", headers: {"Content-Type": "application/json"}, body: payload};
+    if(unloading && utf8Length(payload) < KEEPALIVE_MAX_BYTES) opts.keepalive = true;
+    // Sans délai maximal, une requête qui ne répond jamais garderait le verrou pour toujours
+    // et bloquerait toutes les sauvegardes suivantes.
+    var ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+    var timeout = ctrl ? setTimeout(function(){ ctrl.abort(); }, SAVE_TIMEOUT_MS) : null;
+    if(ctrl) opts.signal = ctrl.signal;
+
+    apiFetch("/api/projects", opts).then(function(res){
+      clearTimeout(timeout);
       if(res.status === 409){
         return res.json().then(function(conflict){
           lastKnownUpdatedAt = conflict.updatedAt || null;
@@ -2886,28 +2996,59 @@
             // d'une vraie édition concurrente du même contenu. Plutôt que de jeter aussitôt
             // le travail local (une photo tout juste changée, par ex.) au profit de la
             // version serveur, on retente avec cette version fraîche après un court délai
-            // aléatoire (200-500ms, croissant avec le nombre de tentatives) : ça résout le
-            // cas courant sans perte, et désynchronise les sessions concurrentes au lieu de
-            // les laisser retenter en boucle au même instant.
+            // aléatoire (200-500ms, croissant avec le nombre de tentatives). Le verrou reste
+            // pris pendant l'attente : aucune autre sauvegarde ne s'intercale.
             var backoff = 200 * (attempt + 1) + Math.random() * 300;
-            setTimeout(function(){ sendSaveNow(attempt + 1); }, backoff);
+            setTimeout(function(){ sendSaveNow(attempt + 1, unloading); }, backoff);
             return;
           }
           // Conflits répétés : conflit réel, pas de logique de fusion possible ici. Plutôt
           // que d'écraser silencieusement ce travail plus récent, on l'affiche et on prévient
-          // — nos changements locaux non enregistrés sont perdus.
+          // — nos changements locaux non enregistrés sont perdus, sauf les photos, rejouées.
           var parsed = conflict.data || {};
           var dropZone = Array.isArray(parsed.dropZone) ? parsed.dropZone.map(normalizeDropItem) : [];
           state = {projects: (parsed.projects || []).map(normalizeProject), dropZone: dropZone};
+          // Rejeu limité à une fois par épisode : sous un conflit qui persiste, rejouer puis
+          // resauvegarder puis reconflicter en boucle saturerait la limite de débit du serveur.
+          // Les photos restent alors en attente dans le navigateur pour le prochain chargement.
+          var replayed = !conflictReplayed && replayPendingPhotos();
+          if(replayed) conflictReplayed = true;
           render();
           showToast("Modifié sur un autre appareil — tes derniers changements n'ont pas pu être enregistrés");
+          saveInFlight = false;
+          if(replayed) persist();
         });
       }
-      if(!res.ok) throw new Error("save-failed");
-      return res.json().then(function(ok){ lastKnownUpdatedAt = ok.updatedAt || lastKnownUpdatedAt; });
+      if(!res.ok){ var e = new Error("save-failed"); e.status = res.status; throw e; }
+      return res.json().then(function(ok){
+        lastKnownUpdatedAt = ok.updatedAt || lastKnownUpdatedAt;
+        clearConfirmedPhotos(sentPhotos);
+        conflictReplayed = false;
+        if(saveFailures > 0){
+          saveFailures = 0; saveFailNotified = false;
+          showToast("Modifications enregistrées");
+        }
+        finishSave();
+      });
     }).catch(function(err){
+      clearTimeout(timeout);
+      saveInFlight = false;
       if(err && err.message === "unauthorized") return;
-      showToast("Échec de l'enregistrement");
+      var status = err && err.status;
+      // Réseau coupé, délai dépassé, limite de débit, panne serveur : ça passera, on réessaie
+      // tout seul. Un refus définitif (400, 413…) ne se réglera pas en réessayant.
+      var retryable = !status || status === 408 || status === 429 || status >= 500;
+      if(!retryable){
+        showToast("Enregistrement refusé par le serveur");
+        return;
+      }
+      pendingSave = true;
+      saveFailures++;
+      if(!saveFailNotified){
+        saveFailNotified = true;
+        showToast("Enregistrement en attente — nouvelle tentative automatique");
+      }
+      scheduleSaveRetry();
     });
   }
 
@@ -2931,16 +3072,29 @@
   // (ou le passage en arrière-plan sur mobile) est perdue silencieusement :
   // le debounce n'a pas eu le temps de partir. On force l'envoi immédiat dès
   // que la page devient invisible, tant qu'une sauvegarde est en attente.
-  document.addEventListener("visibilitychange", function(){
-    if(document.visibilityState === "hidden" && pendingSave){
+  function retrySaveIfNeeded(){
+    if(saveFailures > 0 || pendingSave){
       clearTimeout(saveTimer);
       sendSaveNow();
     }
+  }
+  document.addEventListener("visibilitychange", function(){
+    if(document.visibilityState === "hidden"){
+      if(pendingSave){
+        clearTimeout(saveTimer);
+        sendSaveNow(0, true);
+      }
+    } else {
+      // De retour sur l'app (ou reconnecté) : on relance tout de suite ce qui était en attente
+      // au lieu d'attendre la prochaine tentative programmée.
+      retrySaveIfNeeded();
+    }
   });
+  window.addEventListener("online", retrySaveIfNeeded);
   window.addEventListener("pagehide", function(){
     if(pendingSave){
       clearTimeout(saveTimer);
-      sendSaveNow();
+      sendSaveNow(0, true);
     }
   });
 
@@ -3075,7 +3229,6 @@
   function trashIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function checkIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M4 10.5l3.5 3.5L16 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
   function sendIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M3 10l14-7-5 14-2.5-5.5L3 10z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/></svg>'; }
-  function sparkleIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M10 3l1.3 4.2L15.5 8.5l-4.2 1.3L10 14l-1.3-4.2L4.5 8.5l4.2-1.3L10 3z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>'; }
   function bulbIcon(){ return '<svg class="icon" viewBox="0 0 20 20" fill="none"><path d="M10 3.5a4.5 4.5 0 0 0-2.5 8.25c.4.3.6.75.6 1.25v.5h3.8v-.5c0-.5.2-.95.6-1.25A4.5 4.5 0 0 0 10 3.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8.3 16h3.4M8.7 17.5h2.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'; }
   function copyIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><rect x="5" y="3" width="8" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 5.5H2.5A1.5 1.5 0 001 7v6a1.5 1.5 0 001.5 1.5h5A1.5 1.5 0 009 13v-.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'; }
   function pencilIcon(){ return '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:middle;"><path d="M2 11.5l6-6 2.5 2.5-6 6-2.5.5.5-3z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M9.5 5l1-1a1.2 1.2 0 011.7 0l.3.3a1.2 1.2 0 010 1.7l-1 1L9.5 5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>'; }
@@ -3570,9 +3723,10 @@
       var pc = projectColorVars(p.id);
       var doneClass = status === "accompli" ? " is-done" : "";
       var photoClass = hasPhoto ? " has-photo" : "";
-      // Icônes réduites de 30% depuis que le cadre coloré a disparu : sans fond à remplir,
-      // un glyphe aussi gros écrasait le reste de la tuile.
+      // Glyphe réduit de 30% (demande précédente), désormais posé dans un encadré blanc dont le
+      // côté suit le glyphe (×1.75) : les deux restent proportionnels à la taille de la tuile.
       var iconSize = hasPhoto ? (sizeClass==='size-tiny'?10:14) : (sizeClass==='size-tiny'?15:22);
+      var iconBox = Math.round(iconSize * 1.75);
       return ''+
       '<div class="tile '+sizeClass+doneClass+photoClass+'" data-project-id="'+p.id+'" '+
         'style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;'+
@@ -3580,7 +3734,7 @@
         'role="button" tabindex="0">'+
         '<div class="tile-body">'+
           (hasPhoto ? '<div class="tile-photo"></div><div class="tile-scrim"></div>' : '')+
-          '<div class="tile-emoji" style="font-size:'+iconSize+'px;">'+escapeHtml(p.emoji)+'</div>'+
+          '<div class="tile-emoji" style="font-size:'+iconSize+'px;--emoji-box:'+iconBox+'px;">'+escapeHtml(p.emoji)+'</div>'+
           '<div class="tile-title" style="font-size:'+titleFontSize+'px;">'+escapeHtml(p.title)+'</div>'+
           (showProgress
             ? '<div class="tile-progress">'+
@@ -3729,78 +3883,6 @@
     return pool.slice().sort(function(a,b){ return new Date(b.updatedAt)-new Date(a.updatedAt); })[0] || null;
   }
 
-  function renderTaskListBar(){
-    var p = tlTargetProject();
-    if(!p || !state.projects.length) return '';
-    var showLabel = state.projects.length > 1 && tlSelectedProjects.length !== 1;
-    var labelHtml = showLabel
-      ? '<span class="tl-target-label">'+escapeHtml(p.emoji)+' '+escapeHtml(p.title.slice(0,14)+(p.title.length>14?'…':''))+'</span>'
-      : '';
-    return '<div class="tl-compose-bar">'+
-      labelHtml+
-      '<div class="dfb-input-wrap"><span class="sparkle-prefix">✨</span>'+
-        '<input class="dfb-input" id="tl-compose-input" type="text" placeholder="Ajouter ou décrire…" autocomplete="off">'+
-      '</div>'+
-      '<button class="dfb-btn secondary" id="tl-suggest-btn" title="Suggérer">'+sparkleIcon()+'</button>'+
-      '<button class="dfb-btn primary" id="tl-add-btn" title="Ajouter">'+checkIcon()+'</button>'+
-    '</div>';
-  }
-
-  function performTlSuggest(){
-    var p = tlTargetProject();
-    if(!p || generating) return;
-    var input = document.getElementById('tl-compose-input');
-    var text = input ? input.value.trim() : '';
-    var doneT  = allItems(p).filter(function(it){return it.done;}).map(function(it){return it.title;});
-    var undoneT = allItems(p).filter(function(it){return !it.done;}).map(function(it){return it.title;});
-    var ctx = 'Projet : '+p.title+(p.summary?' — '+p.summary:'')+
-      '\nTâches faites : '+JSON.stringify(doneT)+
-      '\nTâches restantes : '+JSON.stringify(undoneT);
-    var prompt;
-    if(!text){
-      prompt = ctx+'\n\n'+
-        'Propose 2 à 4 nouvelles tâches concrètes et courtes (5-10 mots) qui font LOGIQUEMENT avancer ce projet. '+
-        'Déduis depuis ce qui est déjà fait et ce qui reste. Ne répète aucune tâche existante.\n'+
-        'Réponds UNIQUEMENT avec un tableau JSON : ["tâche 1","tâche 2"]';
-    } else {
-      prompt = ctx+'\n\nTexte de l\'utilisateur : "'+text+'"\n\n'+
-        'Transforme ce texte en 1 à 5 tâches concrètes et distinctes pour ce projet.\n'+
-        'Règles strictes :\n'+
-        '- Liste de choses → une tâche active par élément, reformulée\n'+
-        '- Question → tâches qui y répondent concrètement\n'+
-        '- Instructions ou étapes → une tâche par étape\n'+
-        '- Ne jamais recopier mot pour mot ; formuler en verbe d\'action court\n'+
-        'Réponds UNIQUEMENT avec un tableau JSON : ["tâche 1","tâche 2"]';
-    }
-    generating = true;
-    if(input) input.disabled = true;
-    var btn = document.getElementById('tl-suggest-btn');
-    if(btn) btn.disabled = true;
-    apiFetch("/api/ai",{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:400,messages:[{role:'user',content:[{type:'text',text:prompt}]}]})
-    }).then(function(r){return r.json();}).then(function(data){
-      generating = false;
-      var out = (data.content||[]).filter(function(b){return b.type==='text';}).map(function(b){return b.text;}).join('\n');
-      var items = JSON.parse(out.replace(/```json|```/g,'').trim());
-      if(!Array.isArray(items)||!items.length) throw new Error();
-      if(!p.categories.length) p.categories.push(makeCategory('À faire',[]));
-      var cat = p.categories[0];
-      items.slice(0,5).forEach(function(t){ if(t&&t.trim()) cat.items.push(makeItem(t.trim())); });
-      p.updatedAt = nowIso();
-      persist();
-      if(input) input.value = '';
-      render();
-      showToast(items.length+' tâche'+(items.length>1?'s':'')+' ajoutée'+(items.length>1?'s':''));
-    }).catch(function(){
-      generating = false;
-      if(input) input.disabled = false;
-      var b2 = document.getElementById('tl-suggest-btn');
-      if(b2) b2.disabled = false;
-      showToast('Suggestion indisponible');
-    });
-  }
-
   function renderTaskList(){
     var tasks = buildFlatTasks();
     var scopedProject = tlScopedToProject ? tlTargetProject() : null;
@@ -3861,7 +3943,6 @@
       '</div>'+
       filterRowHtml+
       '<div class="tasklist-scroll" id="tl-scroll">'+rows+'</div>'+
-      renderTaskListBar()+
       // .tasklist-screen reste dans le DOM (hors écran, left:100%) même fermé, pour
       // l'animation de glissement — ne pas y ajouter la tabbar en permanence, seulement
       // pendant que cet écran est réellement affiché, sous peine d'un second jeu de
@@ -5259,24 +5340,6 @@
         showToast("Suppression impossible — réessaie");
       });
     });
-
-    // Task list — barre de saisie
-    var tlAddBtn = document.getElementById('tl-add-btn');
-    var tlInput  = document.getElementById('tl-compose-input');
-    if(tlAddBtn) tlAddBtn.addEventListener('click', function(){
-      if(!tlInput) return;
-      var text = tlInput.value.trim(); if(!text) return;
-      var p = tlTargetProject(); if(!p) return;
-      if(!p.categories.length) p.categories.push(makeCategory('À faire',[]));
-      p.categories[0].items.push(makeItem(text));
-      p.updatedAt = nowIso(); tlInput.value = '';
-      persist(); render();
-    });
-    if(tlInput) tlInput.addEventListener('keydown', function(e){
-      if(e.key==='Enter'){ e.preventDefault(); if(tlAddBtn) tlAddBtn.click(); }
-    });
-    var tlSuggestBtn = document.getElementById('tl-suggest-btn');
-    if(tlSuggestBtn) tlSuggestBtn.addEventListener('click', performTlSuggest);
 
     // Task list — fermer (bouton retour)
     var tlBackBtn = document.getElementById("tl-back-btn");
