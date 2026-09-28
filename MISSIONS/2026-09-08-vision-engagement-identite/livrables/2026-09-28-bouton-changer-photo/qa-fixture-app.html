@@ -5444,7 +5444,43 @@
       });
   }
 
-  boot();
+  var mockProjects = [{
+    id:"p1", title:"Refaire la cuisine", emoji:"🏠", summary:"", categories:[
+      {id:"c1", title:"Travaux", items:[{id:"i1",title:"Peinture",done:false},{id:"i2",title:"Sol",done:false}]}
+    ], projectNotes:[], dueBucket:"1m", dueDate:null,
+    photo:{url:"https://images.pexels.com/photos/old/old.jpeg", photographer:"Old", photographerUrl:"", pexelsId:1, pageUrl:"", query:"Refaire la cuisine", fetchedAt:"2026-01-01"},
+    createdAt:"2026-01-01", updatedAt:"2026-01-01"
+  }];
+  var capturedAiPrompt = null;
+  var capturedPhotoQueries = [];
+  session = {access_token:"test-token", expires_at: Date.now()+3600000, user:{id:"test-user", email:"test@example.com"}};
+  var _origFetch = window.fetch.bind(window);
+  window.fetch = function(url, opts){
+    var u = String(url);
+    if(u.indexOf("/api/ai") === 0){
+      var body = JSON.parse(opts.body);
+      capturedAiPrompt = body.messages[0].content[0].text;
+      var payload = {domain:"maison", photoQuery:"kitchen counter marble"};
+      return Promise.resolve(new Response(JSON.stringify({content:[{type:"text", text: JSON.stringify(payload)}]}),{status:200}));
+    }
+    if(u.indexOf("/api/photos") === 0){
+      var q = decodeURIComponent((u.split("q=")[1]||"").split("&")[0]);
+      capturedPhotoQueries.push(q);
+      return Promise.resolve(new Response(JSON.stringify({
+        url:"https://images.pexels.com/photos/new/new.jpeg", photographer:"New", photographerUrl:"", pexelsId:2, pageUrl:""
+      }),{status:200}));
+    }
+    if(u.indexOf("/api/projects") === 0){
+      if(opts && opts.method === "POST") return Promise.resolve(new Response(JSON.stringify({ok:true, updatedAt:new Date().toISOString()}),{status:200}));
+      return Promise.resolve(new Response(JSON.stringify({data:{projects:mockProjects, dropZone:[]}, updatedAt:"2026-01-01T00:00:00Z"}),{status:200}));
+    }
+    return _origFetch(url, opts);
+  };
+  window.__getCaptured = function(){
+    var p = state.projects.filter(function(x){return x.id==="p1";})[0];
+    return {aiPrompt: capturedAiPrompt, photoQueries: capturedPhotoQueries, currentPhotoUrl: p && p.photo && p.photo.url, currentPhotoQuery: p && p.photo && p.photo.query};
+  };
+  bootAfterAuth();
 })();
 </script>
 </body>
