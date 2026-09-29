@@ -1299,6 +1299,11 @@
     padding:14px;font-size:13px;color:var(--ink-faint);background:none;border:none;text-align:left;
   }
 </style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#F8F8F9">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 </head>
 <body>
 <div id="app"></div>
@@ -6061,6 +6066,14 @@
 
   boot();
 })();
+</script>
+<script>
+// Service worker sans cache (voir /sw.js) : sert seulement la page « pas de connexion ».
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("/sw.js").catch(function(){});
+  });
+}
 </script>
 </body>
 </html>
