@@ -51,21 +51,22 @@
     --proj-indigo-card:#E6E4FA;     --proj-indigo-badge:#DDDBF8;     --proj-indigo-solid:#4D41D2;
     --proj-mure-card:#F4E4FA;       --proj-mure-badge:#F1DBF8;       --proj-mure-solid:#AE41D2;
 
-    /* Composantes RGB des teintes pleines ci-dessus : servent aux dégradés à opacité variable
-       (overlay des titres sur photo), qu'un hex ne permet pas. À garder alignées sur les solides. */
+    /* Composantes RGB des teintes pleines ci-dessus : servent partout où il faut la teinte à une
+       opacité donnée (overlay des titres, rond des icônes), qu'un hex ne permet pas.
+       À garder alignées sur les solides — aucun mécanisme ne le vérifie aujourd'hui. */
     --proj-terracotta-rgb:210,92,65;  --proj-corail-rgb:210,65,101;  --proj-ambre-rgb:198,135,47;
     --proj-emeraude-rgb:39,165,113;   --proj-sarcelle-rgb:38,161,161; --proj-azur-rgb:65,150,210;
     --proj-indigo-rgb:77,65,210;      --proj-mure-rgb:174,65,210;
 
     /* Glyphe des icônes de projet sur surface claire : la teinte pleine assombrie (x 0,55). Le rond
        d'icône n'étant qu'à 40 % d'opacité, un glyphe blanc n'y atteindrait que 1,6 à 2,3:1 ; celui-ci
-       donne au moins 4,8:1 (calcul dans le README du livrable). À garder aligné sur les solides. */
+       donne 4,64:1 au pire des 8 teintes (calc-contraste.js du livrable). À garder aligné sur les solides. */
     --proj-terracotta-ink:#743324; --proj-corail-ink:#742438; --proj-ambre-ink:#6D4A1A; --proj-emeraude-ink:#155B3E;
     --proj-sarcelle-ink:#155959; --proj-azur-ink:#245274; --proj-indigo-ink:#2A2474; --proj-mure-ink:#602474;
 
     /* Glyphe coloré des icônes de projet dans les fenêtres autres que l'accueil : la teinte
-       pleine assombrie de 25 % (x 0,75). Sur le rond pâle (18 %), 4,2:1 au pire des 8 teintes,
-       alors que la teinte pleine non assombrie n'y donnerait que 2,4:1 (ambre). */
+       pleine assombrie de 25 % (x 0,75). Sur le rond pâle (18 %), 4,01:1 au pire des 8 teintes
+       (ambre), alors que la teinte pleine non assombrie n'y donnerait que 2,4:1. */
     --proj-terracotta-strong:#9E4531; --proj-corail-strong:#9E314C; --proj-ambre-strong:#946523; --proj-emeraude-strong:#1D7C55;
     --proj-sarcelle-strong:#1C7979; --proj-azur-strong:#31709E; --proj-indigo-strong:#3A319E; --proj-mure-strong:#82319E;
 
@@ -179,11 +180,11 @@
     position:absolute;inset:0;border-radius:16px;background-size:cover;background-position:center;
     filter:saturate(.82) sepia(.1) contrast(1.03);
   }
+  /* Voile du bas de tuile : c'est lui qui rend le titre blanc lisible sur une photo claire.
+     Il ne couvre pas le coin de l'icône (il n'y a plus de halo sous elle, retiré à la demande). */
   .tile-scrim{
     position:absolute;inset:0;border-radius:16px;pointer-events:none;z-index:0;
-    background:
-      radial-gradient(circle var(--halo-r,0px) at calc(100% - var(--halo-cx,-999px)) var(--halo-cy,-999px), rgba(20,14,10,.24) 45%, rgba(20,14,10,0) 100%),
-      linear-gradient(180deg, rgba(20,14,10,0) 42%, rgba(20,14,10,.6) 100%);
+    background:linear-gradient(180deg, rgba(20,14,10,0) 42%, rgba(20,14,10,.6) 100%);
   }
   .tile.has-photo .tile-body{align-items:flex-start;justify-content:flex-end;text-align:left;}
   /* Overlay du titre sur photo : un aplat uni (aucun dégradé) de la teinte du projet, à 22 %
@@ -222,9 +223,9 @@
      claires (1,6 à 2,3:1). Diamètre proportionnel à la taille de la tuile. */
   .tile .picon{background:rgba(var(--picon-rgb,176,78,56),.40);margin-bottom:0;}
   .tile .picon svg{width:58%;height:58%;fill:var(--picon-ink,#5a2a1e);stroke:none;}
-  /* Sur une photo : glyphe blanc, et un voile sombre très doux, centré sous l'icône (dans
-     .tile-scrim, voir --halo-*), pour que le rond à 40 % reste lisible sur une photo claire
-     sans contour ni ombre visible. Calcul de contraste dans le README du livrable. */
+  /* Sur une photo : glyphe blanc, sans halo ni contour ni ombre (retirés à la demande). Le
+     rond à 40 % porte donc seul le contraste du glyphe : sur une photo très claire, il est
+     faible. Calcul de contraste dans le README du livrable. */
   .tile.has-photo .picon{position:absolute;top:var(--picon-off,8px);right:var(--picon-off,8px);z-index:2;}
   .tile.has-photo .picon svg{fill:#fff;stroke:none;}
   .tile-title{font-weight:700;letter-spacing:-0.01em;line-height:1.25;color:var(--ink);margin-top:8px;
@@ -237,9 +238,12 @@
        est responsable d'éviter le débordement, pas le rétrécissement flex. */
     flex-shrink:0;}
   /* Progression de la tuile : barre + pourcentage + chevron, tous sur la même ligne sous
-     le titre. La barre reprend exactement la teinte du badge du titre, posée sur du blanc
-     opaque pour qu'un voile translucide reste lisible aussi bien sur une carte pâle que
-     sur une photo. */
+     le titre. La barre est posée sur du blanc opaque pour qu'un voile translucide reste
+     lisible aussi bien sur une carte pâle que sur une photo.
+     ATTENTION : elle utilise --proj-*-glass, dont les composantes ne sont PAS celles de
+     --proj-*-solid (glass est une teinte plus claire, héritée de l'ancien badge « effet
+     verre »). Elle ne reprend donc pas exactement la teinte de l'overlay du titre, qui
+     utilise --tile-rgb. À unifier (voir le plan de nettoyage). */
   .tile-progress{display:flex;align-items:center;gap:6px;width:100%;margin-top:7px;flex-shrink:0;}
   .tile-progress-track{
     flex:1;min-width:0;height:5px;border-radius:3px;overflow:hidden;background:rgba(43,36,32,.10);
@@ -3930,15 +3934,13 @@
       var doneClass = status === "accompli" ? " is-done" : "";
       var photoClass = hasPhoto ? " has-photo" : "";
       var iconBox = iconBoxFor(w, h, hasPhoto, sizeClass);
-      // Icône sur photo : décalée du coin, et son voile doux centré dessus (voir .tile-scrim).
+      // Icône sur photo : décalée du coin, sans voile sous elle.
       var iconOff = sizeClass === 'size-tiny' ? 5 : (sizeClass === 'size-flat' ? 6 : 8);
-      var haloVars = hasPhoto
-        ? '--picon-off:'+iconOff+'px;--halo-cx:'+(iconOff + iconBox/2)+'px;--halo-cy:'+(iconOff + iconBox/2)+'px;--halo-r:'+Math.round(iconBox*0.95 + 8)+'px;'
-        : '';
+      var iconVars = hasPhoto ? '--picon-off:'+iconOff+'px;' : '';
       return ''+
       '<div class="tile '+sizeClass+doneClass+photoClass+'" data-project-id="'+p.id+'" '+
         'style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;'+
-          '--tile-card-bg:'+pc.card+';--tile-badge-glass:'+pc.glass+';--tile-rgb:'+pc.rgb+';'+haloVars+'" '+
+          '--tile-card-bg:'+pc.card+';--tile-badge-glass:'+pc.glass+';--tile-rgb:'+pc.rgb+';'+iconVars+'" '+
         'role="button" tabindex="0">'+
         '<div class="tile-body">'+
           (hasPhoto ? '<div class="tile-photo"></div><div class="tile-scrim"></div>' : '')+

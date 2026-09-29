@@ -36,13 +36,26 @@ Seul le cas d'une photo blanche pure reste sous 4,5:1.
 | Où | Rond | Glyphe |
 |---|---|---|
 | **Tuiles de l'accueil**, sans photo | teinte du projet à **40 %**, sans contour ni ombre ; diamètre **proportionnel** à la tuile (0,34 × le petit côté, borné 26-52 px) | teinte foncée du projet (×0,55), 58 % du rond |
-| **Tuiles avec photo** | teinte à 40 %, sans contour ; diamètre 0,24 × le petit côté (20-38 px) ; posé dans le coin avec un voile sombre très doux (24 %) centré dessous | **blanc**, 58 % du rond |
+| **Tuiles avec photo** | teinte à 40 %, sans contour ni voile ; diamètre 0,24 × le petit côté (20-38 px) ; posé dans le coin | **blanc**, 58 % du rond |
 | **Autres fenêtres** (liste, filtres, fenêtre projet, bandeau « accompli ») | teinte à **18 %**, donc un fond pâle | teinte du projet assombrie de 25 %, **66 % du rond**, avec un contour de 1 px de la même couleur qui épaissit le tracé : icône colorée et grasse |
 | Pastilles du calendrier (14 px) | aucun (un rond cacherait l'anneau de progression) | glyphe seul, de la couleur du projet |
 
 **Pourquoi le glyphe de la tuile n'est pas blanc sans photo** : un glyphe blanc sur un rond à 40 % de la teinte, sur une carte claire, n'atteint que 1,6 à 2,3:1. Il est donc foncé. Sur photo, le voile doux sous l'icône garantit le fond sombre nécessaire au blanc.
 
-**Contrastes de l'icône** (à recalculer si les teintes changent) : glyphe fort sur fond à 18 % : 4,22:1 au pire ; glyphe blanc sur photo grise avec le voile : 4,51:1 ; sur photo blanche pure : 2,17:1.
+**Contrastes** (`calc-contraste.js`, recalculé après la suppression du halo — les chiffres annoncés
+avant, « 4,22:1 » et « 4,51:1 », étaient inexacts) :
+
+| | photo grise | photo sombre | photo blanche (irréaliste) |
+|---|---|---|---|
+| Titre blanc sur l'overlay à 22 % | 5,41:1 | 11,13:1 | 2,16:1 |
+| Glyphe blanc de l'icône, **sans halo** | 3,61:1 | 7,53:1 | 1,50:1 |
+
+Glyphe foncé sur tuile sans photo : 4,64:1. Glyphe fort des autres fenêtres : 4,01:1.
+
+Le halo sombre sous l'icône a été retiré à la demande. Il apportait environ 0,9 point de contraste
+au glyphe blanc sur une photo claire : celui-ci passe de 4,51:1 à **3,61:1**. Une icône est un
+élément graphique, dont le seuil WCAG est 3:1 (et non 4,5:1), donc le cas « photo grise » reste
+conforme ; le cas d'une photo quasi blanche ne l'est pas et ne l'était déjà pas.
 
 Jetons CSS : `--proj-*-rgb` (composantes, pour l'alpha variable), `--proj-*-ink` (×0,55), `--proj-*-strong` (×0,75).
 
