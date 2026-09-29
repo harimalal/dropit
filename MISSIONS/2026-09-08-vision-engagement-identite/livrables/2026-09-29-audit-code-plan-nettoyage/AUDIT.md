@@ -20,9 +20,17 @@ var retryable = !status || status === 408 || status === 429 || status >= 500;
 if(!retryable){ showToast("Enregistrement refusé par le serveur"); return; }
 ```
 
-Donc au franchissement du seuil : un toast, puis **plus aucune sauvegarde ne passe, jamais**, sans
-message de rappel ni voie de sortie. C'est exactement le scénario keepalive corrigé hier (blocage
-silencieux à un seuil de taille), déplacé de 64 Kio à 500 Ko.
+Donc au franchissement du seuil : **plus aucune sauvegarde ne passe, jamais**, et aucune voie de
+sortie n'est offerte.
+
+*Correction d'une erreur de la première version de cet audit* : j'avais écrit « un seul toast, puis
+plus rien ». C'est faux. `saveFailNotified` ne sert que dans la branche rejouable, donc le toast
+« Enregistrement refusé par le serveur » repart **à chaque modification**. Ce n'est donc pas
+silencieux — c'est insistant, sans rien expliquer ni proposer. Le point qui compte reste : c'est
+définitif, et le travail est perdu au rechargement.
+
+C'est le même scénario que le bug keepalive corrigé la veille (un seuil de taille que personne ne
+surveille, franchi sans préavis, qui arrête toute sauvegarde), déplacé de 64 Kio à 500 Ko.
 
 Ce n'est pas théorique : le compte principal mesure déjà **67 104 octets pour 8 projets** (mesuré
 hier en base), soit ~8,4 Ko par projet. À ce rythme le seuil tombe vers **55-60 projets** — estimation,
