@@ -1299,6 +1299,8 @@
   .account-email{font-size:14.5px;font-weight:700;color:var(--ink);word-break:break-all;}
   .account-meta{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);margin-top:3px;}
   .account-actions{margin-top:18px;display:flex;flex-direction:column;gap:8px;}
+  .account-legal{margin-top:14px;text-align:center;font-size:11.5px;color:var(--ink-faint);}
+  .account-legal a{color:inherit;text-decoration:underline;}
 
   /* MENU PROJET (renommer / objectif / échéance / supprimer) */
   .project-menu-box{
@@ -1318,6 +1320,11 @@
     padding:14px;font-size:13px;color:var(--ink-faint);background:none;border:none;text-align:left;
   }
 </style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#F8F8F9">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 </head>
 <body>
 <div id="app"></div>
@@ -3719,7 +3726,7 @@
         msgHtml+
         oauthHtml+
         switchHtml+
-        '<div class="auth-legal">Tes données sont stockées de façon privée et rattachées à ton compte.</div>'+
+        '<div class="auth-legal">Tes données sont stockées de façon privée et rattachées à ton compte. <a href="/confidentialite" target="_blank" rel="noopener">Politique de confidentialité</a></div>'+
       '</div>'+
     '</div>'+
     '<div class="toast" id="toast"></div>';
@@ -3771,6 +3778,7 @@
           '<button class="btn btn-danger" id="account-signout-btn">Se déconnecter</button>'+
           '<button class="btn btn-danger" id="account-delete-btn">Supprimer mon compte</button>'+
         '</div>'+
+        '<div class="account-legal"><a href="/confidentialite" target="_blank" rel="noopener">Confidentialité</a> · <a href="/suppression-compte" target="_blank" rel="noopener">Suppression du compte</a></div>'+
       '</div>'+
     '</div>';
   }
@@ -5984,6 +5992,14 @@
 
   boot();
 })();
+</script>
+<script>
+// Service worker sans cache (voir /sw.js) : sert seulement la page « pas de connexion ».
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("/sw.js").catch(function(){});
+  });
+}
 </script>
 </body>
 </html>
