@@ -53,14 +53,14 @@
 
     /* Composantes RGB des teintes pleines ci-dessus : servent partout où il faut la teinte à une
        opacité donnée (overlay des titres, rond des icônes), qu'un hex ne permet pas.
-       À garder alignées sur les solides — aucun mécanisme ne le vérifie aujourd'hui. */
+       Alignement sur les solides vérifié par livrables/test-couleurs.mjs. */
     --proj-terracotta-rgb:210,92,65;  --proj-corail-rgb:210,65,101;  --proj-ambre-rgb:198,135,47;
     --proj-emeraude-rgb:39,165,113;   --proj-sarcelle-rgb:38,161,161; --proj-azur-rgb:65,150,210;
     --proj-indigo-rgb:77,65,210;      --proj-mure-rgb:174,65,210;
 
     /* Glyphe des icônes de projet sur surface claire : la teinte pleine assombrie (x 0,55). Le rond
        d'icône n'étant qu'à 40 % d'opacité, un glyphe blanc n'y atteindrait que 1,6 à 2,3:1 ; celui-ci
-       donne 4,64:1 au pire des 8 teintes (calc-contraste.js du livrable). À garder aligné sur les solides. */
+       donne 4,64:1 au pire des 8 teintes (calc-contraste.js du livrable). Alignement vérifié par test-couleurs.mjs. */
     --proj-terracotta-ink:#743324; --proj-corail-ink:#742438; --proj-ambre-ink:#6D4A1A; --proj-emeraude-ink:#155B3E;
     --proj-sarcelle-ink:#155959; --proj-azur-ink:#245274; --proj-indigo-ink:#2A2474; --proj-mure-ink:#602474;
 
@@ -70,7 +70,9 @@
     --proj-terracotta-strong:#9E4531; --proj-corail-strong:#9E314C; --proj-ambre-strong:#946523; --proj-emeraude-strong:#1D7C55;
     --proj-sarcelle-strong:#1C7979; --proj-azur-strong:#31709E; --proj-indigo-strong:#3A319E; --proj-mure-strong:#82319E;
 
-    /* Badge "effet verre" — voile translucide (alpha 0.40) + reflet en dégradé, SANS backdrop-filter
+    /* Badge "effet verre" — palette réglée à la main, PAS une dérivée de --proj-*-solid (écart
+       mesuré de +10 à +60 par canal selon la teinte). Figée par livrables/test-couleurs.mjs.
+       Voile translucide (alpha 0.40) + reflet en dégradé, SANS backdrop-filter
        (le flou d'arrière-plan produisait un halo gris-beige aux coins arrondis — bug de rendu connu).
        Abaissé de 0.55 à 0.40 : sur une tuile photo le voile trop dense écrasait le texte blanc
        du titre, qui s'appuie maintenant sur le scrim + une ombre portée plutôt que sur la teinte. */
@@ -238,10 +240,11 @@
   /* Progression de la tuile : barre + pourcentage + chevron, tous sur la même ligne sous
      le titre. La barre est posée sur du blanc opaque pour qu'un voile translucide reste
      lisible aussi bien sur une carte pâle que sur une photo.
-     ATTENTION : elle utilise --proj-*-glass, dont les composantes ne sont PAS celles de
-     --proj-*-solid (glass est une teinte plus claire, héritée de l'ancien badge « effet
-     verre »). Elle ne reprend donc pas exactement la teinte de l'overlay du titre, qui
-     utilise --tile-rgb. À unifier (voir le plan de nettoyage). */
+     Elle utilise --proj-*-glass, une palette DISTINCTE de --proj-*-solid : mesurée, elle
+     s'en écarte de +10 à +60 par canal selon la teinte (voir livrables/test-couleurs.mjs).
+     Ce n'est pas une dérive à corriger mais un réglage manuel : unifier la barre sur
+     --tile-rgb, comme l'overlay du titre, changerait visiblement l'émeraude et la sarcelle.
+     Les deux teintes restent donc volontairement différentes, et le test les fige. */
   .tile-progress{display:flex;align-items:center;gap:6px;width:100%;margin-top:7px;flex-shrink:0;}
   .tile-progress-track{
     flex:1;min-width:0;height:5px;border-radius:3px;overflow:hidden;background:rgba(43,36,32,.10);
@@ -3609,12 +3612,39 @@
     }
   }
 
+  // render() réécrit tout l'innerHTML de #app : le champ qui avait le focus est détruit puis
+  // recréé, et le focus comme la position du curseur sont perdus. Le défilement était déjà
+  // sauvegardé ; la saisie ne l'était pas, ce qui imposait la règle non écrite « ne jamais
+  // déclencher un rendu pendant une frappe ». On retient donc l'élément actif par son id
+  // (les champs de l'app en ont tous un) et on le restaure après le rendu.
+  function captureFocus(){
+    var el = document.activeElement;
+    if(!el || !el.id) return null;
+    var tag = el.tagName;
+    if(tag !== "INPUT" && tag !== "TEXTAREA") return null;
+    var snap = {id: el.id};
+    // selectionStart lève sur les types qui ne gèrent pas la sélection (email, number...).
+    try{ snap.start = el.selectionStart; snap.end = el.selectionEnd; }catch(e){}
+    return snap;
+  }
+
+  function restoreFocus(snap){
+    if(!snap) return;
+    var el = document.getElementById(snap.id);
+    if(!el || el === document.activeElement) return;
+    el.focus();
+    if(snap.start != null){
+      try{ el.setSelectionRange(snap.start, snap.end); }catch(e){}
+    }
+  }
+
   function render(){
     var scrollSnapshot = {};
     SCROLL_CONTAINER_IDS.forEach(function(id){
       var el = document.getElementById(id);
       if(el) scrollSnapshot[id] = el.scrollTop;
     });
+    var focusSnapshot = captureFocus();
 
     // L'accueil reste toujours la base, même quand un projet/la liste/l'agenda est
     // ouvert par-dessus : c'est ce qui permet à l'écran du dessus de glisser vers la
@@ -3658,6 +3688,12 @@
       var el = document.getElementById(id);
       if(el) el.scrollTop = scrollSnapshot[id];
     });
+    // Après le défilement : focus() peut faire défiler la zone vers le champ, donc le
+    // rétablir avant écraserait la position qu'on vient de restaurer.
+    restoreFocus(focusSnapshot);
+    // Le bandeau vit sur <body>, hors de #app : render() ne le détruit pas, mais il doit
+    // exister dès le premier rendu si la sauvegarde est déjà bloquée au chargement.
+    updateSaveBanner();
   }
 
   function googleIcon(){
