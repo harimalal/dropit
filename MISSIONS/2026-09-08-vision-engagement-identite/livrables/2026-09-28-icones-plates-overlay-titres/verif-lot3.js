@@ -4,6 +4,17 @@
 const { chromium } = require('playwright');
 const OUT = process.argv[2] || '.';
 
+
+// Applique un corps de sauvegarde sur le faux serveur : ancien protocole {state} ou delta {v:1,...}.
+function appliquerCorps(donnees, body) {
+  if (body.state) return body.state;
+  const projects = (donnees.projects || []).slice();
+  for (const u of body.upserts || []) { const i = projects.findIndex(p => p.id === u.project.id); if (i < 0) projects.push(u.project); else projects[i] = u.project; }
+  const retires = new Set((body.deletes || []).map(d => d.id));
+  return { ...donnees, projects: projects.filter(p => !retires.has(p.id)),
+           dropZone: (donnees.dropZone || []).filter(d => !(body.dropDeletes || []).includes(d.id)).concat(body.dropAdds || []) };
+}
+
 const proj = (id, title, emoji, items, photo, extra = {}) => ({
   id, title, emoji, summary: '', categories: [{ id: 'c' + id, title: 'Catégorie', items: Array.from({ length: items[0] }, (_, i) => ({ id: id + 'i' + i, title: 'Tâche ' + i, done: i < items[1], createdAt: '2026-01-01', notes: [] })) }],
   projectNotes: [], dueBucket: '1m', dueDate: '2026-10-20', photo: photo ? { url: 'https://images.pexels.com/' + photo + '.jpg', photographer: '', photographerUrl: '', pexelsId: 1, pageUrl: '', query: 'x', fetchedAt: '2026-09-01T00:00:00.000Z' } : null,
@@ -35,7 +46,7 @@ const DATA = () => ({ projects: [
   const server = { data: DATA(), updatedAt: '2026-09-28T10:00:00.000Z' };
   await page.route('**/api/projects', r => {
     if (r.request().method() === 'GET') return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: server.data, updatedAt: server.updatedAt }) });
-    const b = JSON.parse(r.request().postData()); saved.posts.push(b.state); server.data = b.state; server.updatedAt = new Date().toISOString();
+    const b = JSON.parse(r.request().postData()); server.data = appliquerCorps(server.data, b); saved.posts.push(server.data); server.updatedAt = new Date().toISOString();
     return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, updatedAt: server.updatedAt }) });
   });
   const aiPrompts = [];

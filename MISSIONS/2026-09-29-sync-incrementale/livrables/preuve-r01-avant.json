@@ -1,0 +1,79 @@
+[
+ {
+  "nom": "GET en 429 (limite de débit)",
+  "apresPanne": {
+   "titresEnBase": [
+    "Bali cet été",
+    "Anniversaire de Julie",
+    "Déménagement"
+   ],
+   "envoisPost": 1,
+   "ecranAffiche": {
+    "tuiles": 3,
+    "exemplesBali": true,
+    "bouton": false,
+    "texte": " C'est parti ! Test 👊Déménagement33%Bali cet été40%Anniversaire de Julie60%✨Priorités8 pr"
+   }
+  },
+  "apresReprise": {
+   "tuiles": [
+    "Déménagement33%",
+    "Bali cet été40%",
+    "Anniversaire de Julie60%"
+   ]
+  },
+  "comptePerdu": true,
+  "erreursJS": []
+ },
+ {
+  "nom": "GET en 500",
+  "apresPanne": {
+   "titresEnBase": [
+    "Bali cet été",
+    "Anniversaire de Julie",
+    "Déménagement"
+   ],
+   "envoisPost": 1,
+   "ecranAffiche": {
+    "tuiles": 3,
+    "exemplesBali": true,
+    "bouton": false,
+    "texte": " C'est parti ! Test 🙌Déménagement33%Bali cet été40%Anniversaire de Julie60%✨Priorités8 pr"
+   }
+  },
+  "apresReprise": {
+   "tuiles": [
+    "Déménagement33%",
+    "Bali cet été40%",
+    "Anniversaire de Julie60%"
+   ]
+  },
+  "comptePerdu": true,
+  "erreursJS": []
+ },
+ {
+  "nom": "réseau coupé",
+  "apresPanne": {
+   "titresEnBase": [
+    "Mon vrai projet X",
+    "Mon vrai projet Y"
+   ],
+   "envoisPost": 0,
+   "ecranAffiche": {
+    "tuiles": 3,
+    "exemplesBali": true,
+    "bouton": false,
+    "texte": " C'est parti ! Test 💪Déménagement33%Bali cet été40%Anniversaire de Julie60%✨Priorités8 pr"
+   }
+  },
+  "apresReprise": {
+   "tuiles": [
+    "Déménagement33%",
+    "Bali cet été40%",
+    "Anniversaire de Julie60%"
+   ]
+  },
+  "comptePerdu": false,
+  "erreursJS": []
+ }
+]

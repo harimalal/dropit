@@ -1,0 +1,97 @@
+[
+ {
+  "nom": "autre-projet",
+  "serveur": {
+   "X": "100",
+   "Y": "100",
+   "Z": "000"
+  },
+  "attendu": {
+   "X": "100",
+   "Y": "100",
+   "Z": "000"
+  },
+  "modificationsPerdues": false,
+  "requetesA": "-:200 delta:200",
+  "requetesB": "-:200 delta:200",
+  "erreursJS": []
+ },
+ {
+  "nom": "meme-projet",
+  "serveur": {
+   "X": "100",
+   "titres": [
+    "Projet X",
+    "Projet Y",
+    "Projet Z",
+    "Projet X (copie locale)"
+   ]
+  },
+  "copieContientLeTravailDeA": true,
+  "copieFlags": "010",
+  "tachesDeBConservees": true,
+  "copieLocale": 1,
+  "toastsA": [
+   "« Projet X » a été modifié sur un autre appareil : ta version est gardée en copie"
+  ],
+  "requetesA": "-:200 delta:200 delta:200",
+  "erreursJS": []
+ },
+ {
+  "nom": "suppression",
+  "serveur": {
+   "titres": [
+    "Projet X",
+    "Projet Y",
+    "Projet Z"
+   ],
+   "Y": "100"
+  },
+  "modificationDeBConservee": true,
+  "toastsA": [
+   "« Projet Y » a été modifié sur un autre appareil : suppression annulée"
+  ],
+  "requetesA": "-:200 delta:200",
+  "erreursJS": []
+ },
+ {
+  "nom": "restauration",
+  "serveur": {
+   "titres": [
+    "Projet X",
+    "Projet Z",
+    "Projet Y"
+   ],
+   "Y": "100"
+  },
+  "projetRestaure": true,
+  "toastsA": [
+   "« Projet Y » avait été supprimé sur un autre appareil : il est restauré"
+  ],
+  "requetesA": "-:200 delta:200 delta:200",
+  "erreursJS": []
+ },
+ {
+  "nom": "poids (compte de ~800 Ko, une case cochée)",
+  "tailleDuCompteEnBase": 794533,
+  "octetsEnvoyesParLeClient": [
+   20061
+  ],
+  "formeEnvoyee": [
+   "delta"
+  ],
+  "caseEnregistree": true,
+  "erreursJS": []
+ },
+ {
+  "nom": "compte-neuf",
+  "projetsCrees": 3,
+  "premierEnvoi": "complet",
+  "envois": [
+   "complet:200",
+   "delta:200"
+  ],
+  "deltaApresLePremier": true,
+  "erreursJS": []
+ }
+]
