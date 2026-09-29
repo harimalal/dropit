@@ -1,0 +1,35 @@
+[
+ {
+  "nom": "autre-projet",
+  "serveur": {
+   "X": "100",
+   "Y": "000",
+   "Z": "000"
+  },
+  "attendu": {
+   "X": "100",
+   "Y": "100",
+   "Z": "000"
+  },
+  "modificationsPerdues": true,
+  "requetesA": "-:200 complet:409 complet:200",
+  "requetesB": "-:200 complet:200",
+  "erreursJS": []
+ },
+ {
+  "nom": "meme-projet",
+  "serveur": {
+   "X": "010",
+   "titres": [
+    "Projet X",
+    "Projet Y",
+    "Projet Z"
+   ]
+  },
+  "tachesDeBConservees": false,
+  "copieLocale": 0,
+  "toastsA": [],
+  "requetesA": "-:200 complet:409 complet:200",
+  "erreursJS": []
+ }
+]

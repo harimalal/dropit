@@ -1,4 +1,5 @@
 import { json, supabaseHeaders, requireUser, enforceRateLimit } from "../_lib/auth.js";
+import { validerDelta, appliquerDelta } from "../_lib/merge.js";
 
 const TABLE = "dropit_user_data";
 const EMPTY = { projects: [] };
@@ -50,6 +51,77 @@ async function writeUserData(env, userId, data, baseUpdatedAt) {
   });
   if (!insertRes.ok) return { ok: false, res: insertRes };
   return { ok: true, updatedAt: newUpdatedAt };
+}
+
+// Lit la ligne du compte : { data, updated_at }, null si le compte n'a encore rien enregistré,
+// ou { erreur } si la base répond mal.
+async function lireLigne(env, userId) {
+  const res = await fetch(
+    env.SUPABASE_URL + "/rest/v1/" + TABLE +
+      "?user_id=eq." + encodeURIComponent(userId) + "&select=data,updated_at",
+    { headers: supabaseHeaders(env) }
+  );
+  if (!res.ok) return { erreur: await res.text() };
+  const rows = await res.json();
+  return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+}
+
+// Fusionne un delta dans la ligne du compte (voir MISSIONS/2026-09-29-sync-incrementale/CADRAGE.md).
+// Relit la ligne, fusionne, écrit conditionnellement sur l'horodatage lu (compare-and-swap : si un
+// autre écrivain est passé entre la lecture et l'écriture, 0 ligne est modifiée) et recommence
+// depuis la relecture, jusqu'à 4 fois. Le client n'a donc jamais à gérer de conflit de ligne : seuls
+// remontent les conflits de CONTENU, projet par projet.
+const ESSAIS_DELTA = 4;
+
+async function ecrireDelta(env, userId, delta) {
+  for (let essai = 0; essai < ESSAIS_DELTA; essai++) {
+    const ligne = await lireLigne(env, userId);
+    if (ligne && ligne.erreur !== undefined) return { statut: 500, corps: { error: ligne.erreur } };
+
+    const { data, changed, conflicts } = appliquerDelta(ligne ? ligne.data : null, delta);
+
+    // Plafonds appliqués sur le RÉSULTAT de la fusion, pas sur la taille de la requête (qui est
+    // petite par construction) : c'est la ligne stockée qui ne doit pas dépasser.
+    if (data.projects.length > MAX_PROJECTS) return { statut: 400, corps: { error: "too_many_projects", limit: MAX_PROJECTS } };
+    if (changed && new TextEncoder().encode(JSON.stringify(data)).length > MAX_BODY_BYTES) {
+      return { statut: 413, corps: { error: "too_large", limit: MAX_BODY_BYTES } };
+    }
+
+    // Rien à écrire (tout est déjà appliqué, ou tout est en conflit) : on ne touche pas à la ligne.
+    if (!changed) return { statut: 200, corps: { ok: true, updatedAt: ligne ? ligne.updated_at : null, conflicts } };
+
+    const nouveau = new Date().toISOString();
+    if (!ligne) {
+      // Premier enregistrement du compte passé par le chemin delta (rare : le client n'y recourt
+      // qu'après avoir lu une ligne). Même insertion que le chemin historique.
+      const ins = await fetch(env.SUPABASE_URL + "/rest/v1/" + TABLE + "?on_conflict=user_id", {
+        method: "POST",
+        headers: { ...supabaseHeaders(env), "Prefer": "resolution=merge-duplicates" },
+        body: JSON.stringify({ user_id: userId, data: data, updated_at: nouveau })
+      });
+      if (!ins.ok) return { statut: 500, corps: { error: await ins.text() } };
+      return { statut: 200, corps: { ok: true, updatedAt: nouveau, conflicts } };
+    }
+
+    const patch = await fetch(
+      env.SUPABASE_URL + "/rest/v1/" + TABLE +
+        "?user_id=eq." + encodeURIComponent(userId) +
+        "&updated_at=eq." + encodeURIComponent(ligne.updated_at),
+      {
+        method: "PATCH",
+        headers: { ...supabaseHeaders(env), "Prefer": "return=representation" },
+        body: JSON.stringify({ data: data, updated_at: nouveau })
+      }
+    );
+    if (!patch.ok) return { statut: 500, corps: { error: await patch.text() } };
+    const touchees = await patch.json();
+    if (Array.isArray(touchees) && touchees.length > 0) {
+      return { statut: 200, corps: { ok: true, updatedAt: nouveau, conflicts } };
+    }
+    // 0 ligne : un autre écrivain est passé. On relit et on refusionne.
+  }
+  // Ligne trop disputée : 503 est réessayé automatiquement par le client, sans message.
+  return { statut: 503, corps: { error: "busy" } };
 }
 
 export async function onRequestGet(context) {
@@ -120,6 +192,16 @@ export async function onRequestPost(context) {
     body = JSON.parse(rawText);
   } catch {
     return json({ error: "Invalid JSON body" }, 400);
+  }
+
+  // Nouveau protocole : un delta (projets modifiés, supprimés, éléments de Drop Zone). Reconnu à
+  // `v`, jamais à l'absence de `state`. L'ancien corps {state, baseUpdatedAt} reste traité plus
+  // bas à l'identique, pour qu'un ancien app.html resté en cache continue de fonctionner.
+  if (body && body.v !== undefined) {
+    const anomalie = validerDelta(body);
+    if (anomalie) return json({ error: "bad_delta", detail: anomalie }, 400);
+    const r = await ecrireDelta(env, user.id, body);
+    return json(r.corps, r.statut);
   }
 
   const state = body && body.state;
