@@ -10,3 +10,10 @@
 # à chaque chargement (réponse 304 si rien n'a changé, donc pas de coût réel).
 /app.html
   Cache-Control: no-cache, must-revalidate
+
+# Le service worker et le manifest ne doivent jamais rester périmés : un sw.js
+# figé empêcherait de livrer un correctif du worker lui-même.
+/sw.js
+  Cache-Control: no-cache, must-revalidate
+/manifest.json
+  Cache-Control: no-cache, must-revalidate

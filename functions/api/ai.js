@@ -17,6 +17,20 @@ const ALLOWED_MODELS = new Set([
 ]);
 const MAX_TOKENS_CAP = 2200; // le plus haut usage réel de l'app est le chat (2100, triplé depuis 700)
 
+// Seuls ces champs sont relayés à Anthropic. Sans liste blanche, tout le corps du client
+// partait tel quel avec la clé partagée : un compte authentifié pouvait activer des options
+// que l'app n'utilise pas (outils, sortie longue, paramètres coûteux). On ne relaie que ce
+// dont les sept points d'appel de l'app ont réellement besoin.
+const ALLOWED_FIELDS = ["model", "max_tokens", "system", "messages", "temperature"];
+
+function pickAllowed(body) {
+  const out = {};
+  for (const k of ALLOWED_FIELDS) {
+    if (body[k] !== undefined) out[k] = body[k];
+  }
+  return out;
+}
+
 export async function onRequestPost(context) {
   const { env, request } = context;
 
@@ -46,24 +60,43 @@ export async function onRequestPost(context) {
     return json({ error: "max_tokens invalide" }, 400);
   }
 
+  if (!Array.isArray(body.messages) || body.messages.length === 0) {
+    return json({ error: "messages requis" }, 400);
+  }
+
+  const payload = pickAllowed(body);
+
   // Personnalisation : le profil est injecté ici plutôt qu'à chacun des sept
   // points d'appel côté client — un seul endroit, impossible à contourner.
   const profileBlock = profileContext(await fetchProfileAnswers(env, user.id));
   if (profileBlock) {
-    body.system = body.system ? profileBlock + "\n\n" + body.system : profileBlock;
+    payload.system = payload.system ? profileBlock + "\n\n" + payload.system : profileBlock;
   }
 
-  const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01"
-    },
-    body: JSON.stringify(body)
-  });
+  let anthropicRes;
+  try {
+    anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01"
+      },
+      body: JSON.stringify(payload)
+    });
+  } catch {
+    return json({ error: "IA injoignable" }, 502);
+  }
 
-  const data = await anthropicRes.json();
+  // Une panne de passerelle renvoie une page HTML, pas du JSON : sans ce filet, le .json()
+  // lèverait et l'utilisateur recevrait une 500 muette au lieu d'un message utilisable.
+  const raw = await anthropicRes.text();
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    return json({ error: "Réponse inattendue de l'IA" }, 502);
+  }
 
   return new Response(JSON.stringify(data), {
     status: anthropicRes.status,
