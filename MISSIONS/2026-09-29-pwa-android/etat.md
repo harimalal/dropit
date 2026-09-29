@@ -15,6 +15,10 @@ Statut : **ÉTAPE A TERMINÉE SUR LA BRANCHE, PAS ENCORE EN LIGNE** (le site n'e
 # 2026-09-29 — Non-régression : test-couleurs.mjs 33/33 et test-securite.mjs 26/26 depuis la racine du dépôt. quota-check.js et focus-check.js NON rejoués : ils exigent une copie modifiée d'app.html (app-apres.html, sur le port 8941) qui n'a jamais été commitée.
 # 2026-09-29 — Constat production : /app est déjà servi avec « public, max-age=0, must-revalidate » ; la règle _headers de /app.html ne s'applique qu'à la redirection 308. Sans conséquence ici, à savoir.
 
+# 2026-09-29 — Branche à part `feature/pwa-play-store` (demande de l'utilisateur : PWA conforme Google). Reprise des éléments d'origine douteuse : l'empreinte de assetlinks.json (ajoutée le 18/09 par une session d'IA pour un App Link mis de côté, aucune clé versionnée ni détenue, servie en production avec handle_all_urls) est remplacée par []. Icônes : origine prouvée (regénérées depuis la source, identiques à l'octet, logotype à 190 px pour 205 de zone sûre) donc conservées ; sw.js conservé. La retirer ne casse aucun flux : l'app Android actuelle utilise le schéma com.dropit.app://auth-callback.
+# 2026-09-29 — Conformité ajoutée : confidentialite.html et suppression-compte.html (brouillons, 7 champs à compléter par le propriétaire, affichés en surbrillance), liens depuis l'écran de connexion et la feuille de compte, manifest (catégorie, prefer_related_applications). Exigences confirmées en ligne : API 36 obligatoire depuis le 31/08/2026, politique de confidentialité non-PDF, suppression de compte dans l'app ET en lien web. Détail : CONFORMITE-PLAY.md.
+# 2026-09-29 — Vérifications : test-conformite-play.mjs 41/41 avec contre-épreuves (empreinte mal formée et logotype hors zone sûre font bien échouer le test), test-pwa.js 38/38, pages rendues sans débordement en clair et sombre. Constat : les 13 captures existantes font 780x1688 (ratio 2,16) ; la limite de 2:1 est de mémoire, à vérifier dans la Play Console.
+
 ## Non vérifié / à surveiller
 
 - **Règles Play Store pour les comptes personnels** (test fermé, nombre de testeurs, durée) : de mémoire, à vérifier dans la Play Console.
