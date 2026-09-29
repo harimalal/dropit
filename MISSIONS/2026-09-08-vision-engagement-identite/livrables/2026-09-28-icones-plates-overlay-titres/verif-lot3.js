@@ -61,10 +61,19 @@ const DATA = () => ({ projects: [
       anciensEmoji: document.querySelectorAll('.tile-emoji').length,
     };
   });
+  // Style des icônes de tuile : fond à 40 %, aucun contour ni ombre, glyphe à 58 %, diamètre proportionnel
+  out.styleIconeTuile = await page.evaluate(() => [...document.querySelectorAll('.tile')].map(t => {
+    const i = t.querySelector('.picon'), s = i.querySelector('svg'), cs = getComputedStyle(i), r = t.getBoundingClientRect();
+    return { id: t.dataset.projectId, photo: t.classList.contains('has-photo'), tuile: Math.round(r.width) + 'x' + Math.round(r.height), diametre: Math.round(i.getBoundingClientRect().width),
+      fond: cs.backgroundColor, contour: cs.borderTopWidth + '/' + cs.boxShadow, glyphe: Math.round(100 * s.getBoundingClientRect().width / i.getBoundingClientRect().width) + '%', remplissage: getComputedStyle(s).fill };
+  }));
   out.overlay = await page.evaluate(() => {
     const t = document.querySelector('.tile.has-photo .tile-title'); const cs = getComputedStyle(t);
-    return { fond: cs.backgroundImage.split('linear-gradient').length - 1 + ' dégradés', rayon: cs.borderRadius, ombreTexte: cs.textShadow, paddingDroit: cs.paddingRight };
+    return { fond: cs.backgroundColor, degrades: cs.backgroundImage === 'none' ? 0 : cs.backgroundImage.split('gradient').length - 1, rayon: cs.borderRadius, ombreTexte: cs.textShadow, paddingDroit: cs.paddingRight };
   });
+  // Autres fenêtres : voir plus bas (style pâle + glyphe coloré gras)
+  const styleAutre = (sel) => page.evaluate((sel) => { const i = document.querySelector(sel); if(!i) return null; const s = i.querySelector('svg'), cs = getComputedStyle(i), g = getComputedStyle(s);
+    return { fond: cs.backgroundColor, glyphe: Math.round(100 * s.getBoundingClientRect().width / i.getBoundingClientRect().width) + '%', remplissage: g.fill, contour: g.stroke, epaisseurContour: g.strokeWidth }; }, sel);
   await page.screenshot({ path: OUT + '/lot3-accueil.png', clip: { x: 0, y: 0, width: 420, height: 470 } });
 
   // — rien de rogné : contenu de chaque tuile dans sa hauteur, icône entièrement dans la tuile
@@ -106,12 +115,14 @@ const DATA = () => ({ projects: [
   // — Vue liste
   await page.click('.bottom-tabbar #tabbar-list'); await page.waitForSelector('#tasklist-screen'); await page.waitForTimeout(600);
   out.liste = await page.evaluate(() => ({ chips: document.querySelectorAll('.tl-proj-chip .picon').length, lignes: document.querySelectorAll('.tl-row .picon').length, emojiAffiche: /\p{Extended_Pictographic}/u.test(document.getElementById('tasklist-screen').textContent) }));
+  out.styleListeLigne = await styleAutre('.tl-row .picon'); out.styleListeFiltre = await styleAutre('.tl-proj-chip .picon');
   await page.screenshot({ path: OUT + '/lot3-liste.png' });
   await page.click('#tasklist-screen #tabbar-home'); await page.waitForTimeout(500);
 
   // — Fenêtre projet
   await page.click('.tile[data-project-id="p2"]'); await page.waitForSelector('#detail-screen'); await page.waitForTimeout(600);
   out.fenetreProjet = await page.evaluate(() => { const i = document.querySelector('#detail-screen .detail-header .picon'); const r = i.getBoundingClientRect(); return { rond: getComputedStyle(i).borderRadius === '50%', diametre: Math.round(r.width) }; });
+  out.styleFenetreProjet = await styleAutre('#detail-screen .detail-header .picon');
   await page.screenshot({ path: OUT + '/lot3-projet.png', clip: { x: 0, y: 0, width: 420, height: 330 } });
   await page.click('#detail-screen #tabbar-home'); await page.waitForTimeout(400);
 

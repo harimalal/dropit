@@ -57,6 +57,18 @@
     --proj-emeraude-rgb:39,165,113;   --proj-sarcelle-rgb:38,161,161; --proj-azur-rgb:65,150,210;
     --proj-indigo-rgb:77,65,210;      --proj-mure-rgb:174,65,210;
 
+    /* Glyphe des icônes de projet sur surface claire : la teinte pleine assombrie (x 0,55). Le rond
+       d'icône n'étant qu'à 40 % d'opacité, un glyphe blanc n'y atteindrait que 1,6 à 2,3:1 ; celui-ci
+       donne au moins 4,8:1 (calcul dans le README du livrable). À garder aligné sur les solides. */
+    --proj-terracotta-ink:#743324; --proj-corail-ink:#742438; --proj-ambre-ink:#6D4A1A; --proj-emeraude-ink:#155B3E;
+    --proj-sarcelle-ink:#155959; --proj-azur-ink:#245274; --proj-indigo-ink:#2A2474; --proj-mure-ink:#602474;
+
+    /* Glyphe coloré des icônes de projet dans les fenêtres autres que l'accueil : la teinte
+       pleine assombrie de 25 % (x 0,75). Sur le rond pâle (18 %), 4,2:1 au pire des 8 teintes,
+       alors que la teinte pleine non assombrie n'y donnerait que 2,4:1 (ambre). */
+    --proj-terracotta-strong:#9E4531; --proj-corail-strong:#9E314C; --proj-ambre-strong:#946523; --proj-emeraude-strong:#1D7C55;
+    --proj-sarcelle-strong:#1C7979; --proj-azur-strong:#31709E; --proj-indigo-strong:#3A319E; --proj-mure-strong:#82319E;
+
     /* Badge "effet verre" — voile translucide (alpha 0.40) + reflet en dégradé, SANS backdrop-filter
        (le flou d'arrière-plan produisait un halo gris-beige aux coins arrondis — bug de rendu connu).
        Abaissé de 0.55 à 0.40 : sur une tuile photo le voile trop dense écrasait le texte blanc
@@ -169,42 +181,52 @@
   }
   .tile-scrim{
     position:absolute;inset:0;border-radius:16px;pointer-events:none;z-index:0;
-    background:linear-gradient(180deg, rgba(20,14,10,0) 42%, rgba(20,14,10,.6) 100%);
+    background:
+      radial-gradient(circle var(--halo-r,0px) at calc(100% - var(--halo-cx,-999px)) var(--halo-cy,-999px), rgba(20,14,10,.24) 45%, rgba(20,14,10,0) 100%),
+      linear-gradient(180deg, rgba(20,14,10,0) 42%, rgba(20,14,10,.6) 100%);
   }
   .tile.has-photo .tile-body{align-items:flex-start;justify-content:flex-end;text-align:left;}
-  /* Overlay du titre sur photo : un dégradé de la couleur du projet, dense à gauche derrière le
-     texte et qui s'estompe vers la droite (là où le padding déborde du texte), plutôt qu'un
-     rectangle uniforme. Un second dégradé sombre, très léger, est posé dessous : il assure le
-     contraste du texte blanc quelle que soit la teinte (ambre, émeraude…) et même sur une
-     photo claire (voir le calcul dans le README du livrable : au moins 5:1 sur les 8 teintes,
-     dans le pire cas d'une photo entièrement blanche sous le voile sombre du bas de la tuile). Coins de 7 px
-     à gauche seulement : le bord droit se fond dans la photo, il n'y a plus de capsule.
+  /* Overlay du titre sur photo : un aplat uni (aucun dégradé) de la teinte du projet, à 22 %
+     d'opacité, dans un rectangle aux coins arrondis de 10 px. C'est la puce d'origine, revenue
+     après l'essai en dégradé, mais beaucoup plus transparente (40 % avant) et sans son reflet
+     de verre : ce reflet éclaircissait le fond derrière le texte blanc, et l'ancienne version
+     tombait à 1,4-2,1:1 au pire. Contraste du texte blanc, au pire des 8 teintes : 5,4:1 sur une
+     photo grise, 9,7:1 sur une photo sombre (calcul dans le README du livrable) ; seule une photo
+     entièrement blanche, cas irréaliste, reste faible (2,2:1). Ombre de texte légère.
      Aucun padding vertical, la respiration vient de line-height : avec un padding haut/bas,
      -webkit-line-clamp coupe au bord de la boîte de padding et laisse dépasser une lichette de
      la ligne suivante. */
   .tile.has-photo .tile-title{
     position:relative;z-index:1;color:#fff;
-    padding:0 28px 0 8px;line-height:1.55;border-radius:7px 0 0 7px;
-    background:
-      linear-gradient(90deg, rgba(var(--tile-rgb),.85) 0%, rgba(var(--tile-rgb),.65) 55%, rgba(var(--tile-rgb),0) 100%),
-      linear-gradient(90deg, rgba(20,14,10,.42) 0%, rgba(20,14,10,.34) 55%, rgba(20,14,10,0) 100%);
+    padding:0 8px;line-height:1.55;border-radius:var(--radius-sm);
+    background:rgba(var(--tile-rgb),.22);
     width:fit-content;max-width:100%;box-decoration-break:clone;-webkit-box-decoration-break:clone;
-    text-shadow:0 1px 2px rgba(20,14,10,.25);
+    text-shadow:0 1px 2px rgba(20,14,10,.35);
   }
-  /* Icône plate dans un rond à la couleur du projet, glyphe blanc (voir projectIconHtml). Le
-     diamètre est posé en ligne, proportionnel à la taille de la tuile. Sur une photo, un mince
-     liseré blanc la détache du fond, sans ombre. */
+  /* Icône plate d'un projet, sans contour ni ombre. Style par défaut = fenêtres autres que
+     l'accueil (liste, filtres, fenêtre projet) : rond pâle (18 % de la teinte du projet) et glyphe
+     coloré et gras — 66 % du rond, teinte assombrie de 25 %, plus un contour de même couleur qui
+     épaissit ce tracé plein. Diamètre posé en ligne. Les tuiles de l'accueil ont leur propre
+     style, plus bas (rond à 40 %, proportionnel à la tuile). */
   .picon{
     width:var(--picon-box,32px);height:var(--picon-box,32px);flex-shrink:0;border-radius:50%;
-    background:var(--picon-bg,var(--accent));
+    background:rgba(var(--picon-rgb,176,78,56),.18);
     display:inline-flex;align-items:center;justify-content:center;
   }
-  .picon svg{width:58%;height:58%;fill:#fff;}
-  .tile .picon{margin-bottom:0;}
-  .tile.has-photo .picon{
-    position:absolute;top:8px;right:8px;z-index:2;
-    box-shadow:0 0 0 2px rgba(255,255,255,.9);
+  .picon svg{
+    width:66%;height:66%;
+    fill:var(--picon-strong,#8a3b2b);stroke:var(--picon-strong,#8a3b2b);stroke-width:1;stroke-linejoin:round;
   }
+  /* Tuiles de l'accueil : rond à 40 % d'opacité (60 % de transparence), glyphe en teinte foncée
+     du projet — un glyphe blanc sur un rond aussi léger n'y serait pas lisible sur les cartes
+     claires (1,6 à 2,3:1). Diamètre proportionnel à la taille de la tuile. */
+  .tile .picon{background:rgba(var(--picon-rgb,176,78,56),.40);margin-bottom:0;}
+  .tile .picon svg{width:58%;height:58%;fill:var(--picon-ink,#5a2a1e);stroke:none;}
+  /* Sur une photo : glyphe blanc, et un voile sombre très doux, centré sous l'icône (dans
+     .tile-scrim, voir --halo-*), pour que le rond à 40 % reste lisible sur une photo claire
+     sans contour ni ombre visible. Calcul de contraste dans le README du livrable. */
+  .tile.has-photo .picon{position:absolute;top:var(--picon-off,8px);right:var(--picon-off,8px);z-index:2;}
+  .tile.has-photo .picon svg{fill:#fff;stroke:none;}
   .tile-title{font-weight:700;letter-spacing:-0.01em;line-height:1.25;color:var(--ink);margin-top:8px;
     display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
     width:100%;word-break:break-word;overflow-wrap:break-word;
@@ -249,8 +271,6 @@
   .tile.size-flat .tile-body{padding:8px;}
   .tile.size-flat .tile-title{margin-top:4px;}
   .tile.size-flat .tile-progress{margin-top:4px;}
-  .tile.size-flat.has-photo .picon{top:6px;right:6px;}
-  .tile.size-tiny.has-photo .picon{top:5px;right:5px;}
   .tile.has-photo .tile-title{margin-top:0;}
 
   .empty-state{
@@ -2489,7 +2509,9 @@
       btn:       "var(--proj-"+name+"-btn)",
       next:      "var(--proj-"+name+"-next)",
       glass:     "var(--proj-"+name+"-glass)",
-      rgb:       "var(--proj-"+name+"-rgb)"
+      rgb:       "var(--proj-"+name+"-rgb)",
+      ink:       "var(--proj-"+name+"-ink)",
+      strong:    "var(--proj-"+name+"-strong)"
     };
   }
   function escapeHtml(s){
@@ -2595,14 +2617,14 @@
   // Rond plein à la couleur du projet, glyphe blanc. `box` = diamètre en px.
   function projectIconHtml(p, box, extraClass){
     var key = projectIconKey(p);
-    return '<span class="picon'+(extraClass ? ' '+extraClass : '')+'" style="--picon-box:'+box+'px;--picon-bg:'+projectColorVars(p.id).solid+';" '+
+    return '<span class="picon'+(extraClass ? ' '+extraClass : '')+'" style="--picon-box:'+box+'px;--picon-rgb:'+projectColorVars(p.id).rgb+';--picon-ink:'+projectColorVars(p.id).ink+';--picon-strong:'+projectColorVars(p.id).strong+';" '+
       'aria-hidden="true"><svg viewBox="0 0 24 24"><path d="'+ICON_CATALOG[key].path+'"/></svg></span>';
   }
   // Glyphe seul, à la couleur du projet, pour les pastilles minuscules du calendrier (14 px) où
   // un rond plein masquerait l'anneau de progression qu'elles portent.
   function projectGlyphHtml(p, px){
     var key = projectIconKey(p);
-    return '<svg class="pglyph" viewBox="0 0 24 24" style="width:'+px+'px;height:'+px+'px;fill:'+projectColorVars(p.id).solid+';" aria-hidden="true"><path d="'+ICON_CATALOG[key].path+'"/></svg>';
+    return '<svg class="pglyph" viewBox="0 0 24 24" style="width:'+px+'px;height:'+px+'px;fill:'+projectColorVars(p.id).strong+';stroke:'+projectColorVars(p.id).strong+';stroke-width:1;stroke-linejoin:round;" aria-hidden="true"><path d="'+ICON_CATALOG[key].path+'"/></svg>';
   }
   function iconCatalogForPrompt(){ return Object.keys(ICON_CATALOG).join(", "); }
 
@@ -3350,6 +3372,17 @@
   // Nombre de lignes du titre selon la place en hauteur : 1 sur les tuiles minuscules et sur les
   // tuiles basses (moins de 108 px), 2 dès que la hauteur le permet. Partagé par le calcul de la
   // police et par la coupure CSS (-webkit-line-clamp posé en ligne) pour qu'ils restent d'accord.
+  // Diamètre du rond d'icône d'une tuile : proportionnel à sa taille (le plus petit des deux
+  // côtés), et non plus par paliers. 34 % du petit côté quand l'icône est le visuel principal,
+  // 24 % quand c'est un badge de coin sur une photo ; bornes pour rester lisible sur les
+  // petites tuiles et tenir dans la hauteur sur les tuiles basses. Le glyphe occupe 58 % du rond.
+  function iconBoxFor(w,h,hasPhoto,cls){
+    var compact = cls === "size-tiny" || cls === "size-flat";
+    var k = hasPhoto ? 0.24 : 0.34;
+    var lo = compact ? 22 : (hasPhoto ? 20 : 26);
+    var hi = compact ? 34 : (hasPhoto ? 38 : 52);
+    return Math.max(lo, Math.min(hi, Math.round(Math.min(w,h) * k)));
+  }
   function titleMaxLinesFor(w,h){
     var cls = sizeClassFor(w,h);
     if(cls === "size-tiny") return 1;
@@ -3380,9 +3413,8 @@
       // .tile.has-photo .tile-title) — absent sans photo, donc compté seulement si la
       // tuile en a une (sinon on rétrécit le texte pour rien).
       var bodyPadding = isTiny ? 8 : 14;
-      // Overlay du titre : 8 px à gauche + 28 px à droite (zone où le dégradé s'estompe), soit
-      // 18 px par côté en moyenne.
-      var chipPadding = hasPhoto ? 18 : 0;
+      // Puce du titre sur photo : 8 px de chaque côté (.tile.has-photo .tile-title).
+      var chipPadding = hasPhoto ? 8 : 0;
       var padding = bodyPadding + chipPadding;
       var availableWidth = Math.max(20, w - padding*2);
       while(fs > 8 && linesNeededAt(text, fs, availableWidth) > maxLines){
@@ -3897,13 +3929,16 @@
       var pc = projectColorVars(p.id);
       var doneClass = status === "accompli" ? " is-done" : "";
       var photoClass = hasPhoto ? " has-photo" : "";
-      // Diamètre du rond d'icône, proportionnel à la tuile (le glyphe en occupe 58 %).
-      var compact = sizeClass === 'size-tiny' || sizeClass === 'size-flat';
-      var iconBox = hasPhoto ? (sizeClass==='size-tiny'?20:(compact?22:28)) : (sizeClass==='size-tiny'?28:(compact?30:42));
+      var iconBox = iconBoxFor(w, h, hasPhoto, sizeClass);
+      // Icône sur photo : décalée du coin, et son voile doux centré dessus (voir .tile-scrim).
+      var iconOff = sizeClass === 'size-tiny' ? 5 : (sizeClass === 'size-flat' ? 6 : 8);
+      var haloVars = hasPhoto
+        ? '--picon-off:'+iconOff+'px;--halo-cx:'+(iconOff + iconBox/2)+'px;--halo-cy:'+(iconOff + iconBox/2)+'px;--halo-r:'+Math.round(iconBox*0.95 + 8)+'px;'
+        : '';
       return ''+
       '<div class="tile '+sizeClass+doneClass+photoClass+'" data-project-id="'+p.id+'" '+
         'style="left:'+x+'px;top:'+y+'px;width:'+w+'px;height:'+h+'px;'+
-          '--tile-card-bg:'+pc.card+';--tile-badge-glass:'+pc.glass+';--tile-rgb:'+pc.rgb+';" '+
+          '--tile-card-bg:'+pc.card+';--tile-badge-glass:'+pc.glass+';--tile-rgb:'+pc.rgb+';'+haloVars+'" '+
         'role="button" tabindex="0">'+
         '<div class="tile-body">'+
           (hasPhoto ? '<div class="tile-photo"></div><div class="tile-scrim"></div>' : '')+

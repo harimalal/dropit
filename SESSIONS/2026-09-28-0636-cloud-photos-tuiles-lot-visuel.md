@@ -105,3 +105,8 @@ Voir `MISSIONS/2026-09-08-vision-engagement-identite/livrables/2026-09-28-icones
 - **Icônes plates** : catalogue de 83 icônes Material Design Icons (Apache 2.0), champ `icon` sur le projet, emoji conservé mais non affiché, choix par l'IA à la création et pour les emojis inconnus.
 - **Deux défauts trouvés en vérifiant** : mots de titre coupés au milieu (ma propre simulation les jugeait acceptables) et icône rognée sur les tuiles basses (antérieur, dû à la barre de progression).
 - **À surveiller** : premiers rendus sur de vraies photos, et projets dont l'icône ne trouve pas d'équivalent proche dans les 83.
+
+### Ajustements d'icônes et d'overlay (2026-09-29)
+
+Le dégradé et le rond plein livrés juste avant ont été remplacés sur demande : icônes de tuile à 40 % sans liseré et proportionnelles à la tuile ; overlay des titres à 22 %, uni, sans dégradé ; icônes des autres fenêtres en fond pâle (18 %) avec glyphe coloré gras. Détail, contrastes et résultats de vérification : README du livrable `2026-09-28-icones-plates-overlay-titres`. Bash a refusé plusieurs commandes (« classifier sans verdict ») pendant la vérification ; elles ont été relancées telles quelles ou découpées, sans autre contournement.
+- **À surveiller** : vraies photos claires (icône et titre moins contrastés) ; le voile sombre sous l'icône se voit comme une tache douce sur les photos très claires.
