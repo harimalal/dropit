@@ -2644,8 +2644,15 @@
 
   // https seulement : l'URL finit dans un background-image, et cette fonction relit aussi des
   // photos gardées dans le navigateur (voir rejeu des photos non enregistrées).
+  // Seules les URL servies par Pexels sont acceptées. Avant, tout https:// passait : une URL
+  // arbitraire stockée dans l'état d'un compte se serait chargée telle quelle en fond de tuile
+  // (requête vers un tiers à chaque affichage). On autorise tout sous-domaine pexels.com plutôt
+  // que le seul images.pexels.com d'aujourd'hui : un changement de CDN côté Pexels ferait sinon
+  // disparaître toutes les photos déjà enregistrées, et je ne peux pas joindre Pexels d'ici
+  // pour vérifier que l'hôte ne bougera pas.
+  var PHOTO_URL_OK = /^https:\/\/[a-z0-9-]+\.pexels\.com\//i;
   function normalizePhoto(raw){
-    if(!raw || typeof raw.url !== "string" || !/^https:\/\//.test(raw.url)) return null;
+    if(!raw || typeof raw.url !== "string" || !PHOTO_URL_OK.test(raw.url)) return null;
     return {
       url: raw.url,
       photographer: raw.photographer || "",
@@ -4050,7 +4057,8 @@
       var p = r.item.project;
       if(!p.photo || !p.photo.url) return;
       var photoLayer = zone.querySelector('[data-project-id="'+p.id+'"] .tile-photo');
-      if(photoLayer) photoLayer.style.backgroundImage = "url('" + p.photo.url + "')";
+      // encodeURI : une apostrophe ou une parenthèse dans l'URL casserait la déclaration CSS.
+      if(photoLayer) photoLayer.style.backgroundImage = "url('" + encodeURI(p.photo.url) + "')";
     });
 
     zone.querySelectorAll("[data-project-id]").forEach(function(el){

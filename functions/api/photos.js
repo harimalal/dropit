@@ -133,8 +133,15 @@ export async function onRequestGet(context) {
     return json({ error: "no_results" }, 404);
   }
 
+  // L'URL ne sort d'ici que si elle vient bien de Pexels : le client applique la même règle
+  // (PHOTO_URL_OK dans app.html), autant ne jamais lui envoyer ce qu'il rejettera.
+  const src = (photo.src && (photo.src.large2x || photo.src.large)) || null;
+  if (!src || !/^https:\/\/[a-z0-9-]+\.pexels\.com\//i.test(src)) {
+    return json({ error: "no_results" }, 404);
+  }
+
   return json({
-    url: (photo.src && (photo.src.large2x || photo.src.large)) || null,
+    url: src,
     photographer: photo.photographer || "",
     photographerUrl: photo.photographer_url || "",
     pexelsId: photo.id,
