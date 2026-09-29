@@ -96,3 +96,12 @@ Voir `MISSIONS/2026-09-08-vision-engagement-identite/livrables/2026-09-28-echec-
 ### Retour sur la sélection de photos (fin de soirée)
 
 Après déploiement, l'utilisateur constate que la sélection « n'a rien à voir avec le projet », veut que l'icône et le titre soient seuls pris en compte, puis « wallpaper seulement ». Cause en partie de mon fait : le classement « fond d'écran » de la mise en ligne précédente donnait des points aux mots paysagers et faisait passer un paysage devant une photo du projet (rejoué sur l'ancien code : oui). Trois autres causes plus anciennes (titre français brut au rattrapage, mots génériques du domaine noyant le sujet, requête issue de l'intention complète). Refonte : un chemin unique titre + icône → sujet anglais → requête Pexels, et un serveur strict (fond d'écran ET sujet ET sans visage). Détail dans le README du livrable. **Risque ouvert** : jamais testé contre le vrai Pexels ; le filtre strict peut laisser des tuiles sans photo.
+
+### Icônes plates et overlay des titres (fin de session)
+
+Voir `MISSIONS/2026-09-08-vision-engagement-identite/livrables/2026-09-28-icones-plates-overlay-titres/README.md`.
+
+- **Overlay** en dégradé de la couleur du projet, dense derrière le texte, bords peu arrondis, ombre légère ; contraste calculé sur les 8 teintes (5,06:1 au pire). J'avais d'abord affirmé 5:1 avant de l'avoir calculé : le calcul a donné 3,5:1 puis 4,47:1, j'ai renforcé la couche sombre et corrigé la doc.
+- **Icônes plates** : catalogue de 83 icônes Material Design Icons (Apache 2.0), champ `icon` sur le projet, emoji conservé mais non affiché, choix par l'IA à la création et pour les emojis inconnus.
+- **Deux défauts trouvés en vérifiant** : mots de titre coupés au milieu (ma propre simulation les jugeait acceptables) et icône rognée sur les tuiles basses (antérieur, dû à la barre de progression).
+- **À surveiller** : premiers rendus sur de vraies photos, et projets dont l'icône ne trouve pas d'équivalent proche dans les 83.
