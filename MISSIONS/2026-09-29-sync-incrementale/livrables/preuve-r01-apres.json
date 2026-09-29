@@ -1,0 +1,74 @@
+[
+ {
+  "nom": "GET en 429 (limite de débit)",
+  "apresPanne": {
+   "titresEnBase": [
+    "Mon vrai projet X",
+    "Mon vrai projet Y"
+   ],
+   "envoisPost": 0,
+   "tuilesVisibles": [],
+   "ecranAffiche": {
+    "bouton": true,
+    "titre": "Impossible de charger tes projets"
+   }
+  },
+  "apresReprise": {
+   "tuiles": [
+    "Mon vrai projet X",
+    "Mon vrai projet Y"
+   ],
+   "postsTotal": 0
+  },
+  "comptePerdu": false,
+  "erreursJS": []
+ },
+ {
+  "nom": "GET en 500",
+  "apresPanne": {
+   "titresEnBase": [
+    "Mon vrai projet X",
+    "Mon vrai projet Y"
+   ],
+   "envoisPost": 0,
+   "tuilesVisibles": [],
+   "ecranAffiche": {
+    "bouton": true,
+    "titre": "Impossible de charger tes projets"
+   }
+  },
+  "apresReprise": {
+   "tuiles": [
+    "Mon vrai projet X",
+    "Mon vrai projet Y"
+   ],
+   "postsTotal": 0
+  },
+  "comptePerdu": false,
+  "erreursJS": []
+ },
+ {
+  "nom": "réseau coupé",
+  "apresPanne": {
+   "titresEnBase": [
+    "Mon vrai projet X",
+    "Mon vrai projet Y"
+   ],
+   "envoisPost": 0,
+   "tuilesVisibles": [],
+   "ecranAffiche": {
+    "bouton": true,
+    "titre": "Impossible de charger tes projets"
+   }
+  },
+  "apresReprise": {
+   "tuiles": [
+    "Mon vrai projet X",
+    "Mon vrai projet Y"
+   ],
+   "postsTotal": 0
+  },
+  "comptePerdu": false,
+  "erreursJS": []
+ }
+]

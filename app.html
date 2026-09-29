@@ -1280,6 +1280,10 @@
   .account-email{font-size:14.5px;font-weight:700;color:var(--ink);word-break:break-all;}
   .account-meta{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);margin-top:3px;}
   .account-actions{margin-top:18px;display:flex;flex-direction:column;gap:8px;}
+  .load-error{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 24px;text-align:center;background:var(--canvas);}
+  .load-error-box{max-width:320px;}
+  .load-error h1{font-size:19px;font-weight:800;margin:0 0 8px;color:var(--ink);}
+  .load-error p{font-size:14px;color:var(--ink-soft);line-height:1.5;margin:0 0 22px;}
 
   /* MENU PROJET (renommer / objectif / échéance / supprimer) */
   .project-menu-box{
@@ -2351,6 +2355,8 @@
     }
     saveSession(null);
     state = {projects: [], dropZone: []};
+    syncSnap = null; lastSavedStateJson = null;
+    chargementReussi = false; loadError = false; loadFailures = 0; clearTimeout(loadRetryTimer);
     currentProjectId = null; expandedCategoryId = null;
     taskListOpen = false; accountSheetOpen = false; projectMenuOpen = false;
     chatState = {}; tlSelectedProjects = []; tlScopedToProject = false;
@@ -3017,23 +3023,37 @@
   var lastKnownUpdatedAt = null;
 
   function load(){
+    clearTimeout(loadRetryTimer);
     return apiFetch("/api/projects")
-      .then(function(res){ return res.json(); })
+      .then(function(res){
+        // Une réponse d'erreur (429, 500…) n'a pas de `data` : sans ce contrôle elle passait pour un
+        // compte neuf (R-01).
+        if(!res.ok){ var e = new Error("load-failed"); e.status = res.status; throw e; }
+        return res.json();
+      })
       .then(function(json){
+        if(!json || typeof json !== "object" || !("data" in json)) throw new Error("load-failed");
         var parsed = json.data || {};
         var dropZone = Array.isArray(parsed.dropZone) ? parsed.dropZone.map(normalizeDropItem) : [];
         var fresh = !(parsed.projects && parsed.projects.length > 0);
         lastKnownUpdatedAt = json.updatedAt || null;
         if(fresh){
           state = defaultData();
+          syncSnap = null;              // rien côté serveur : le premier envoi est l'état complet
           persist();
         } else {
           state = {projects: parsed.projects.map(normalizeProject), dropZone: dropZone};
+          // Ce que le serveur détient, projet par projet : sert à n'envoyer ensuite que les changements.
+          syncSnap = snapshotFromServer(parsed.projects, state.projects, state.dropZone);
           // Une photo changée pendant une panne de sauvegarde, puis page rechargée ou compte
           // reconnecté : elle attendait dans le navigateur, on la remet et on la sauvegarde.
           if(replayPendingPhotos()) persist();
         }
+        // État et instantané construits : la sauvegarde peut s'ouvrir.
+        chargementReussi = true; loadFailures = 0;
+        var etaitEnErreur = loadError; loadError = false;
         render();
+        if(etaitEnErreur) showToast("Tes projets sont de retour");
         if(json.migrated) showToast("Tes projets ont été rattachés à ton compte");
         // Le parcours d'arrivée ne peut démarrer qu'ici : il faut savoir si le
         // compte est neuf, et l'appel est asynchrone.
@@ -3041,11 +3061,32 @@
       })
       .catch(function(err){
         if(err && err.message === "unauthorized") return; // signOut a déjà pris la main
-        state = defaultData();
+        // JAMAIS d'exemples à la place du compte, et rien n'est sauvegardé (voir chargementReussi).
+        chargementReussi = false;
+        loadError = true;
+        loadFailures++;
         render();
-        showOnboardingIfNeeded();
-        showToast("Chargement impossible — données locales affichées");
+        scheduleLoadRetry();
       });
+  }
+
+  function scheduleLoadRetry(){
+    clearTimeout(loadRetryTimer);
+    var delai = LOAD_RETRY_DELAYS[Math.min(loadFailures - 1, LOAD_RETRY_DELAYS.length - 1)];
+    loadRetryTimer = setTimeout(function(){ load(); }, delai);
+  }
+
+  function renderLoadError(){
+    var app = document.getElementById("app");
+    app.innerHTML =
+      '<div class="load-error" role="alert"><div class="load-error-box">'+
+        '<h1>Impossible de charger tes projets</h1>'+
+        '<p>Rien n\'a été modifié ni effacé. Nous réessayons automatiquement.</p>'+
+        '<button class="btn btn-primary" id="load-retry-btn">Réessayer</button>'+
+      '</div></div>'+
+      '<div class="toast" id="toast"></div>';
+    var b = document.getElementById("load-retry-btn");
+    if(b) b.addEventListener("click", function(){ load(); });
   }
 
   var saveTimer = null;
@@ -3081,6 +3122,25 @@
   var saveSizeWarned = false;  // l'alerte de taille n'est montrée qu'une fois par session
   var saveBlockedReason = null; // refus définitif du serveur : message persistant, voir updateSaveBanner
   var lastSavedStateJson = null; // dernier état confirmé par le serveur, pour ne pas renvoyer l'identique
+  // Instantané de ce que le serveur a confirmé, projet par projet : { projects: {id: {json, base}}, drop: {id:true} }.
+  //  json = le projet tel que le client le connaissait (pour détecter ce qui a changé) ;
+  //  base = empreinte du projet tel que le SERVEUR le détient (pour que le serveur détecte un conflit).
+  // null = pas encore établi (compte neuf, ou ids douteux) : la sauvegarde envoie alors l'état complet.
+  var syncSnap = null;
+  // R-01 : tant que le compte n'a pas été lu AVEC SUCCÈS, rien n'est sauvegardé. Un état local qui ne
+  // vient pas du serveur (données d'exemple, écran vide) écraserait le vrai compte : avant ce
+  // garde-fou, une simple réponse 429 ou 500 au chargement remplaçait tous les projets par les
+  // exemples (preuve : MISSIONS/2026-09-29-sync-incrementale/livrables/preuve-r01-avant.json).
+  // Levé à la TOUTE FIN du chargement, jamais avant : une exception en cours de route laisserait
+  // sinon la sauvegarde ouverte sur un état à moitié construit.
+  var chargementReussi = false;
+  var loadError = false;          // vrai : on affiche l'écran « Réessayer » à la place de l'app
+  var loadFailures = 0;
+  var loadRetryTimer = null;
+  var LOAD_RETRY_DELAYS = [2000, 5000, 15000, 30000];
+  // Vrai si le serveur ne comprend pas le delta (ancien déploiement, ou delta refusé) : repli sur
+  // l'état complet pour le reste de la session, plutôt que de laisser des données non enregistrées.
+  var deltaUnsupported = false;
 
   function utf8Length(str){
     try{ return new TextEncoder().encode(str).length; }catch(e){ return str.length * 3; }
@@ -3187,17 +3247,195 @@
     showToast("Tes projets occupent beaucoup de place — pense à en archiver quelques-uns");
   }
 
+  /* ---------- synchronisation incrémentale ---------- */
+  // Voir MISSIONS/2026-09-29-sync-incrementale/CADRAGE.md.
+  //
+  // ATTENTION : stable / cyrb53 / empreinte sont copiés de functions/_lib/merge.js et DOIVENT rester
+  // identiques au caractère près. Sinon chaque projet paraît modifié des deux côtés et tout devient
+  // un faux conflit. Vérifié par livrables/test-parite-empreinte.mjs, qui compare les deux copies.
+  function stable(v) {
+    if (v === null || typeof v !== "object") return JSON.stringify(v);
+    if (Array.isArray(v)) return "[" + v.map(stable).join(",") + "]";
+    return "{" + Object.keys(v).filter(function (k) { return v[k] !== undefined; }).sort()
+      .map(function (k) { return JSON.stringify(k) + ":" + stable(v[k]); }).join(",") + "}";
+  }
+  function cyrb53(str) {
+    var h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (var i = 0, ch; i < str.length; i++) {
+      ch = str.charCodeAt(i);
+      h1 = Math.imul(h1 ^ ch, 2654435761);
+      h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507); h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507); h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+  }
+  function empreinte(objet) {
+    return cyrb53(stable(objet)).toString(36);
+  }
+
+  // Instantané depuis des données que le SERVEUR vient de fournir (chargement, ou remplacement après
+  // un conflit d'état complet). `bruts` : projets tels que reçus ; `normes` : les mêmes, normalisés,
+  // dans le même ordre. Renvoie null si un id manque ou se répète : un projet sans id stable ne peut
+  // pas être suivi par le serveur, et le delta le dupliquerait. On retombe alors sur l'état complet,
+  // qui remplace la liste entière et fixe les ids.
+  function snapshotFromServer(bruts, normes, dropZone){
+    var snap = {projects: {}, drop: {}};
+    for(var i = 0; i < bruts.length; i++){
+      var id = bruts[i] && bruts[i].id;
+      if(typeof id !== "string" || !id || snap.projects[id]) return null;
+      snap.projects[id] = {json: JSON.stringify(normes[i]), base: empreinte(bruts[i])};
+    }
+    (dropZone || []).forEach(function(d){ snap.drop[d.id] = true; });
+    return snap;
+  }
+  // Instantané de l'état local tel qu'il est ENVOYÉ. À prendre à l'envoi et non à la réponse : une
+  // modification faite pendant que la requête est en vol serait sinon tenue pour confirmée, alors
+  // qu'elle n'est jamais partie.
+  function snapshotFromState(){
+    var snap = {projects: {}, drop: {}};
+    state.projects.forEach(function(p){
+      var json = JSON.stringify(p);
+      snap.projects[p.id] = {json: json, base: empreinte(JSON.parse(json))};
+    });
+    state.dropZone.forEach(function(d){ snap.drop[d.id] = true; });
+    return snap;
+  }
+
+  // Ce qui a changé depuis l'instantané confirmé. `vide` : rien à envoyer.
+  function buildSyncDelta(){
+    var upserts = [], deletes = [], present = {}, total = 0;
+    state.projects.forEach(function(p){
+      var json = JSON.stringify(p);
+      total += json.length; present[p.id] = true;
+      var s = syncSnap.projects[p.id];
+      if(!s) upserts.push({project: p, json: json, base: null});
+      else if(s.json !== json) upserts.push({project: p, json: json, base: s.base});
+    });
+    Object.keys(syncSnap.projects).forEach(function(id){
+      if(!present[id]) deletes.push({id: id, base: syncSnap.projects[id].base});
+    });
+    var dropIds = {}, dropAdds = [], dropDeletes = [];
+    state.dropZone.forEach(function(d){ dropIds[d.id] = true; if(!syncSnap.drop[d.id]) dropAdds.push(d); });
+    Object.keys(syncSnap.drop).forEach(function(id){ if(!dropIds[id]) dropDeletes.push(id); });
+    var vide = !upserts.length && !deletes.length && !dropAdds.length && !dropDeletes.length;
+    var payload = vide ? "" :
+      '{"v":1,"upserts":[' + upserts.map(function(u){ return '{"project":' + u.json + ',"base":' + JSON.stringify(u.base) + '}'; }).join(",") +
+      '],"deletes":' + JSON.stringify(deletes) + ',"dropAdds":' + JSON.stringify(dropAdds) + ',"dropDeletes":' + JSON.stringify(dropDeletes) + '}';
+    return {upserts: upserts, deletes: deletes, dropAdds: dropAdds, dropDeletes: dropDeletes, vide: vide, payload: payload, totalBytes: total};
+  }
+
+  // Copie d'un projet sous de nouveaux identifiants (projet, catégories, tâches, notes) : une copie
+  // qui partagerait les ids de l'original mélangerait les deux dans tout ce qui cherche par id.
+  function copieLocale(p){
+    var c = JSON.parse(JSON.stringify(p)), cats = {};
+    c.id = uid();
+    c.title = String(p.title || "Projet").slice(0, 44) + " (copie locale)";
+    c.updatedAt = nowIso();
+    (c.categories || []).forEach(function(cat){
+      var ancien = cat.id; cat.id = uid(); cats[ancien] = cat.id;
+      (cat.items || []).forEach(function(it){ it.id = uid(); (it.notes || []).forEach(function(n){ n.id = uid(); }); });
+      (cat.catNotes || []).forEach(function(n){ n.id = uid(); });
+    });
+    (c.projectNotes || []).forEach(function(n){ n.id = uid(); if(n.catId) n.catId = cats[n.catId] || null; });
+    return c;
+  }
+
+  // Le serveur a appliqué ce qui pouvait l'être et renvoyé le reste en conflit. Rien n'est jamais
+  // perdu en silence : une modification locale écartée est gardée en copie, une suppression refusée
+  // est annulée, un projet supprimé ailleurs mais modifié ici est restauré. Renvoie vrai s'il reste
+  // des changements locaux à envoyer (copies, restaurations).
+  function resoudreConflits(conflits, delta){
+    var messages = [], aEnvoyer = false;
+    conflits.forEach(function(c){
+      var suppression = delta.deletes.some(function(d){ return d.id === c.id; });
+      var idx = -1;
+      state.projects.forEach(function(p, i){ if(p.id === c.id) idx = i; });
+      if(c.kind === "deleted-remote" || !c.server){
+        delete syncSnap.projects[c.id];
+        // Supprimé ici pendant l'envoi ET supprimé ailleurs : rien à restaurer, les deux côtés sont d'accord.
+        if(idx < 0) return;
+        // Supprimé ailleurs, modifié ici : on garde la version locale, envoyée comme nouveau projet.
+        aEnvoyer = true;
+        messages.push("« " + state.projects[idx].title + " » avait été supprimé sur un autre appareil : il est restauré");
+        return;
+      }
+      var serveur = normalizeProject(c.server);
+      var titre = (idx >= 0 && state.projects[idx].title) || serveur.title;
+      if(!suppression && idx < 0){
+        // Modifié ailleurs, mais supprimé ici pendant l'envoi : la suppression locale reste à envoyer,
+        // désormais contre la copie fraîche du serveur (le serveur la refusera si elle a encore changé).
+        syncSnap.projects[serveur.id] = {json: JSON.stringify(serveur), base: empreinte(c.server)};
+        aEnvoyer = true;
+        return;
+      }
+      if(suppression){
+        state.projects.push(serveur);                       // modifié ailleurs : la suppression est annulée
+        messages.push("« " + titre + " » a été modifié sur un autre appareil : suppression annulée");
+      } else {
+        var local = state.projects[idx];
+        state.projects[idx] = serveur;                      // la version la plus récente du serveur l'emporte…
+        if(state.projects.length < MAX_PROJECTS_CLIENT){
+          state.projects.push(copieLocale(local));          // …et la tienne est gardée en copie
+          aEnvoyer = true;
+          messages.push("« " + titre + " » a été modifié sur un autre appareil : ta version est gardée en copie");
+        } else {
+          messages.push("« " + titre + " » a été modifié sur un autre appareil : limite de projets atteinte, ta version n'a pas pu être gardée");
+        }
+      }
+      syncSnap.projects[serveur.id] = {json: JSON.stringify(serveur), base: empreinte(c.server)};
+    });
+    if(messages.length){
+      render();
+      showToast(messages.length === 1 ? messages[0] : messages.length + " projets modifiés sur un autre appareil : tes versions sont gardées en copie");
+    }
+    return aEnvoyer;
+  }
+
+  // Enregistre dans l'instantané ce que le serveur a réellement appliqué (tout sauf les conflits).
+  function confirmerDelta(delta, conflits, sentPhotos){
+    if(!syncSnap) return false;
+    var enConflit = {};
+    conflits.forEach(function(c){ enConflit[c.id] = true; });
+    delta.upserts.forEach(function(u){
+      if(enConflit[u.project.id]) return;
+      syncSnap.projects[u.project.id] = {json: u.json, base: empreinte(JSON.parse(u.json))};
+    });
+    delta.deletes.forEach(function(d){ if(!enConflit[d.id]) delete syncSnap.projects[d.id]; });
+    delta.dropAdds.forEach(function(a){ syncSnap.drop[a.id] = true; });
+    delta.dropDeletes.forEach(function(id){ delete syncSnap.drop[id]; });
+    // Une photo dont le projet est en conflit n'est pas confirmée : elle reste en attente.
+    Object.keys(enConflit).forEach(function(id){ delete sentPhotos[id]; });
+    return conflits.length ? resoudreConflits(conflits, delta) : false;
+  }
+
   function sendSaveNow(attempt, unloading){
     attempt = attempt || 0;
+    // R-01 : rien n'est envoyé tant que le compte n'a pas été lu avec succès.
+    if(!chargementReussi){ pendingSave = true; return; }
     if(attempt === 0 && saveInFlight && !unloading){ pendingSave = true; return; }
     clearTimeout(saveRetryTimer);
 
-    var stateJson = JSON.stringify(state);
-    // Rien n'a changé depuis la dernière confirmation du serveur : ne pas réémettre la requête.
-    // Comparaison d'octets, aucune logique métier — un render() ou un persist() déclenché sans
-    // modification réelle (ouverture d'un projet, changement de filtre) n'envoie plus rien.
-    // Jamais court-circuité pendant une reprise d'échec (saveFailures > 0), où il FAUT réessayer.
-    if(attempt === 0 && !unloading && saveFailures === 0 && stateJson === lastSavedStateJson){
+    // Deux modes. DELTA : on envoie seulement ce qui a changé depuis l'instantané confirmé, et le
+    // serveur fusionne (voir le cadrage de la synchronisation incrémentale). COMPLET : tout l'état,
+    // comme avant — pour un compte neuf, quand les ids ne sont pas fiables, ou si le serveur ne
+    // comprend pas le delta.
+    var delta = (syncSnap && !deltaUnsupported) ? buildSyncDelta() : null;
+    var stateJson = delta ? null : JSON.stringify(state);
+    var sentSnap = null;
+
+    if(delta){
+      // Rien n'a changé depuis la dernière confirmation : ne pas émettre de requête. Un render() ou
+      // un persist() déclenché sans modification réelle (ouverture d'un projet, filtre) n'envoie rien.
+      if(delta.vide){
+        pendingSave = false;
+        if(saveFailures > 0 && !unloading){ saveFailures = 0; saveFailNotified = false; }   // l'échec porté par cette reprise n'a plus d'objet
+        return;
+      }
+      checkSaveSize(delta.totalBytes);
+    } else if(attempt === 0 && !unloading && saveFailures === 0 && stateJson === lastSavedStateJson){
+      // Mode complet : même court-circuit par comparaison d'octets. Jamais pendant une reprise
+      // d'échec (saveFailures > 0), où il FAUT réessayer.
       pendingSave = false;
       return;
     }
@@ -3205,9 +3443,14 @@
     pendingSave = false;
 
     var sentPhotos = {};
-    state.projects.forEach(function(p){ if(p.photo && p.photo.url) sentPhotos[p.id] = p.photo.url; });
-    var payload = '{"state":' + stateJson + ',"baseUpdatedAt":' + JSON.stringify(lastKnownUpdatedAt) + '}';
-    checkSaveSize(utf8Length(payload));
+    if(delta){
+      delta.upserts.forEach(function(u){ if(u.project.photo && u.project.photo.url) sentPhotos[u.project.id] = u.project.photo.url; });
+    } else {
+      state.projects.forEach(function(p){ if(p.photo && p.photo.url) sentPhotos[p.id] = p.photo.url; });
+      sentSnap = snapshotFromState();     // pris ICI, à l'envoi : voir snapshotFromState
+    }
+    var payload = delta ? delta.payload : '{"state":' + stateJson + ',"baseUpdatedAt":' + JSON.stringify(lastKnownUpdatedAt) + '}';
+    if(!delta) checkSaveSize(utf8Length(payload));
     var opts = {method: "POST", headers: {"Content-Type": "application/json"}, body: payload};
     if(unloading && utf8Length(payload) < KEEPALIVE_MAX_BYTES) opts.keepalive = true;
     // Sans délai maximal, une requête qui ne répond jamais garderait le verrou pour toujours
@@ -3218,7 +3461,7 @@
 
     apiFetch("/api/projects", opts).then(function(res){
       clearTimeout(timeout);
-      if(res.status === 409){
+      if(res.status === 409 && !delta){
         return res.json().then(function(conflict){
           lastKnownUpdatedAt = conflict.updatedAt || null;
           if(attempt < MAX_SAVE_ATTEMPTS - 1){
@@ -3242,6 +3485,7 @@
           // L'état local vient d'être remplacé par celui du serveur : la mémoire du dernier
           // envoi ne décrit plus rien, la vider évite de court-circuiter la sauvegarde suivante.
           lastSavedStateJson = null;
+          syncSnap = snapshotFromServer(parsed.projects || [], state.projects, state.dropZone);
           // Rejeu limité à une fois par épisode : sous un conflit qui persiste, rejouer puis
           // resauvegarder puis reconflicter en boucle saturerait la limite de débit du serveur.
           // Les photos restent alors en attente dans le navigateur pour le prochain chargement.
@@ -3257,15 +3501,32 @@
         // Le corps porte le motif exact (too_large, too_many_projects) : sans lui, un refus
         // définitif ne pourrait être expliqué à l'utilisateur que par un message générique.
         return res.json().catch(function(){ return {}; }).then(function(body){
+          if(delta && res.status === 400 && body && (body.error === "state required" || body.error === "bad_delta")){
+            // « state required » : ancien serveur, qui ne connaît que l'état complet. « bad_delta » :
+            // le serveur a refusé le delta lui-même (un défaut de ce client). Dans les deux cas, mieux
+            // vaut envoyer l'état complet que laisser des modifications non enregistrées.
+            deltaUnsupported = true;
+            saveInFlight = false;
+            pendingSave = true;
+            sendSaveNow(0, unloading);
+            return;
+          }
           var e = new Error("save-failed"); e.status = res.status; e.reason = body && body.error; e.limit = body && body.limit;
           throw e;
         });
       }
       return res.json().then(function(ok){
         lastKnownUpdatedAt = ok.updatedAt || lastKnownUpdatedAt;
+        var resteAEnvoyer = false;
+        if(delta){
+          resteAEnvoyer = confirmerDelta(delta, ok.conflicts || [], sentPhotos);
+        } else {
+          lastSavedStateJson = stateJson;
+          syncSnap = sentSnap;
+        }
         clearConfirmedPhotos(sentPhotos);
         conflictReplayed = false;
-        lastSavedStateJson = stateJson;
+        if(resteAEnvoyer) pendingSave = true;
         if(saveBlockedReason){ saveBlockedReason = null; updateSaveBanner(); }
         if(saveFailures > 0){
           saveFailures = 0; saveFailNotified = false;
@@ -3327,6 +3588,7 @@
   // le debounce n'a pas eu le temps de partir. On force l'envoi immédiat dès
   // que la page devient invisible, tant qu'une sauvegarde est en attente.
   function retrySaveIfNeeded(){
+    if(loadError){ load(); return; }      // le chargement a échoué : on le relance d'abord
     if(saveFailures > 0 || pendingSave){
       clearTimeout(saveTimer);
       sendSaveNow();
@@ -3644,6 +3906,7 @@
   }
 
   function render(){
+    if(loadError){ renderLoadError(); return; }
     var scrollSnapshot = {};
     SCROLL_CONTAINER_IDS.forEach(function(id){
       var el = document.getElementById(id);

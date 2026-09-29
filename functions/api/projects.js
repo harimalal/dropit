@@ -83,21 +83,29 @@ async function ecrireDelta(env, userId, delta) {
     // Plafonds appliqués sur le RÉSULTAT de la fusion, pas sur la taille de la requête (qui est
     // petite par construction) : c'est la ligne stockée qui ne doit pas dépasser.
     if (data.projects.length > MAX_PROJECTS) return { statut: 400, corps: { error: "too_many_projects", limit: MAX_PROJECTS } };
-    if (changed && new TextEncoder().encode(JSON.stringify(data)).length > MAX_BODY_BYTES) {
-      return { statut: 413, corps: { error: "too_large", limit: MAX_BODY_BYTES } };
-    }
 
     // Rien à écrire (tout est déjà appliqué, ou tout est en conflit) : on ne touche pas à la ligne.
     if (!changed) return { statut: 200, corps: { ok: true, updatedAt: ligne ? ligne.updated_at : null, conflicts } };
 
+    // Sérialisé UNE fois : sert à mesurer la taille puis à construire le corps de la requête.
+    // (Sérialiser deux fois une ligne de 2 Mo coûte du temps de calcul, que Cloudflare limite.)
+    // La taille se mesure en octets UTF-8 ; le décompte en caractères ne suffit qu'aux cas sans
+    // ambiguïté : au plus MAX octets si 3 x caractères <= MAX, forcément trop gros si caractères > MAX.
+    const donneesJson = JSON.stringify(data);
+    if (donneesJson.length > MAX_BODY_BYTES ||
+        (donneesJson.length * 3 > MAX_BODY_BYTES && new TextEncoder().encode(donneesJson).length > MAX_BODY_BYTES)) {
+      return { statut: 413, corps: { error: "too_large", limit: MAX_BODY_BYTES } };
+    }
+
     const nouveau = new Date().toISOString();
+    const corpsEcriture = '{"data":' + donneesJson + ',"updated_at":' + JSON.stringify(nouveau) + '}';
     if (!ligne) {
       // Premier enregistrement du compte passé par le chemin delta (rare : le client n'y recourt
       // qu'après avoir lu une ligne). Même insertion que le chemin historique.
       const ins = await fetch(env.SUPABASE_URL + "/rest/v1/" + TABLE + "?on_conflict=user_id", {
         method: "POST",
         headers: { ...supabaseHeaders(env), "Prefer": "resolution=merge-duplicates" },
-        body: JSON.stringify({ user_id: userId, data: data, updated_at: nouveau })
+        body: '{"user_id":' + JSON.stringify(userId) + ',"data":' + donneesJson + ',"updated_at":' + JSON.stringify(nouveau) + '}'
       });
       if (!ins.ok) return { statut: 500, corps: { error: await ins.text() } };
       return { statut: 200, corps: { ok: true, updatedAt: nouveau, conflicts } };
@@ -110,7 +118,7 @@ async function ecrireDelta(env, userId, delta) {
       {
         method: "PATCH",
         headers: { ...supabaseHeaders(env), "Prefer": "return=representation" },
-        body: JSON.stringify({ data: data, updated_at: nouveau })
+        body: corpsEcriture
       }
     );
     if (!patch.ok) return { statut: 500, corps: { error: await patch.text() } };
