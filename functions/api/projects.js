@@ -77,11 +77,20 @@ export async function onRequestGet(context) {
   return json({ data: EMPTY, updatedAt: null });
 }
 
-// Plafonds larges au-dessus de tout usage réel observé, pour empêcher un
-// compte (bug client ou abus volontaire) de gonfler indéfiniment sa ligne
-// dropit_user_data — sans jamais gêner un utilisateur normal.
-const MAX_BODY_BYTES = 500 * 1024; // 500 Ko
-const MAX_PROJECTS = 300;
+// Plafonds, dimensionnés sur une MESURE du modèle de données
+// (MISSIONS/2026-09-29-robustesse-sauvegarde-nettoyage/livrables/mesure-poids-projet.js) :
+// un projet pèse 2,9 Ko (sortie IA brute), 10,1 Ko (usage moyen), 60 Ko (grand utilisateur de
+// notes). Référence réelle mesurée en base : 8,2 Ko/projet.
+//
+// L'ancien plafond de 500 Ko était SOUS le cas nominal : 50 projets moyens pèsent 503 Ko. Un
+// compte normal l'aurait franchi, et le client traite le 413 comme définitif — plus aucune
+// sauvegarde, jamais. 2 Mo laisse 4x de marge sur ce cas nominal.
+// Le client en garde une copie (SAVE_MAX_BYTES dans app.html) pour prévenir AVANT le refus :
+// si ce chiffre change, changer les DEUX.
+const MAX_BODY_BYTES = 2 * 1024 * 1024; // 2 Mo
+// 50 projets : décision produit. Remplace un plafond de 300 qui n'a jamais été atteignable,
+// la limite d'octets mordant bien avant — deux plafonds qui se contredisaient.
+const MAX_PROJECTS = 50;
 
 export async function onRequestPost(context) {
   const { env, request } = context;
@@ -93,7 +102,7 @@ export async function onRequestPost(context) {
 
   const contentLength = Number(request.headers.get("content-length") || 0);
   if (contentLength > MAX_BODY_BYTES) {
-    return json({ error: "Payload trop volumineux" }, 413);
+    return json({ error: "too_large", limit: MAX_BODY_BYTES }, 413);
   }
 
   let rawText;
@@ -103,7 +112,7 @@ export async function onRequestPost(context) {
     return json({ error: "Invalid JSON body" }, 400);
   }
   if (rawText.length > MAX_BODY_BYTES) {
-    return json({ error: "Payload trop volumineux" }, 413);
+    return json({ error: "too_large", limit: MAX_BODY_BYTES }, 413);
   }
 
   let body;
@@ -118,7 +127,7 @@ export async function onRequestPost(context) {
     return json({ error: "state required" }, 400);
   }
   if (state.projects.length > MAX_PROJECTS) {
-    return json({ error: "Trop de projets" }, 400);
+    return json({ error: "too_many_projects", limit: MAX_PROJECTS }, 400);
   }
 
   const baseUpdatedAt = typeof body.baseUpdatedAt === "string" ? body.baseUpdatedAt : null;

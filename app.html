@@ -536,6 +536,16 @@
   @media (prefers-reduced-motion:no-preference){.toast{transition:opacity .25s ease;}}
   .toast.show{opacity:1;}
 
+  /* Bandeau de sauvegarde bloquée : persistant, contrairement au toast. Posé sur <body> et
+     jamais reconstruit par render(). Rouge de notification, au-dessus de la barre d'onglets
+     pour ne masquer ni la navigation ni la barre de composition. */
+  .save-banner{
+    position:fixed;left:12px;right:12px;bottom:calc(12px + var(--tabbar-h));z-index:60;
+    background:var(--notif-red);color:#fff;font-size:12.5px;line-height:1.45;
+    padding:11px 14px;border-radius:12px;box-shadow:0 8px 22px rgba(0,0,0,.22);
+  }
+  .save-banner-txt{display:block;}
+
   .reset-link{
     position:fixed;left:16px;bottom:calc(74px + var(--tabbar-h));z-index:40;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-faint);
     background:var(--canvas-card);border:1px solid var(--line);border-radius:14px;padding:7px 13px;
@@ -3069,6 +3079,22 @@
   var SAVE_TIMEOUT_MS = 30000;
   var SAVE_RETRY_DELAYS = [2000, 5000, 15000, 30000, 60000];
 
+  // Miroir exact de MAX_BODY_BYTES dans functions/api/projects.js. Le serveur reste l'autorité ;
+  // cette copie sert uniquement à prévenir AVANT le refus, jamais à bloquer à sa place.
+  // Dimensionné sur une mesure du modèle de données (livrables/mesure-poids-projet.js) : un compte
+  // « moyen » de 50 projets pèse 503 Ko, un compte réel mesuré 8,2 Ko/projet. 2 Mo laisse 4x de
+  // marge sur le cas nominal. Si ce chiffre change, changer les DEUX.
+  var SAVE_MAX_BYTES = 2 * 1024 * 1024;
+  // 70 % : assez tôt pour laisser le temps d'agir, assez tard pour ne jamais s'afficher en
+  // usage normal (un compte moyen de 50 projets est à 25 % de ce plafond).
+  var SAVE_WARN_RATIO = 0.7;
+  // Miroir de MAX_PROJECTS dans functions/api/projects.js. Sert à refuser la création AVANT
+  // l'appel réseau plutôt qu'à subir un refus après coup. Si ce chiffre change, changer les DEUX.
+  var MAX_PROJECTS_CLIENT = 50;
+  var saveSizeWarned = false;  // l'alerte de taille n'est montrée qu'une fois par session
+  var saveBlockedReason = null; // refus définitif du serveur : message persistant, voir updateSaveBanner
+  var lastSavedStateJson = null; // dernier état confirmé par le serveur, pour ne pas renvoyer l'identique
+
   function utf8Length(str){
     try{ return new TextEncoder().encode(str).length; }catch(e){ return str.length * 3; }
   }
@@ -3148,16 +3174,53 @@
     if(pendingSave && saveFailures === 0) persist();
   }
 
+  // Bandeau de sauvegarde : posé directement sur <body>, jamais reconstruit par render().
+  // C'est volontaire — render() réécrit tout l'innerHTML de #app, un bandeau qui y vivrait
+  // disparaîtrait puis reviendrait à chaque coche de tâche. Ici il persiste tant que la cause
+  // persiste, ce qui est exactement le point : un refus définitif n'est pas un toast qui passe.
+  function updateSaveBanner(){
+    var el = document.getElementById("save-banner");
+    if(!saveBlockedReason){
+      if(el) el.remove();
+      return;
+    }
+    if(!el){
+      el = document.createElement("div");
+      el.id = "save-banner";
+      el.className = "save-banner";
+      document.body.appendChild(el);
+    }
+    el.innerHTML = '<span class="save-banner-txt">'+escapeHtml(saveBlockedReason)+'</span>';
+  }
+
+  // Alerte de taille, une seule fois par session : on approche du plafond sans l'avoir atteint.
+  function checkSaveSize(bytes){
+    if(saveSizeWarned || bytes < SAVE_MAX_BYTES * SAVE_WARN_RATIO) return;
+    saveSizeWarned = true;
+    showToast("Tes projets occupent beaucoup de place — pense à en archiver quelques-uns");
+  }
+
   function sendSaveNow(attempt, unloading){
     attempt = attempt || 0;
     if(attempt === 0 && saveInFlight && !unloading){ pendingSave = true; return; }
     clearTimeout(saveRetryTimer);
+
+    var stateJson = JSON.stringify(state);
+    // Rien n'a changé depuis la dernière confirmation du serveur : ne pas réémettre la requête.
+    // Comparaison d'octets, aucune logique métier — un render() ou un persist() déclenché sans
+    // modification réelle (ouverture d'un projet, changement de filtre) n'envoie plus rien.
+    // Jamais court-circuité pendant une reprise d'échec (saveFailures > 0), où il FAUT réessayer.
+    if(attempt === 0 && !unloading && saveFailures === 0 && stateJson === lastSavedStateJson){
+      pendingSave = false;
+      return;
+    }
     saveInFlight = true;
     pendingSave = false;
 
     var sentPhotos = {};
     state.projects.forEach(function(p){ if(p.photo && p.photo.url) sentPhotos[p.id] = p.photo.url; });
-    var payload = JSON.stringify({state: state, baseUpdatedAt: lastKnownUpdatedAt});
+    var payload = '{"state":' + stateJson + ',"baseUpdatedAt":' + JSON.stringify(lastKnownUpdatedAt) + '}';
+    checkSaveSize(utf8Length(payload));
     var opts = {method: "POST", headers: {"Content-Type": "application/json"}, body: payload};
     if(unloading && utf8Length(payload) < KEEPALIVE_MAX_BYTES) opts.keepalive = true;
     // Sans délai maximal, une requête qui ne répond jamais garderait le verrou pour toujours
@@ -3189,6 +3252,9 @@
           var parsed = conflict.data || {};
           var dropZone = Array.isArray(parsed.dropZone) ? parsed.dropZone.map(normalizeDropItem) : [];
           state = {projects: (parsed.projects || []).map(normalizeProject), dropZone: dropZone};
+          // L'état local vient d'être remplacé par celui du serveur : la mémoire du dernier
+          // envoi ne décrit plus rien, la vider évite de court-circuiter la sauvegarde suivante.
+          lastSavedStateJson = null;
           // Rejeu limité à une fois par épisode : sous un conflit qui persiste, rejouer puis
           // resauvegarder puis reconflicter en boucle saturerait la limite de débit du serveur.
           // Les photos restent alors en attente dans le navigateur pour le prochain chargement.
@@ -3200,11 +3266,20 @@
           if(replayed) persist();
         });
       }
-      if(!res.ok){ var e = new Error("save-failed"); e.status = res.status; throw e; }
+      if(!res.ok){
+        // Le corps porte le motif exact (too_large, too_many_projects) : sans lui, un refus
+        // définitif ne pourrait être expliqué à l'utilisateur que par un message générique.
+        return res.json().catch(function(){ return {}; }).then(function(body){
+          var e = new Error("save-failed"); e.status = res.status; e.reason = body && body.error; e.limit = body && body.limit;
+          throw e;
+        });
+      }
       return res.json().then(function(ok){
         lastKnownUpdatedAt = ok.updatedAt || lastKnownUpdatedAt;
         clearConfirmedPhotos(sentPhotos);
         conflictReplayed = false;
+        lastSavedStateJson = stateJson;
+        if(saveBlockedReason){ saveBlockedReason = null; updateSaveBanner(); }
         if(saveFailures > 0){
           saveFailures = 0; saveFailNotified = false;
           showToast("Modifications enregistrées");
@@ -3220,9 +3295,20 @@
       // tout seul. Un refus définitif (400, 413…) ne se réglera pas en réessayant.
       var retryable = !status || status === 408 || status === 429 || status >= 500;
       if(!retryable){
-        showToast("Enregistrement refusé par le serveur");
+        // Un refus définitif ne se règle pas en réessayant : il faut le dire, dire pourquoi, et
+        // le laisser affiché. Un toast de 1,8 s répété à chaque modification n'informe de rien.
+        var reason = err && err.reason;
+        if(status === 413 || reason === "too_large"){
+          saveBlockedReason = "Tes projets dépassent la taille maximale — archive ou supprime un projet pour réactiver l'enregistrement.";
+        } else if(reason === "too_many_projects"){
+          saveBlockedReason = "Tu as atteint la limite de "+(err.limit || MAX_PROJECTS_CLIENT)+" projets — supprimes-en un pour réactiver l'enregistrement.";
+        } else {
+          saveBlockedReason = "Enregistrement refusé par le serveur. Tes dernières modifications ne sont pas sauvegardées.";
+        }
+        updateSaveBanner();
         return;
       }
+      if(saveBlockedReason){ saveBlockedReason = null; updateSaveBanner(); }
       pendingSave = true;
       saveFailures++;
       if(!saveFailNotified){
@@ -5187,6 +5273,13 @@
   function performCreateFromIntention(){
     var intention = composeText.trim();
     if(!intention || generating) return;
+    // Refus AVANT l'appel à l'IA : au-delà du plafond, le serveur refuserait la sauvegarde de
+    // toute façon. Mieux vaut le dire tout de suite que de dépenser un appel IA, une recherche
+    // de photo, et de laisser l'utilisateur avec un projet à l'écran qui ne sera jamais gardé.
+    if(state.projects.length >= MAX_PROJECTS_CLIENT){
+      showToast("Limite de "+MAX_PROJECTS_CLIENT+" projets atteinte — supprime un projet pour en créer un nouveau");
+      return;
+    }
     generating = true;
     render();
 
